@@ -26,8 +26,7 @@
  */
 
 import { motion } from 'framer-motion';
-import { Lock, Building2, Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 
 interface AnimatedInputsProps {
@@ -70,15 +69,15 @@ export const AnimatedInputs = ({
               }}
             />
 
-            <Input
+            <Textarea
               id="company-input"
-              placeholder={isAuthenticated ? "e.g., We are a SaaS company with 50 employees" : "I work at Zapier in HR function"}
+              placeholder={isAuthenticated ? "e.g., We are a SaaS company with 50 employees looking to streamline our operations" : "I work at Zapier in HR function"}
               disabled={!isAuthenticated}
               value={companyInput}
               onChange={(e) => onCompanyChange(e.target.value)}
               autoFocus={isAuthenticated}
               className={`
-                relative rounded-xl h-14 px-4 text-base
+                relative rounded-xl h-24 px-4 text-base resize-none
                 ${!isAuthenticated
                   ? 'bg-white/60 backdrop-blur-sm cursor-not-allowed shadow-elevated-combined border-brand-blue/30'
                   : 'bg-white shadow-soft border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20'
@@ -86,19 +85,6 @@ export const AnimatedInputs = ({
                 transition-all duration-500
               `}
             />
-
-            {!isAuthenticated && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="flex items-center gap-2 bg-brand-blue/90 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
-                  <Lock className="h-3 w-3" />
-                  Register to unlock
-                </div>
-              </div>
-            )}
-
-            {!isAuthenticated && (
-              <Building2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-brand-blue/40" />
-            )}
           </div>
         </div>
 
@@ -122,14 +108,14 @@ export const AnimatedInputs = ({
               }}
             />
 
-            <Input
+            <Textarea
               id="solution-input"
-              placeholder={isAuthenticated ? "e.g., CRM system with email integration" : "Looking for HR management software"}
+              placeholder={isAuthenticated ? "e.g., CRM system with email integration and mobile app support" : "Looking for HR management software"}
               disabled={!isAuthenticated}
               value={solutionInput}
               onChange={(e) => onSolutionChange(e.target.value)}
               className={`
-                relative rounded-xl h-14 px-4 text-base
+                relative rounded-xl h-24 px-4 text-base resize-none
                 ${!isAuthenticated
                   ? 'bg-white/60 backdrop-blur-sm cursor-not-allowed shadow-elevated-combined border-brand-blue/30'
                   : 'bg-white shadow-soft border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20'
@@ -137,19 +123,6 @@ export const AnimatedInputs = ({
                 transition-all duration-500
               `}
             />
-
-            {!isAuthenticated && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="flex items-center gap-2 bg-brand-blue/90 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg">
-                  <Lock className="h-3 w-3" />
-                  Register to unlock
-                </div>
-              </div>
-            )}
-
-            {!isAuthenticated && (
-              <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-brand-blue/40" />
-            )}
           </div>
         </div>
       </div>
