@@ -1,84 +1,126 @@
-# Vendora AI Vendor Analyst
+# Clarioo - AI-Powered Vendor Selection
 
-A React-based vendor analysis application built with Vite, TypeScript, and Supabase.
+A visual prototype landing page showcasing the Clarioo vendor selection platform. Built with modern web technologies and featuring interactive components with Clearbit-inspired design.
 
-## Project info
+## 🚀 Live Demo
 
-**URL**: https://lovable.dev/projects/af3940c8-e9cf-4b82-8532-e38c6b6c1d94
+**Live Site**: [https://pangeafate.github.io/Clarioo-Visuals/](https://pangeafate.github.io/Clarioo-Visuals/)
 
-## Local Development Setup
+**Repository**: [https://github.com/pangeafate/Clarioo-Visuals](https://github.com/pangeafate/Clarioo-Visuals)
 
-Follow these steps to set up the application for local development:
+## 📋 Project Overview
+
+This is a visual prototype demonstrating the Clarioo landing page experience. It includes 6 interactive components designed to showcase the platform's capabilities and user journey.
+
+### Key Features
+
+- **Hero Section**: Gradient typography with value proposition badges
+- **Registration Toggle**: Sign In/Sign Up toggle with visual feedback
+- **Animated Inputs**: Hypnotic animations (pulse-glow, float, shimmer)
+- **Artifact Visualization**: Input → AI Processing → Output workflow
+- **Interactive Carousel**: 5-step workflow demonstration with auto-rotation
+- **Mobile-First Design**: Fully responsive across desktop, tablet, and mobile
+
+## 🛠️ Technologies
+
+- **React 18.3.1** + **TypeScript 5.5.3**
+- **Vite 5.4.1** - Build tool and dev server
+- **Tailwind CSS 3.4.11** - Utility-first styling
+- **Framer Motion 12.23.24** - Animation library
+- **Embla Carousel React 8.6.0** - Carousel component
+- **shadcn/ui** - Component library (Radix UI)
+- **React Router DOM 6.26.2** - Client-side routing
+
+## 🏃 Local Development
 
 ### Prerequisites
 
-- **Docker & Docker Compose** - [Install Docker](https://docs.docker.com/get-docker/)
+- **Node.js 20+**
+- **npm** or **bun**
 
-### Step-by-Step Setup
+### Quick Start
 
-1. **Set up Supabase (local backend):**
-   ```sh
-   # Start the local Supabase stack
-   docker compose -f supabase-docker/docker-compose.yml up -d
-   ```
-   
-   This will start all Supabase services (database, auth, API, etc.) on your local machine.
-   See `supabase-docker/README.md` for more details.
-
-2. **Configure environment variables:**
-   ```sh
-   # Copy the example environment file
-   cp env.dev.example .env.dev
-   ```
-   
-   Edit `.env.dev` with your Supabase configuration:
-   ```env
-   VITE_SUPABASE_URL=http://localhost:8000
-   VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key_here
-   ```
-   
-   **Get your Supabase anonymous key:**
-   - Visit Supabase Studio at `http://your-ip-here:8000` (replace `your-ip-here` with your actual IP or use `localhost`)
-   - **Chrome users**: If Chrome refuses to show Basic auth popup, first click here: http://supabase:this_password_is_insecure_and_should_be_updated@your-ip-here:8000/. The page won't work properly, but then navigate to http://your-ip-here:8000/ after that.
-   - Go to Settings → API
-   - Copy the `anon public` key
-
-3. **Start the application:**
-   ```sh
-   # Build and start the React application
-   docker-compose up --build
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/pangeafate/Clarioo-Visuals.git
+   cd Clarioo-Visuals
    ```
 
-4. **Push database migrations:**
-   ```sh
-   # Apply all pending migrations to your local database
-   PGSSLMODE=disable npx supabase db push --db-url "postgres://postgres.your-tenant-id:your-super-secret-and-long-postgres-password@localhost:6543/postgres"
+2. **Install dependencies:**
+   ```bash
+   npm install
    ```
-   
-   This command will apply all database schema migrations to your local Supabase instance.
 
-5. **Access the application:**
-   - **App**: http://localhost:8080
-   - **Supabase Studio**: http://your-ip-here:8000
+3. **Start development server:**
+   ```bash
+   npm run dev
+   ```
 
-### Environment Configuration
+4. **Access the application:**
+   - Local: http://localhost:8080
 
-**Environment File Priority:**
-- `.env.dev` (highest priority - for development overrides, not tracked in git)
-- `.env` (fallback - tracked in git and used in production)
+### Available Scripts
 
-The `.env.dev` file will override any values in `.env`, allowing you to customize your development environment without modifying the tracked `.env` file.
+- `npm run dev` - Start development server (port 8080)
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build locally
 
-## What technologies are used for this project?
+## 📦 Project Structure
 
-This project is built with:
+```
+src/
+├── components/
+│   ├── landing/          # Landing page components
+│   │   ├── HeroSection.tsx
+│   │   ├── RegistrationToggle.tsx
+│   │   ├── AnimatedInputs.tsx
+│   │   ├── ArtifactVisualization.tsx
+│   │   ├── CardCarousel.tsx
+│   │   └── LandingPage.tsx
+│   ├── ui/               # shadcn/ui components
+│   └── vendor-discovery/ # Dashboard components (prototype)
+├── hooks/                # Custom React hooks
+├── services/             # Mock services for prototype
+├── types/                # TypeScript type definitions
+└── utils/                # Utility functions
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🎨 Design System
 
-## Production Deployment
+The landing page uses a Clearbit-inspired design system featuring:
 
-Simply open [Lovable](https://lovable.dev/projects/af3940c8-e9cf-4b82-8532-e38c6b6c1d94) and click on Share → Publish.
+- **Custom Color Palette**: Purple gradients with neutral warm tones
+- **Multi-Layer Shadows**: Elevated combined shadows for depth
+- **Bold Typography**: Gradient text with tight tracking (-0.02em)
+- **Keyframe Animations**: Pulse-glow (2s), float (3s), shimmer (4s)
+- **Mobile-First Breakpoints**:
+  - `md: 768px` (tablet)
+  - `lg: 1024px` (desktop)
+
+## 🚢 Deployment
+
+The project automatically deploys to GitHub Pages via GitHub Actions on every push to the `main` branch.
+
+### Manual Deployment
+
+```bash
+# Build the project
+npm run build
+
+# Preview the build locally
+npm run preview
+```
+
+The built files are in the `dist/` directory and can be deployed to any static hosting service.
+
+## 📄 License
+
+This is a prototype/demonstration project for Clarioo.
+
+## 🤖 Development
+
+Built with [Claude Code](https://claude.com/claude-code)
+
+---
+
+**Note**: This is a visual prototype. Backend services use mock data for demonstration purposes.
