@@ -48,17 +48,18 @@ export const RegistrationToggle = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>(isSignUp ? 'signup' : 'signin');
 
-  // Don't show toggle if already authenticated
-  if (isAuthenticated) {
-    return null;
-  }
-
   /**
    * PROTOTYPE: Handle toggle interaction
    * Opens modal and sets authentication mode
    * Waits for animation to complete before showing modal
+   * Disabled when user is already authenticated
    */
   const handleToggleClick = () => {
+    // Don't allow interaction if already authenticated
+    if (isAuthenticated) {
+      return;
+    }
+
     const newMode = !isSignUp ? 'signup' : 'signin';
     onToggle(!isSignUp);
     setAuthMode(newMode);
@@ -90,20 +91,22 @@ export const RegistrationToggle = ({
         {/* Simple iOS-Style Toggle Switch */}
         <button
           onClick={handleToggleClick}
+          disabled={isAuthenticated}
           className={`
             relative w-[70px] h-[36px] rounded-full transition-all duration-300 ease-in-out
-            focus:outline-none focus:ring-4 focus:ring-brand-purple/20
-            ${isSignUp
-              ? 'bg-gradient-to-r from-brand-purple to-brand-purpleLight'
+            focus:outline-none focus:ring-4 focus:ring-brand-blue/20
+            ${isAuthenticated || isSignUp
+              ? 'bg-gradient-to-r from-brand-blue to-brand-blueLight'
               : 'bg-gray-200'
             }
+            ${isAuthenticated ? 'opacity-80 cursor-not-allowed' : 'cursor-pointer'}
           `}
-          aria-label={`Switch to ${isSignUp ? 'Sign In' : 'Sign Up'}`}
+          aria-label={isAuthenticated ? 'Signed Up' : `Switch to ${isSignUp ? 'Sign In' : 'Sign Up'}`}
         >
           {/* Sliding Circle Knob */}
           <motion.div
             animate={{
-              x: isSignUp ? 38 : 2,
+              x: isAuthenticated || isSignUp ? 38 : 2,
             }}
             transition={{
               type: 'spring',
@@ -116,7 +119,10 @@ export const RegistrationToggle = ({
 
         {/* Helper Text */}
         <p className="text-sm text-neutral-warmGray text-center max-w-md">
-          Toggle to {isSignUp ? 'sign in' : 'create an account'} and unlock the full vendor discovery experience
+          {isAuthenticated
+            ? "You're signed in! Input fields below are now unlocked."
+            : `Toggle to ${isSignUp ? 'sign in' : 'create an account'} and unlock the full vendor discovery experience`
+          }
         </p>
       </motion.div>
 

@@ -28,6 +28,20 @@ export const HeroSection = () => {
       transition={{ duration: 0.6 }}
       className="text-center px-4 py-12 md:py-16"
     >
+      {/* Logo */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="flex justify-center mb-2"
+      >
+        <img
+          src="/clarioo-logo.png"
+          alt="Clarioo Logo"
+          className="h-64 md:h-80 lg:h-96 w-auto"
+        />
+      </motion.div>
+
       {/* Element 1: Title */}
       <h1
         className="

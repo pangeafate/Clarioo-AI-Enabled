@@ -59,16 +59,6 @@ export const AnimatedInputs = ({
           </Label>
 
           <div className={`relative ${!isAuthenticated ? 'animate-pulse-glow animate-float' : ''}`}>
-            <div
-              className={`
-                absolute inset-0 rounded-xl bg-gradient-to-r from-brand-blue/20 to-brand-blueLight/20
-                ${!isAuthenticated ? 'animate-shimmer' : 'opacity-0'}
-              `}
-              style={{
-                backgroundSize: '200% 100%'
-              }}
-            />
-
             <Textarea
               id="company-input"
               placeholder={isAuthenticated ? "e.g., We are a SaaS company with 50 employees looking to streamline our operations" : "I work at Zapier in HR function"}
@@ -97,17 +87,6 @@ export const AnimatedInputs = ({
           <div className={`relative ${!isAuthenticated ? 'animate-pulse-glow animate-float' : ''}`}
             style={{ animationDelay: '0.5s' }}
           >
-            <div
-              className={`
-                absolute inset-0 rounded-xl bg-gradient-to-r from-brand-blueLight/20 to-brand-blue/20
-                ${!isAuthenticated ? 'animate-shimmer' : 'opacity-0'}
-              `}
-              style={{
-                backgroundSize: '200% 100%',
-                animationDelay: '1s'
-              }}
-            />
-
             <Textarea
               id="solution-input"
               placeholder={isAuthenticated ? "e.g., CRM system with email integration and mobile app support" : "Looking for HR management software"}
