@@ -4,10 +4,10 @@
 
 **Project Name**: Vendora AI Vendor Analyst  
 **Project Type**: Web Application - AI-Powered Vendor Discovery & Evaluation Platform  
-**Status**: MVP Development (68% Complete - 21/31 features)  
-**Framework**: React + TypeScript with Vite  
-**Backend**: Supabase (PostgreSQL + Auth)  
-**Deployment**: Lovable.dev integration  
+**Status**: MVP Development (68% Complete - 21/31 features)
+**Framework**: React + TypeScript with Vite
+**Backend**: Supabase (PostgreSQL + Auth)
+**Deployment**: GitHub Pages  
 
 ---
 
@@ -242,7 +242,7 @@ Vendora AI Vendor Analyst
 | Package Manager | npm/bun | Dependency management |
 | Linting | ESLint | Code quality |
 | Version Control | Git | Source control |
-| Deployment | Lovable.dev | Hosting and CI/CD |
+| Deployment | GitHub Pages | Hosting and CI/CD |
 
 ### AI/ML Integration
 - **OpenAI GPT-4** - AI criteria generation, vendor matching, comparison
@@ -400,7 +400,7 @@ Primary feature orchestrated by `src/components/VendorDiscovery.tsx`
   - Development server on port 8080
   - React plugin with SWC compiler
   - Path alias: `@` → `./src`
-  - Lovable component tagger in development
+  - Component tagger for development
 
 - **tsconfig.json**: TypeScript configuration
   - Base URL: `.`
@@ -583,7 +583,7 @@ Recommended stack (NOT YET IMPLEMENTED):
 - tailwindcss@3.4.11
 - autoprefixer@10.4.20
 - postcss@8.4.47
-- lovable-tagger@1.1.7 (Lovable integration)
+- lovable-tagger@1.1.7
 
 ### Package Manager
 - **npm** (primary) - 262MB lock file

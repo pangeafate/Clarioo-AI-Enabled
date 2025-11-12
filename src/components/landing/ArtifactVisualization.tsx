@@ -80,10 +80,10 @@ export const ArtifactVisualization = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-neutral-warmBlack mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-neutral-navy mb-4">
             See Every Step of the Process
           </h2>
-          <p className="text-lg text-neutral-warmGray max-w-2xl mx-auto">
+          <p className="text-lg text-neutral-slate max-w-2xl mx-auto">
             Complete transparency from input to output. Watch how AI transforms your requirements into actionable insights.
           </p>
         </motion.div>
@@ -103,20 +103,20 @@ export const ArtifactVisualization = () => {
               whileHover={{ y: -4, shadow: "0 20px 40px rgba(0,0,0,0.12)" }}
             >
               <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-brand-purple/10 flex items-center justify-center text-brand-purple mb-4">
+                <div className="w-16 h-16 rounded-full bg-brand-blue/10 flex items-center justify-center text-brand-blue mb-4">
                   {current.inputIcon}
                 </div>
-                <h3 className="font-semibold text-neutral-warmBlack mb-2">
+                <h3 className="font-semibold text-neutral-navy mb-2">
                   {current.input}
                 </h3>
-                <p className="text-sm text-neutral-warmGray">
+                <p className="text-sm text-neutral-slate">
                   What you provide
                 </p>
               </div>
             </motion.div>
 
             {/* Arrow 1 */}
-            <ArrowRight className="h-8 w-8 text-brand-purple hidden md:block" />
+            <ArrowRight className="h-8 w-8 text-brand-blue hidden md:block" />
 
             {/* Processing Card */}
             <motion.div
@@ -148,7 +148,7 @@ export const ArtifactVisualization = () => {
             </motion.div>
 
             {/* Arrow 2 */}
-            <ArrowRight className="h-8 w-8 text-brand-purple hidden md:block" />
+            <ArrowRight className="h-8 w-8 text-brand-blue hidden md:block" />
 
             {/* Output Card */}
             <motion.div
@@ -156,13 +156,13 @@ export const ArtifactVisualization = () => {
               whileHover={{ y: -4, shadow: "0 20px 40px rgba(0,0,0,0.12)" }}
             >
               <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-brand-purpleLight/10 flex items-center justify-center text-brand-purpleLight mb-4">
+                <div className="w-16 h-16 rounded-full bg-brand-blueLight/10 flex items-center justify-center text-brand-blueLight mb-4">
                   {current.outputIcon}
                 </div>
-                <h3 className="font-semibold text-neutral-warmBlack mb-2">
+                <h3 className="font-semibold text-neutral-navy mb-2">
                   {current.output}
                 </h3>
-                <p className="text-sm text-neutral-warmGray">
+                <p className="text-sm text-neutral-slate">
                   What you get
                 </p>
               </div>
@@ -178,7 +178,7 @@ export const ArtifactVisualization = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
-            className="text-center text-lg text-neutral-warmGray mt-8"
+            className="text-center text-lg text-neutral-slate mt-8"
           >
             {current.description}
           </motion.p>
@@ -193,8 +193,8 @@ export const ArtifactVisualization = () => {
               className={`
                 w-2 h-2 rounded-full transition-all duration-300
                 ${index === currentIndex
-                  ? 'w-8 bg-brand-purple'
-                  : 'bg-brand-purple/30 hover:bg-brand-purple/50'
+                  ? 'w-8 bg-brand-blue'
+                  : 'bg-brand-blue/30 hover:bg-brand-blue/50'
                 }
               `}
               aria-label={`Go to slide ${index + 1}`}

@@ -64,7 +64,7 @@ export const RegistrationToggle = ({
           min-w-[140px] h-12 rounded-xl font-semibold transition-all duration-300
           ${!isSignUp
             ? 'bg-gradient-button text-white shadow-button-glow hover:shadow-elevated-combined hover:-translate-y-0.5'
-            : 'border-2 border-brand-purple text-brand-purple hover:bg-brand-purple/5'
+            : 'border-2 border-brand-blue text-brand-blue hover:bg-brand-blue/5'
           }
         `}
       >
@@ -84,7 +84,7 @@ export const RegistrationToggle = ({
           min-w-[140px] h-12 rounded-xl font-semibold transition-all duration-300
           ${isSignUp
             ? 'bg-gradient-button text-white shadow-button-glow hover:shadow-elevated-combined hover:-translate-y-0.5'
-            : 'border-2 border-brand-purple text-brand-purple hover:bg-brand-purple/5'
+            : 'border-2 border-brand-blue text-brand-blue hover:bg-brand-blue/5'
           }
         `}
       >

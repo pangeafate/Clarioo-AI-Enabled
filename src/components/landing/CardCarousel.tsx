@@ -178,22 +178,22 @@ export const CardCarousel = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-neutral-warmBlack mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-neutral-navy mb-6">
             How Clarioo AI Works
           </h2>
-          <p className="text-lg text-neutral-warmGray mb-8 max-w-2xl mx-auto">
+          <p className="text-lg text-neutral-slate mb-8 max-w-2xl mx-auto">
             From requirements to vendor selection in 5 intelligent steps
           </p>
 
           {/* Value proposition badges */}
           <div className="flex flex-wrap justify-center gap-3">
-            <span className="px-4 py-2 bg-brand-purple/10 text-brand-purple rounded-full text-sm font-medium">
+            <span className="px-4 py-2 bg-brand-blue/10 text-brand-blue rounded-full text-sm font-medium">
               ⚡ 90% of routine work automated
             </span>
-            <span className="px-4 py-2 bg-brand-purple/10 text-brand-purple rounded-full text-sm font-medium">
+            <span className="px-4 py-2 bg-brand-blue/10 text-brand-blue rounded-full text-sm font-medium">
               ✓ No doubts in decisions
             </span>
-            <span className="px-4 py-2 bg-brand-purple/10 text-brand-purple rounded-full text-sm font-medium">
+            <span className="px-4 py-2 bg-brand-blue/10 text-brand-blue rounded-full text-sm font-medium">
               🚀 &lt;24 hours from start to selection
             </span>
           </div>
@@ -217,42 +217,42 @@ export const CardCarousel = () => {
                     className={`
                       bg-white rounded-2xl p-6 shadow-elevated-combined
                       border border-gray-100 h-full
-                      ${index === selectedIndex ? 'ring-2 ring-brand-purple/30' : ''}
+                      ${index === selectedIndex ? 'ring-2 ring-brand-blue/30' : ''}
                     `}
                   >
                     {/* Card content */}
                     <div className="space-y-4">
                       {/* Step badge and icon */}
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold text-brand-purple">
+                        <span className="text-sm font-semibold text-brand-blue">
                           {card.step}
                         </span>
-                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${card.gradient} flex items-center justify-center text-brand-purple`}>
+                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${card.gradient} flex items-center justify-center text-brand-blue`}>
                           {card.icon}
                         </div>
                       </div>
 
                       {/* Title */}
-                      <h3 className="text-xl font-bold text-neutral-warmBlack">
+                      <h3 className="text-xl font-bold text-neutral-navy">
                         {card.title}
                       </h3>
 
                       {/* Description */}
-                      <p className="text-sm text-neutral-warmGray leading-relaxed">
+                      <p className="text-sm text-neutral-slate leading-relaxed">
                         {card.description}
                       </p>
 
                       {/* Process Flow */}
                       <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-                        <div className="flex items-center gap-2 text-xs text-neutral-warmGray">
+                        <div className="flex items-center gap-2 text-xs text-neutral-slate">
                           <span className="font-medium">Input:</span>
                           <span>{card.processFlow.input}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-brand-purple font-medium">
+                        <div className="flex items-center gap-2 text-xs text-brand-blue font-medium">
                           <ArrowRight className="h-3 w-3" />
                           <span>{card.processFlow.aiProcessing}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-neutral-warmGray">
+                        <div className="flex items-center gap-2 text-xs text-neutral-slate">
                           <span className="font-medium">Output:</span>
                           <span>{card.processFlow.output}</span>
                         </div>
@@ -260,8 +260,8 @@ export const CardCarousel = () => {
 
                       {/* Artifact */}
                       <div className="pt-2">
-                        <span className="text-xs text-neutral-warmGray">Deliverable:</span>
-                        <p className="text-sm font-semibold text-neutral-warmBlack mt-1">
+                        <span className="text-xs text-neutral-slate">Deliverable:</span>
+                        <p className="text-sm font-semibold text-neutral-navy mt-1">
                           📄 {card.artifact}
                         </p>
                       </div>
@@ -269,7 +269,7 @@ export const CardCarousel = () => {
                       {/* CTA Button */}
                       <Button
                         variant="outline"
-                        className="w-full mt-4 border-brand-purple text-brand-purple hover:bg-brand-purple hover:text-white"
+                        className="w-full mt-4 border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white"
                       >
                         {card.ctaText}
                         <ArrowRight className="h-4 w-4 ml-2" />
@@ -287,7 +287,7 @@ export const CardCarousel = () => {
               variant="outline"
               size="icon"
               onClick={scrollPrev}
-              className="rounded-full border-brand-purple text-brand-purple hover:bg-brand-purple hover:text-white"
+              className="rounded-full border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white"
               aria-label="Previous slide"
             >
               <ChevronLeft className="h-5 w-5" />
@@ -297,7 +297,7 @@ export const CardCarousel = () => {
               variant="outline"
               size="icon"
               onClick={() => setIsPlaying(!isPlaying)}
-              className="rounded-full border-brand-purple text-brand-purple hover:bg-brand-purple hover:text-white"
+              className="rounded-full border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white"
               aria-label={isPlaying ? "Pause autoplay" : "Play autoplay"}
             >
               {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
@@ -307,7 +307,7 @@ export const CardCarousel = () => {
               variant="outline"
               size="icon"
               onClick={scrollNext}
-              className="rounded-full border-brand-purple text-brand-purple hover:bg-brand-purple hover:text-white"
+              className="rounded-full border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white"
               aria-label="Next slide"
             >
               <ChevronRight className="h-5 w-5" />
@@ -323,8 +323,8 @@ export const CardCarousel = () => {
                 className={`
                   h-2 rounded-full transition-all duration-300
                   ${index === selectedIndex
-                    ? 'w-8 bg-brand-purple'
-                    : 'w-2 bg-brand-purple/30 hover:bg-brand-purple/50'
+                    ? 'w-8 bg-brand-blue'
+                    : 'w-2 bg-brand-blue/30 hover:bg-brand-blue/50'
                   }
                 `}
                 aria-label={`Go to slide ${index + 1}`}

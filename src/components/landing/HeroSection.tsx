@@ -33,7 +33,7 @@ export const HeroSection = () => {
         className="
           text-4xl md:text-5xl lg:text-6xl
           font-bold
-          bg-gradient-to-r from-brand-purple to-brand-purpleLight
+          bg-gradient-to-r from-brand-blue to-brand-blueLight
           bg-clip-text text-transparent
           mb-6
           tracking-tight
@@ -45,20 +45,20 @@ export const HeroSection = () => {
       </h1>
 
       {/* Element 2: Subtitle */}
-      <p className="text-lg md:text-xl text-neutral-warmGray max-w-3xl mx-auto leading-relaxed">
+      <p className="text-lg md:text-xl text-neutral-slate max-w-3xl mx-auto leading-relaxed">
         Discover, evaluate, and select the perfect vendors in minutes, not weeks.
         Let AI guide you through intelligent vendor discovery with transparent, data-driven recommendations.
       </p>
 
       {/* Value proposition badges */}
       <div className="flex flex-wrap justify-center gap-3 mt-8">
-        <span className="px-4 py-2 bg-white rounded-full text-sm font-medium text-neutral-warmBlack shadow-soft border border-gray-100">
+        <span className="px-4 py-2 bg-white rounded-full text-sm font-medium text-neutral-navy shadow-soft border border-gray-100">
           ⚡ 90% of routine work automated
         </span>
-        <span className="px-4 py-2 bg-white rounded-full text-sm font-medium text-neutral-warmBlack shadow-soft border border-gray-100">
+        <span className="px-4 py-2 bg-white rounded-full text-sm font-medium text-neutral-navy shadow-soft border border-gray-100">
           ✓ No doubts in decisions
         </span>
-        <span className="px-4 py-2 bg-white rounded-full text-sm font-medium text-neutral-warmBlack shadow-soft border border-gray-100">
+        <span className="px-4 py-2 bg-white rounded-full text-sm font-medium text-neutral-navy shadow-soft border border-gray-100">
           🚀 &lt;24 hours from start to selection
         </span>
       </div>

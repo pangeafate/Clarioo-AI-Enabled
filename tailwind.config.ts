@@ -71,31 +71,36 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// SP_007: Clearbit-inspired brand colors
+				// Clearbit-inspired brand colors
 				brand: {
-					purple: '#6366F1',
-					purpleLight: '#8B5CF6',
+					blue: '#0066FF',      // Primary Clearbit blue
+					blueLight: '#3399FF', // Lighter blue for gradients
+					blueDark: '#0052CC',  // Darker blue for hover states
 				},
 				neutral: {
-					warmBlack: '#1A1A1A',
-					warmGray: '#4B5563',
+					navy: '#172B4D',      // Dark navy for text
+					slate: '#42526E',     // Medium gray for secondary text
+					silver: '#6B778C',    // Light gray for muted text
+					ash: '#DFE1E6',       // Very light gray for borders
+					cloud: '#F4F5F7',     // Light background
+					snow: '#FAFBFC',      // Lightest background
 				}
 			},
 			backgroundImage: {
 				'gradient-primary': 'var(--gradient-primary)',
 				'gradient-secondary': 'var(--gradient-secondary)',
 				'gradient-hero': 'var(--gradient-hero)',
-				// SP_007: Clearbit-inspired gradients
-				'gradient-button': 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
-				'gradient-hero-bg': 'linear-gradient(135deg, #FFE5DD 0%, #FFF5F2 100%)',
+				// Clearbit-inspired gradients - Subtle blues
+				'gradient-button': 'linear-gradient(135deg, #0066FF 0%, #3399FF 100%)',
+				'gradient-hero-bg': 'linear-gradient(135deg, #FAFBFC 0%, #F4F5F7 100%)',
 			},
 			boxShadow: {
 				'soft': 'var(--shadow-soft)',
 				'medium': 'var(--shadow-medium)',
 				'large': 'var(--shadow-large)',
-				// SP_007: Multi-layer shadows for elevated components
-				'elevated-combined': '0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04)',
-				'button-glow': '0 4px 14px rgba(99, 102, 241, 0.4)',
+				// Clearbit-inspired shadows - Very subtle
+				'elevated-combined': '0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03)',
+				'button-glow': '0 2px 8px rgba(0, 102, 255, 0.25)',
 			},
 			transitionTimingFunction: {
 				'smooth': 'var(--transition-smooth)',
@@ -105,8 +110,8 @@ export default {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)',
-				// SP_007: Generous border radius for modern look
-				xl: '20px',
+				// Clearbit-inspired border radius - Clean and modern
+				xl: '12px',
 			},
 			keyframes: {
 				'accordion-down': {
@@ -125,13 +130,13 @@ export default {
 						height: '0'
 					}
 				},
-				// SP_007: Hypnotic input animations
+				// Clearbit-inspired subtle animations
 				'pulse-glow': {
 					'0%, 100%': {
-						boxShadow: '0 0 20px rgba(99, 102, 241, 0.4)'
+						boxShadow: '0 0 12px rgba(0, 102, 255, 0.2)'
 					},
 					'50%': {
-						boxShadow: '0 0 40px rgba(99, 102, 241, 0.8)'
+						boxShadow: '0 0 24px rgba(0, 102, 255, 0.4)'
 					}
 				},
 				'float': {
@@ -154,10 +159,13 @@ export default {
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				// SP_007: Hypnotic input animations
+				// Clearbit-inspired subtle animations
 				'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
 				'float': 'float 3s ease-in-out infinite',
 				'shimmer': 'shimmer 4s ease-in-out infinite',
+			},
+			fontFamily: {
+				sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
 			}
 		}
 	},

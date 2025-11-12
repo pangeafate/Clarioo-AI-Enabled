@@ -19,7 +19,7 @@ Clarioo is built on a foundation of exceptional user experience, distinguishing 
 - **Progressive Enhancement**: Full functionality on desktop builds upon mobile foundation
 
 ### Minimalist Simplicity
-- **Lovable-Inspired**: Clean, accessible design avoiding information overload
+- Clean, accessible design avoiding information overload
 - **Shopify-Style Messaging**: Clear, direct value propositions
 - **Progressive Disclosure**: Complex features revealed only when needed
 - **Visual Hierarchy**: Strategic use of color, size, and position to guide attention

@@ -641,7 +641,7 @@ projects (
 
 **Design Principles (Source: VISION MODIFIED.md):**
 - **Mobile First:** 80-90% mobile traffic expected
-- **Lovable-inspired Simplicity:** Minimal text, clean accessible design, avoid information overload
+- **Simplicity:** Minimal text, clean accessible design, avoid information overload
 - **Shopify-style Messaging:** Clear, direct value propositions, no enterprise jargon
 - **Process Transparency:** Show users exactly what happens at each step, visible artifacts
 - **Progressive Disclosure:** Complex features revealed only when needed
