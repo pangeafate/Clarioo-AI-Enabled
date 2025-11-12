@@ -154,9 +154,8 @@ export const useVendorDiscovery = (): UseVendorDiscoveryReturn => {
       }
 
       // Call AI service to discover vendors
-      const { data: discoveredVendors, error } = await aiService.discoverVendors(
+      const { data: discoveredVendors, error } = await aiService.selectVendors(
         techRequest.category,
-        requirements,
         mappedCriteria,
         maxVendors
       );
