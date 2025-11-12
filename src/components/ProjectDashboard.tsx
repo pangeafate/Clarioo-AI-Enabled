@@ -21,9 +21,13 @@ interface Project {
 }
 interface ProjectDashboardProps {
   onSelectProject: (project: Project) => void;
+  selectedProjectId?: string;
+  onProjectsLoaded?: (projects: Project[]) => void;
 }
 const ProjectDashboard = ({
-  onSelectProject
+  onSelectProject,
+  selectedProjectId,
+  onProjectsLoaded
 }: ProjectDashboardProps) => {
   const {
     user,
@@ -71,6 +75,9 @@ const ProjectDashboard = ({
       );
 
       setProjects(mappedProjects);
+
+      // Notify parent about loaded projects for auto-selection
+      onProjectsLoaded?.(mappedProjects);
     } catch (error) {
       toast({
         title: "Error fetching projects",
@@ -189,7 +196,7 @@ const ProjectDashboard = ({
         </div>
       </div>;
   }
-  return <div className="min-h-screen bg-gradient-secondary">
+  return <div className="bg-gradient-secondary">
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-start mb-8">
           <div className="text-center flex-1">
@@ -309,7 +316,13 @@ const ProjectDashboard = ({
               </Button>
             </CardContent>
           </Card> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map(project => <Card key={project.id} className="cursor-pointer transition-all hover:shadow-medium group" onClick={() => onSelectProject(project)}>
+            {projects.map(project => <Card
+              key={project.id}
+              className={`cursor-pointer transition-all hover:shadow-medium group ${
+                selectedProjectId === project.id ? 'ring-2 ring-primary shadow-large' : ''
+              }`}
+              onClick={() => onSelectProject(project)}
+            >
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div className="flex-1">

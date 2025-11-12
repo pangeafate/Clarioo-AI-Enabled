@@ -5,7 +5,7 @@
   },
   "demo_request": {
     "subject": "Demo Request: {{vendor_name}} for {{company_name}}",
-    "body": "Hello {{vendor_name}} Sales Team,\n\nI'm reaching out from {{company_name}} to request a product demonstration of {{vendor_name}}.\n\nOur team is evaluating {{category}} solutions and we're particularly interested in:\n{{top_criteria}}\n\nCould we schedule a 30-45 minute demo at your earliest convenience? We have {{team_size}} team members who would benefit from your solution.\n\nOur timeline: {{timeline}}\nOur budget range: {{budget}}\n\nPlease let me know your availability.\n\nThank you,\n{{user_name}}\n{{user_email}}\n{{company_name}}"
+    "body": "Hello {{vendor_name}} Sales Team,\n\nI'm reaching out from {{company_name}} to request a product demonstration of {{vendor_name}}.\n\nOur team is evaluating {{category}} solutions and we're particularly interested in:\n{{top_criteria}}\n\nCould we schedule a 30-45 minute demo at your earliest convenience? We have {{team_size}} team members who would benefit from your solution.\n\nOur timeline: {{timeline}}\n\nPlease let me know your availability.\n\nThank you,\n{{user_name}}\n{{user_email}}\n{{company_name}}"
   },
   "pricing_inquiry": {
     "subject": "Pricing Inquiry: {{vendor_name}} for {{team_size}} Users",

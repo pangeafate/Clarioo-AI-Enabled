@@ -63,8 +63,6 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 **Acceptance Criteria:**
 - Project name and description fields
 - Category selection
-- Budget range setting
-- Timeline/urgency specification
 - Auto-save as draft
 
 **Implementation:** `src/components/ProjectDashboard.tsx`, `src/components/NewProjectDialog.tsx`
@@ -108,8 +106,6 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 **Acceptance Criteria:**
 - Category selection dropdown
 - Detailed description text area
-- Budget range selector
-- Urgency/timeline picker
 - Company size indicator
 - Special requirements field
 
@@ -398,6 +394,26 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 
 **Status:** 🔵 Future
 
+## Epic 11: Landing Page Experience
+
+### US-11.1: View Process Visualization (Pre-Authentication)
+**As** a first-time visitor
+**I want to** see a visualization of the vendor discovery process
+**So that** I understand how the platform works before signing up
+
+**Acceptance Criteria:**
+- "See Every Step of the Process" section visible on landing page
+- Section displays workflow: "Evaluation Criteria" → "Intelligent Search AI Review" → "Vendor Matches"
+- Section includes title "See Every Step of the Process"
+- Section includes subtitle "Complete transparency from input to output. Watch how AI transforms your requirements into actionable insights."
+- Visual flow diagram shows the transformation process
+- Section is completely hidden after user authentication
+- Smooth transition when authentication state changes
+- Tagline "Find vendors that perfectly match your requirements" displayed
+
+**Implementation:** `src/components/ArtifactVisualization.tsx`, `src/pages/LandingPage.tsx`
+**Status:** 🔄 Planned
+
 ## Story Mapping to Features
 
 | Feature | Related User Stories | Priority | Status |
@@ -414,6 +430,7 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 | Analytics | US-9.1, US-9.2 | P2 | 🔄 Planned |
 | Vendor Portal | US-8.1, US-8.2 | P3 | 🔵 Future |
 | Integrations | US-10.1, US-10.2 | P3 | 🔵 Future |
+| Landing Page UX | US-11.1 | P0 | 🔄 Planned |
 
 ## Legend
 
@@ -427,7 +444,7 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 
 ---
 
-*Version: 1.0*
-*Last Updated: October 2024*
-*Total User Stories: 32*
-*Implemented: 12 | Planned: 10 | Future: 10*
+*Version: 1.1*
+*Last Updated: November 2024*
+*Total User Stories: 33*
+*Implemented: 12 | Planned: 11 | Future: 10*

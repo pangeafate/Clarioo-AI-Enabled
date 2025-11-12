@@ -42,19 +42,48 @@
  */
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { HeroSection } from './HeroSection';
 import { RegistrationToggle } from './RegistrationToggle';
 import { AnimatedInputs } from './AnimatedInputs';
 import { ArtifactVisualization } from './ArtifactVisualization';
 import { CardCarousel } from './CardCarousel';
+import ProjectDashboard from '../ProjectDashboard';
+import VendorDiscovery, { Project } from '../VendorDiscovery';
 
 export const LandingPage = () => {
   const { user } = useAuth();
   const [isSignUp, setIsSignUp] = useState(true); // Default to Sign Up mode
   const [companyInput, setCompanyInput] = useState('');
   const [solutionInput, setSolutionInput] = useState('');
+
+  // SP_010: Project workflow state management (pattern from Index.tsx)
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [projectsLoaded, setProjectsLoaded] = useState(false);
+
+  // SP_010: Project selection handlers
+  const handleSelectProject = (project: Project) => {
+    setSelectedProject(project);
+    // Smooth scroll to workflow section
+    setTimeout(() => {
+      const workflowElement = document.getElementById('workflow-section');
+      if (workflowElement) {
+        workflowElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
+  // Auto-select first project when projects are loaded
+  const handleProjectsLoaded = (projects: Project[]) => {
+    if (projects.length > 0 && !projectsLoaded) {
+      // Auto-select first in-progress project, or first project if none are in-progress
+      const inProgressProject = projects.find(p => p.status === 'in-progress');
+      const projectToSelect = inProgressProject || projects[0];
+      setSelectedProject(projectToSelect);
+      setProjectsLoaded(true);
+    }
+  };
 
   /**
    * FUTURE INTEGRATION: Connect to Auth modal
@@ -100,8 +129,51 @@ export const LandingPage = () => {
         onSolutionChange={setSolutionInput}
       />
 
-      {/* Artifact Visualization - Element 6 */}
-      <ArtifactVisualization />
+      {/* SP_010: PRE-AUTH ONLY - Marketing Content */}
+      <AnimatePresence>
+        {!user && (
+          <motion.div
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.4 }}
+          >
+            {/* Artifact Visualization - Element 6 (Pre-Auth Only - US-11.1) */}
+            <ArtifactVisualization />
+
+            {/* Card Carousel - Element 8 */}
+            <CardCarousel />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* SP_010: POST-AUTH ONLY - Scrollable Canvas Workflow */}
+      <AnimatePresence>
+        {user && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            {/* Always show ProjectDashboard at the top */}
+            <ProjectDashboard
+              onSelectProject={handleSelectProject}
+              selectedProjectId={selectedProject?.id}
+              onProjectsLoaded={handleProjectsLoaded}
+            />
+
+            {/* Show workflow below when project is selected */}
+            {selectedProject && (
+              <div id="workflow-section" className="scroll-mt-4">
+                <VendorDiscovery
+                  project={selectedProject}
+                  isEmbedded={true}
+                />
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Element 7 - Visual Step Indicator: Placeholder for future implementation */}
       {/* TODO: Add VisualStepIndicator component when ready
@@ -111,9 +183,6 @@ export const LandingPage = () => {
         </section>
       )}
       */}
-
-      {/* Card Carousel - Element 8 */}
-      <CardCarousel />
 
       {/* Footer Spacer */}
       <div className="h-16" />

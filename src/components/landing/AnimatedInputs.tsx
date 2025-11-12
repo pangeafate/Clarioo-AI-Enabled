@@ -11,6 +11,11 @@
  * - Post-registration: smooth unlock animation, auto-focus
  * - Visual cue: "Register to unlock" with lock icon
  *
+ * FIXED (GAP-4): Landing input persistence
+ * - Saves input to localStorage on every change
+ * - Data flows: Landing → localStorage → Step 1 (TechInput)
+ * - Enables seamless user journey from landing to workflow
+ *
  * DESIGN SPECS:
  * - Border radius: rounded-xl (20px)
  * - Shadow: elevated-combined when inactive
@@ -21,8 +26,10 @@
  * - Inactive: Shows placeholder examples, disabled, animated
  * - Active: After registration, input fields unlock with smooth transition
  * - Auto-focus: First input field gets focus post-registration
+ * - Auto-save: Saves to localStorage on every keystroke
  *
  * @see SP_007 Sprint Plan - Phase 3, Task 3.2 (Hypnotic Input Animations)
+ * @see SP_009 Sprint Plan - Phase 2 (GAP-4: Landing Input Connection)
  */
 
 import { motion } from 'framer-motion';
@@ -44,6 +51,22 @@ export const AnimatedInputs = ({
   onCompanyChange,
   onSolutionChange
 }: AnimatedInputsProps) => {
+  /**
+   * GAP-4 FIX: Save to localStorage on input change
+   * Data will be loaded in TechInput.tsx when user starts workflow
+   */
+  const handleCompanyChange = (value: string) => {
+    onCompanyChange(value);
+    // Save to localStorage for later retrieval in Step 1
+    localStorage.setItem('landing_company_info', value);
+  };
+
+  const handleSolutionChange = (value: string) => {
+    onSolutionChange(value);
+    // Save to localStorage for later retrieval in Step 1
+    localStorage.setItem('landing_tech_needs', value);
+  };
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 20 }}
@@ -64,7 +87,7 @@ export const AnimatedInputs = ({
               placeholder={isAuthenticated ? "e.g., We are a SaaS company with 50 employees looking to streamline our operations" : "I work at Zapier in HR function"}
               disabled={!isAuthenticated}
               value={companyInput}
-              onChange={(e) => onCompanyChange(e.target.value)}
+              onChange={(e) => handleCompanyChange(e.target.value)}
               autoFocus={isAuthenticated}
               className={`
                 relative rounded-xl h-24 px-4 text-base resize-none
@@ -92,7 +115,7 @@ export const AnimatedInputs = ({
               placeholder={isAuthenticated ? "e.g., CRM system with email integration and mobile app support" : "Looking for HR management software"}
               disabled={!isAuthenticated}
               value={solutionInput}
-              onChange={(e) => onSolutionChange(e.target.value)}
+              onChange={(e) => handleSolutionChange(e.target.value)}
               className={`
                 relative rounded-xl h-24 px-4 text-base resize-none
                 ${!isAuthenticated

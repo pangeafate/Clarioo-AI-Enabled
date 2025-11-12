@@ -33,12 +33,12 @@ export const HeroSection = () => {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="flex justify-center mb-2"
+        className="flex justify-center mb-4"
       >
         <img
-          src={`${import.meta.env.BASE_URL}clarioo-logo.png`}
+          src={`${import.meta.env.BASE_URL}logo.png`}
           alt="Clarioo Logo"
-          className="h-64 md:h-80 lg:h-96 w-auto"
+          className="h-16 md:h-20 lg:h-24 w-auto"
         />
       </motion.div>
 

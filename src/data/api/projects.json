@@ -12,7 +12,6 @@
       "step_1_data": {
         "description": "CRM for sales team management and customer tracking",
         "team_size": "50",
-        "budget": "$500/month",
         "requirements": ["Contact management", "Pipeline tracking", "Email integration"]
       },
       "step_2_data": {
@@ -50,7 +49,6 @@
       "step_1_data": {
         "description": "Cloud hosting for web applications",
         "team_size": "10",
-        "budget": "$2000/month",
         "requirements": ["Auto-scaling", "Load balancing", "Global CDN"]
       },
       "step_2_data": {

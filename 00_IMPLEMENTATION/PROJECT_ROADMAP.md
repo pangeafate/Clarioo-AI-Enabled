@@ -29,6 +29,8 @@ Vendora AI is now a **visual prototype** designed for team alignment and demonst
 - **Backend Handoff Ready**: Clean separation for easy integration
 - **Code Quality**: Improved architecture for maintainability and testing
 
+**📊 Gap Analysis**: See [GAP_ANALYSIS.md](./GAP_ANALYSIS.md) for comprehensive mapping of user stories to implementation, identifying 8 gaps across 3 priority levels (4 high, 4 medium, 3 low).
+
 #### Completed Prototype Features (21 Total)
 - **Core Platform (Visual Demo)**
   - Mock authentication (login always succeeds)
@@ -113,6 +115,78 @@ Vendora AI is now a **visual prototype** designed for team alignment and demonst
 - ✅ Test coverage thresholds met (80% lines, 75% branches)
 - ✅ Build successful with 0 errors
 - ✅ Documentation updated
+
+#### Completed Sprint: SP_009 ✅
+**Sprint Name**: Critical UX Gaps & Foundation Fixes
+**Duration**: 14 hours / 1-2 days (November 12, 2024)
+**Status**: ✅ Complete
+**Type**: Critical UX Improvements & Foundation Fixes
+
+**Sprint Objectives**:
+1. Fix authentication navigation breaking SPA experience (GAP-2)
+2. Connect landing page inputs to workflow Step 1 (GAP-4)
+3. Add workflow state persistence with localStorage (GAP-1)
+4. Remove budget/timeline fields from scope (GAP-3 out-of-scope)
+5. Remove budget and urgency fields from TechInput workflow step
+
+**Key Deliverables**:
+- **GAP_ANALYSIS.md**: Updated with GAP-3 out-of-scope status
+- **SP_009 Sprint Plan**: Comprehensive 950+ line implementation plan
+- **AuthModal.tsx** (GAP-2): Fixed navigation with React Router
+- **AnimatedInputs.tsx** (GAP-4): Added localStorage save on input change
+- **TechInput.tsx** (GAP-4): Added localStorage load on mount with pre-fill; removed budget and urgency fields
+- **VendorDiscovery.tsx** (GAP-1): Complete workflow persistence system
+
+**Exit Criteria**:
+- ✅ All 3 high-priority UX gaps implemented and tested
+- ✅ Authentication navigation maintains SPA experience
+- ✅ Landing page inputs seamlessly flow to workflow Step 1
+- ✅ Workflow state persists across sessions with auto-save
+- ✅ "Last saved" timestamp displayed in UI
+- ✅ Toast notifications for state restoration and pre-fill
+- ✅ Documentation updated (PROGRESS.md, PROJECT_ROADMAP.md)
+
+**Sprint Plan**: [SP_009_Critical_UX_Gaps_Foundation_Fixes.md](./SPRINTS/SP_009_Critical_UX_Gaps_Foundation_Fixes.md)
+
+---
+
+#### Completed Sprint: SP_010 ✅
+**Sprint Name**: Unified Landing & Workflow Integration
+**Duration**: 6-8 hours / 1 day (November 12, 2024)
+**Status**: ✅ Complete
+**Type**: Critical UX Enhancement - Single-Page Experience
+
+**Sprint Objectives**:
+1. Transform landing page from pure marketing to unified single-page experience
+2. Eliminate navigation breaks between marketing content and workflow
+3. Implement conditional rendering based on authentication state
+4. Preserve user context and input values throughout workflow
+5. Create seamless transition from pre-auth (marketing) to post-auth (workflow)
+
+**Key Deliverables**:
+- **SP_010 Sprint Plan**: Comprehensive 950+ line implementation plan with problem analysis, solution design, test cases
+- **LandingPage.tsx** (SP_010): Integrated ProjectDashboard and VendorDiscovery with conditional rendering
+  - Added selectedProject state management (pattern from Index.tsx)
+  - Wrapped marketing content in `{!user &&` condition with AnimatePresence
+  - Added workflow content in `{user &&` condition with AnimatePresence
+  - Implemented smooth fade-in/fade-out transitions (400ms/500ms)
+- **AuthModal.tsx** (SP_010): Removed navigation logic, simplified to close modal
+  - Changed from `navigate('/dashboard')` to `onClose()`
+  - Updated success message to "Loading your projects..."
+  - LandingPage detects auth state change via useAuth hook
+
+**Exit Criteria**:
+- ✅ LandingPage integrates ProjectDashboard and VendorDiscovery
+- ✅ Marketing content conditionally rendered (pre-auth only)
+- ✅ Workflow content conditionally rendered (post-auth only)
+- ✅ Smooth transitions with framer-motion
+- ✅ AuthModal simplified (navigation removed)
+- ✅ Build successful with no errors
+- ✅ Documentation updated (PROGRESS.md, PROJECT_ROADMAP.md)
+
+**Sprint Plan**: [SP_010_Unified_Landing_Workflow_Integration.md](./SPRINTS/SP_010_Unified_Landing_Workflow_Integration.md)
+
+---
 
 #### Current Sprint: SP_007 🚀
 **Sprint Name**: Visual Design Enhancement & Mobile-First UI/UX
@@ -749,6 +823,9 @@ Once prototype is validated, begin backend implementation:
 | 2.1.0 | 2024-11-12 | System | Added SP_007 planning (component refactoring) |
 | 3.0.0 | 2024-11-12 | System | Updated SP_007 to visual design enhancement focus |
 | 3.1.0 | 2024-11-12 | System | Added SP_008 completion (Service Layer & Testing) |
+| 3.2.0 | 2024-11-12 | System | Added SP_009 completion (Critical UX Gaps & Foundation Fixes) |
+| 3.3.0 | 2024-11-12 | System | Added SP_010 completion (Unified Landing & Workflow Integration) |
+| 3.3.1 | 2024-11-12 | System | Documented removal of budget and urgency fields from TechInput |
 
 ---
 
@@ -827,11 +904,72 @@ Once prototype is validated, begin backend implementation:
 
 **Next Review**: Ongoing - maintain test coverage and code quality standards
 
+### November 12, 2024 - Sprint 10 Unified Landing & Workflow Integration (SP_010)
+**Decision**: Create unified single-page experience eliminating navigation between marketing and workflow
+**Rationale**:
+- Identified disjointed user experience with separate landing page and dashboard
+- Navigation to `/dashboard` broke user context and interrupted flow
+- Marketing content remained visible even after authentication (poor UX)
+- Multi-page architecture created cognitive load and context switching
+- Sprint SP_009 provided foundation (workflow persistence, input connection) enabling unified approach
+
+**Implementation Approach**:
+- Replicated proven pattern from Index.tsx (selectedProject state management)
+- Conditional rendering based on authentication state (pre-auth vs. post-auth)
+- Framer Motion AnimatePresence for smooth transitions (400ms fade-out, 500ms fade-in)
+- AuthModal simplified to close on success - LandingPage detects auth state via useAuth
+- No routing changes - everything happens on single landing page
+- Component reuse - ProjectDashboard and VendorDiscovery unchanged
+
+**Impact**:
+- Seamless single-page experience from marketing → authentication → workflow
+- Context preservation - AnimatedInputs remain visible throughout
+- No navigation breaks - smooth transition between states
+- Better mobile experience - no page reloads or URL changes
+- Scalable architecture - easy to add more workflow steps
+- Maintained backward compatibility - `/dashboard` route still works as fallback
+
+**Technical Benefits**:
+- Clean state management with clear separation of concerns
+- Type-safe implementation with TypeScript
+- Easy to test - clear pre-auth and post-auth states
+- Maintainable - clear separation between marketing and workflow
+- Performance - no page reloads, instant transitions
+
+**Next Review**: After manual testing and stakeholder feedback
+
+### November 12, 2024 - Budget and Urgency Fields Removed from TechInput
+**Decision**: Remove budget and urgency fields from Step 1 (TechInput) of the vendor discovery workflow
+**Rationale**:
+- Budget and urgency fields identified as premature in the discovery phase
+- Users typically don't have concrete budget information at technology exploration stage
+- Urgency can create artificial pressure and reduce thoughtful vendor evaluation
+- Fields added unnecessary complexity to Step 1 workflow
+- Removal streamlines initial user input and reduces friction
+- Budget/timeline considerations can be addressed later in vendor negotiation phase
+
+**Impact**:
+- TechInput form simplified to focus on core inputs: technology description and company context
+- Cleaner, more focused Step 1 experience with less cognitive load
+- Improved workflow state management (fewer fields to persist)
+- Better alignment with user journey (exploration → criteria → vendors → comparison → budget/timeline)
+- Form validation simplified
+- localStorage data structure updated to exclude removed fields
+
+**Technical Changes**:
+- Removed budget and urgency field components from TechInput.tsx
+- Updated TechInputFormData type definitions
+- Updated workflow state persistence logic
+- Modified form validation schema
+- Updated tests to reflect new form structure
+
+**Next Review**: After user testing and feedback on simplified Step 1 workflow
+
 ---
 
 *This roadmap is a living document focused on the prototype phase. Future phases will be refined based on prototype feedback and stakeholder input.*
 
-**Current Phase**: 🎨 Visual Prototype - Code Quality & Design Focus (SP_008 Complete)
+**Current Phase**: 🎨 Visual Prototype - Unified Experience Architecture (SP_008, SP_009, SP_010 Complete)
 **Status**: Active Development
-**Next Milestones**: SP_007 (Visual Design Enhancement) → Stakeholder feedback
-**Last Updated**: November 12, 2024 (v3.1.0 - SP_008 Complete)
+**Next Milestones**: Testing & Validation → SP_007 (Visual Design Enhancement) → Stakeholder feedback
+**Last Updated**: November 12, 2024 (v3.3.1 - Budget & Urgency Fields Removed from TechInput)

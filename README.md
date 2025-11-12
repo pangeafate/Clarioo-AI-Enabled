@@ -21,6 +21,17 @@ This is a visual prototype demonstrating the Clarioo landing page experience. It
 - **Interactive Carousel**: 5-step workflow demonstration with auto-rotation
 - **Mobile-First Design**: Fully responsive across desktop, tablet, and mobile
 
+### Documentation
+
+📊 **Gap Analysis**: For detailed mapping of user stories to implementation and identified gaps, see [GAP_ANALYSIS.md](./00_IMPLEMENTATION/GAP_ANALYSIS.md)
+
+📚 **Full Documentation**:
+- [Architecture](./00_PLAN/ARCHITECTURE.md)
+- [Feature List](./00_PLAN/FEATURE_LIST.md)
+- [Project Roadmap](./00_IMPLEMENTATION/PROJECT_ROADMAP.md)
+- [Progress Tracking](./00_IMPLEMENTATION/PROGRESS.md)
+- [User Stories](./00_PLAN/USER_STORIES.md)
+
 ## 🛠️ Technologies
 
 - **React 18.3.1** + **TypeScript 5.5.3**

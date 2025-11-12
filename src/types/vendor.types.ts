@@ -60,7 +60,6 @@ export interface VendorSelectionRequest {
   category: string;
   description: string;
   criteria: string[]; // Array of criterion IDs
-  budget?: string;
   companyInfo?: string;
 }
 

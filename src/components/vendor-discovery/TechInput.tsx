@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,14 +22,46 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
     initialData || {
       category: '',
       description: '',
-      urgency: 'medium',
-      budget: '',
       companyInfo: ''
     }
   );
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  /**
+   * GAP-4 FIX: Load landing page inputs from localStorage on mount
+   * - Reads data saved by AnimatedInputs.tsx
+   * - Pre-fills company info and tech needs
+   * - Clears localStorage after loading (one-time use)
+   * - Shows success toast when pre-filled
+   */
+  useEffect(() => {
+    const landingCompanyInfo = localStorage.getItem('landing_company_info');
+    const landingTechNeeds = localStorage.getItem('landing_tech_needs');
+
+    if (landingCompanyInfo || landingTechNeeds) {
+      // Pre-fill form data from landing page inputs
+      setFormData(prev => ({
+        ...prev,
+        companyInfo: landingCompanyInfo || prev.companyInfo,
+        description: landingTechNeeds || prev.description
+      }));
+
+      // Clear localStorage after loading (one-time use)
+      localStorage.removeItem('landing_company_info');
+      localStorage.removeItem('landing_tech_needs');
+
+      // Show success feedback
+      toast({
+        title: "✨ Pre-filled from landing page",
+        description: "We've loaded your inputs from the landing page to save you time!",
+        duration: 3000,
+      });
+
+      console.log('✅ Pre-filled from landing page inputs (GAP-4)');
+    }
+  }, []); // Run once on mount
 
   const techCategories = [
     'CRM Software',
@@ -46,16 +78,6 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
     'Other'
   ];
 
-  const budgetRanges = [
-    'Under $1,000/month',
-    '$1,000 - $5,000/month',
-    '$5,000 - $15,000/month',
-    '$15,000 - $50,000/month',
-    '$50,000+/month',
-    'One-time purchase',
-    'To be determined'
-  ];
-
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -68,9 +90,6 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
     if (formData.description.trim().length < 20) {
       newErrors.description = 'Please provide more details (at least 20 characters)';
     }
-    if (!formData.budget) {
-      newErrors.budget = 'Please select a budget range';
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -81,9 +100,7 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
     // In production, this would save to database for analytics
     console.log('Tech request saved (prototype mode):', {
       category: requestData.category,
-      description: requestData.description,
-      budget: requestData.budget,
-      urgency: requestData.urgency
+      description: requestData.description
     });
   };
 
@@ -187,49 +204,6 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
                 </CardContent>
               </Card>
             ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Budget Range */}
-          <div className="space-y-2">
-            <Label htmlFor="budget">Budget Range *</Label>
-            <Select 
-              value={formData.budget} 
-              onValueChange={(value) => setFormData({ ...formData, budget: value })}
-            >
-              <SelectTrigger className={errors.budget ? 'border-destructive' : ''}>
-                <SelectValue placeholder="Select budget range" />
-              </SelectTrigger>
-              <SelectContent>
-                {budgetRanges.map((range) => (
-                  <SelectItem key={range} value={range}>
-                    {range}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.budget && (
-              <p className="text-sm text-destructive">{errors.budget}</p>
-            )}
-          </div>
-
-          {/* Urgency */}
-          <div className="space-y-2">
-            <Label htmlFor="urgency">Urgency Level</Label>
-            <Select 
-              value={formData.urgency} 
-              onValueChange={(value: 'low' | 'medium' | 'high') => setFormData({ ...formData, urgency: value })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Low - Nice to have</SelectItem>
-                <SelectItem value="medium">Medium - Important</SelectItem>
-                <SelectItem value="high">High - Urgent need</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
 

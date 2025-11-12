@@ -34,7 +34,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
-import { signIn, signUp } from '@/services/mock/authService';
+import { useAuth } from '@/hooks/useAuth';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -44,6 +44,7 @@ interface AuthModalProps {
 }
 
 export const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
+  const { signIn, signUp } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -57,6 +58,14 @@ export const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProp
   /**
    * PROTOTYPE: Mock authentication handler
    * Always succeeds with valid input format
+   *
+   * FIXED (SP_010): Now closes modal and lets LandingPage handle state change
+   * - No navigation needed - LandingPage detects auth state change via useAuth
+   * - Maintains single-page experience
+   * - Smooth transition from marketing to workflow content
+   *
+   * PREVIOUS (GAP-2): Used to navigate to /dashboard
+   * NEW (SP_010): Just close modal - LandingPage will show ProjectDashboard automatically
    *
    * FUTURE INTEGRATION:
    * Replace with real Supabase auth:
@@ -77,9 +86,9 @@ export const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProp
           setError(response.error.message);
         } else {
           setSuccess(true);
-          // Auto-close after success animation
+          // SP_010: Close modal after success animation - LandingPage will handle UI update
           setTimeout(() => {
-            window.location.reload(); // Simple reload to trigger auth state update
+            onClose();
           }, 1500);
         }
       } else {
@@ -88,9 +97,9 @@ export const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProp
           setError(response.error.message);
         } else {
           setSuccess(true);
-          // Auto-close after success animation
+          // SP_010: Close modal after success animation - LandingPage will handle UI update
           setTimeout(() => {
-            window.location.reload(); // Simple reload to trigger auth state update
+            onClose();
           }, 1500);
         }
       }
@@ -144,7 +153,7 @@ export const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProp
                 {isSignUp ? 'Account created successfully!' : 'Welcome back!'}
               </p>
               <p className="text-sm text-neutral-slate">
-                Redirecting to dashboard...
+                Loading your projects...
               </p>
             </motion.div>
           ) : (
