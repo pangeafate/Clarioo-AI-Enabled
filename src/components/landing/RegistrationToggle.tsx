@@ -98,32 +98,51 @@ export const RegistrationToggle = ({
         </h3>
 
         {/* Simple iOS-Style Toggle Switch */}
-        <button
-          onClick={handleToggleClick}
-          className={`
-            relative w-[70px] h-[36px] rounded-full transition-all duration-300 ease-in-out
-            focus:outline-none focus:ring-4 focus:ring-brand-blue/20
-            cursor-pointer
-            ${isAuthenticated
-              ? 'bg-gradient-to-r from-brand-blue to-brand-blueLight'
-              : 'bg-gray-200'
-            }
-          `}
-          aria-label={isAuthenticated ? 'Click to Sign Out' : 'Click to Sign In or Sign Up'}
-        >
-          {/* Sliding Circle Knob */}
-          <motion.div
-            animate={{
-              x: isAuthenticated ? 38 : 2,
-            }}
-            transition={{
-              type: 'spring',
-              stiffness: 700,
-              damping: 30,
-            }}
-            className="absolute top-[2px] w-[32px] h-[32px] bg-white rounded-full shadow-md"
-          />
-        </button>
+        <div className="relative">
+          {/* Pulsating outline for Off position */}
+          {!isAuthenticated && (
+            <motion.div
+              animate={{
+                scale: [1, 1.15, 1],
+                opacity: [0.5, 0.8, 0.5],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="absolute inset-0 w-[70px] h-[36px] rounded-full border-2 border-brand-blue/60"
+              style={{ left: 0, top: 0 }}
+            />
+          )}
+
+          <button
+            onClick={handleToggleClick}
+            className={`
+              relative w-[70px] h-[36px] rounded-full transition-all duration-300 ease-in-out
+              focus:outline-none focus:ring-4 focus:ring-brand-blue/20
+              cursor-pointer
+              ${isAuthenticated
+                ? 'bg-gradient-to-r from-brand-blue to-brand-blueLight'
+                : 'bg-gray-200'
+              }
+            `}
+            aria-label={isAuthenticated ? 'Click to Sign Out' : 'Click to Sign In or Sign Up'}
+          >
+            {/* Sliding Circle Knob */}
+            <motion.div
+              animate={{
+                x: isAuthenticated ? 38 : 2,
+              }}
+              transition={{
+                type: 'spring',
+                stiffness: 700,
+                damping: 30,
+              }}
+              className="absolute top-[2px] w-[32px] h-[32px] bg-white rounded-full shadow-md"
+            />
+          </button>
+        </div>
 
         {/* Helper Text */}
         <p className="text-sm text-neutral-warmGray text-center max-w-md">

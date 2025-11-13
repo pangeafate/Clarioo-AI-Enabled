@@ -175,16 +175,16 @@ export const LandingPage = () => {
       transition={{ duration: 0.6 }}
       className="min-h-screen bg-gradient-hero-bg"
     >
-      {/* Hero Section - Elements 1 & 2 */}
-      <HeroSection />
-
-      {/* Registration Toggle - Element 3 */}
-      <RegistrationToggle
-        isSignUp={isSignUp}
-        onToggle={setIsSignUp}
-        onOpenAuth={handleOpenAuth}
-        isAuthenticated={!!user}
-      />
+      {/* Hero Section - Elements 1, 2 & 3 (integrated) */}
+      <HeroSection>
+        {/* Registration Toggle - Element 3 (now inside hero) */}
+        <RegistrationToggle
+          isSignUp={isSignUp}
+          onToggle={setIsSignUp}
+          onOpenAuth={handleOpenAuth}
+          isAuthenticated={!!user}
+        />
+      </HeroSection>
 
       {/* Element 4 - iPod Navigation: Placeholder for future implementation */}
       {/* TODO: Add iPodNavigation component when ready

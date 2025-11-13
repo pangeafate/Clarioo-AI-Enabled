@@ -1,80 +1,93 @@
 /**
- * HeroSection Component - Landing Page Elements 1 & 2
+ * HeroSection Component - Landing Page Elements 1 & 2 (Redesigned)
  *
  * @prototype Visual demonstration component
- * @purpose Displays main headline and subtitle for landing page
+ * @purpose Modern centered hero section with gradient background
  *
- * FEATURES (SP_007):
- * - Element 1: Large gradient headline with mobile-first typography
- * - Element 2: Clear value proposition subtitle
- * - Responsive: 56px desktop / 36px mobile headline
- * - Gradient text treatment using brand purple colors
+ * FEATURES:
+ * - Centered layout with large logo/icon
+ * - Clean typography hierarchy: Title → Subtitle → Toggle
+ * - Balanced gradient background (gray-50 to blue-50)
+ * - Value proposition badges
+ * - Integrated authentication toggle
  *
  * DESIGN SPECS:
- * - Typography: -0.02em letter-spacing, warm grays
- * - Gradient: bg-gradient-hero text treatment
- * - Mobile-first responsive breakpoints
+ * - Background: Subtle gradient with overlay
+ * - Typography: Large centered title, descriptive subtitle
+ * - Spacing: Generous vertical rhythm
+ * - Mobile-first responsive
  *
- * @see SP_007 Sprint Plan - Phase 1, Task 1.2
+ * @see Modern SaaS landing page redesign
  */
 
 import { motion } from 'framer-motion';
+import { Sparkles } from 'lucide-react';
 
-export const HeroSection = () => {
+interface HeroSectionProps {
+  children?: React.ReactNode; // For RegistrationToggle
+}
+
+export const HeroSection = ({ children }: HeroSectionProps) => {
   return (
     <motion.section
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      className="text-center px-4 py-12 md:py-16 relative"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+      className="relative min-h-[75vh] flex flex-col items-center justify-center px-4 py-20 md:py-28 bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50"
     >
-      {/* Logo - Upper Left Corner */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="absolute top-4 left-4"
-      >
-        <img
-          src={`${import.meta.env.BASE_URL}logo.png`}
-          alt="Clarioo Logo"
-          className="h-4 md:h-5 lg:h-6 w-auto"
-        />
-      </motion.div>
+      {/* Subtle gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-blue-600/5 pointer-events-none" />
 
-      {/* Element 1: Title */}
-      <h1
-        className="
-          text-4xl md:text-5xl lg:text-6xl
-          font-bold
-          bg-gradient-to-r from-brand-blue to-brand-blueLight
-          bg-clip-text text-transparent
-          mb-6
-          mt-12 md:mt-16 lg:mt-20
-          tracking-tight
-          leading-tight
-        "
-        style={{ letterSpacing: '-0.02em' }}
-      >
-        Supercharge your software vendor's selection with AI assistant
-      </h1>
+      <div className="relative max-w-5xl mx-auto text-center space-y-8">
+        {/* Logo/Icon - Centered */}
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="flex justify-center mb-6"
+        >
+          <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg flex items-center justify-center">
+            <Sparkles className="w-10 h-10 md:w-12 md:h-12 text-white" strokeWidth={2} />
+          </div>
+        </motion.div>
 
-      {/* Element 2: Subtitle */}
-      <p className="text-lg md:text-xl text-neutral-slate max-w-3xl mx-auto leading-relaxed">
-        Discover and evaluate software based on your business needs and company context.
-      </p>
+        {/* Main Title */}
+        <motion.h1
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-gray-900 tracking-tight leading-[1.1]"
+          style={{ letterSpacing: '-0.03em' }}
+        >
+          Software Selection Expert
+        </motion.h1>
 
-      {/* Value proposition badges */}
-      <div className="flex flex-wrap justify-center gap-3 mt-8">
-        <span className="px-6 py-3 bg-brand-blue/10 rounded-full text-sm font-medium text-brand-blue border border-brand-blue/20">
-          90% of routine work automated
-        </span>
-        <span className="px-6 py-3 bg-brand-blue/10 rounded-full text-sm font-medium text-brand-blue border border-brand-blue/20">
-          Clear comparison criteria
-        </span>
-        <span className="px-6 py-3 bg-brand-blue/10 rounded-full text-sm font-medium text-brand-blue border border-brand-blue/20">
-          Follows you business needs
-        </span>
+        {/* Subtitle - Two lines */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="space-y-2"
+        >
+          <p className="text-xl md:text-2xl text-gray-700 font-medium max-w-3xl mx-auto leading-relaxed">
+            Supercharge your software vendor's selection with AI assistant
+          </p>
+          <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            Discover and evaluate software based on your business needs and company context.
+          </p>
+        </motion.div>
+
+        {/* Authentication Toggle (passed as children) */}
+        {children && (
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="pt-4"
+          >
+            {children}
+          </motion.div>
+        )}
       </div>
     </motion.section>
   );
