@@ -21,7 +21,6 @@
  */
 
 import { motion } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
 
 interface HeroSectionProps {
   children?: React.ReactNode; // For RegistrationToggle
@@ -39,15 +38,15 @@ export const HeroSection = ({ children }: HeroSectionProps) => {
       <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-blue-600/5 pointer-events-none" />
 
       <div className="relative max-w-5xl mx-auto text-center space-y-8">
-        {/* Logo/Icon - Centered */}
+        {/* Clarioo Brand Badge - Centered */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.1 }}
           className="flex justify-center mb-6"
         >
-          <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg flex items-center justify-center">
-            <Sparkles className="w-10 h-10 md:w-12 md:h-12 text-white" strokeWidth={2} />
+          <div className="px-8 py-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg">
+            <span className="text-2xl md:text-3xl font-bold text-white">Clarioo</span>
           </div>
         </motion.div>
 
