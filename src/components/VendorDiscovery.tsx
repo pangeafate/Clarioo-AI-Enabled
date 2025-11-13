@@ -289,47 +289,83 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
           <Progress value={progress} className="h-2" />
         </div>
 
-        {/* Step Navigation */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {/* Vertical Step Timeline */}
+        <div className="relative max-w-3xl mx-auto mb-8">
           {steps.map((step, index) => {
             const StepIcon = step.icon;
             const isActive = step.id === currentStep;
             const isCompleted = index < currentStepIndex;
             const isAccessible = index <= currentStepIndex;
+            const isLast = index === steps.length - 1;
 
             return (
-              <Card 
-                key={step.id}
-                className={`cursor-pointer transition-all hover:shadow-medium ${
-                  isActive ? 'ring-2 ring-primary shadow-medium' : ''
-                } ${!isAccessible ? 'opacity-50 cursor-not-allowed' : ''}`}
-                onClick={() => isAccessible && handleStepClick(step.id as Step)}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className={`p-2 rounded-lg ${
-                      isActive ? 'bg-primary text-primary-foreground' : 
-                      isCompleted ? 'bg-success text-success-foreground' : 'bg-muted'
-                    }`}>
-                      {isCompleted ? <CheckCircle className="h-5 w-5" /> : <StepIcon className="h-5 w-5" />}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">{step.title}</h3>
-                      <p className="text-sm text-muted-foreground">{step.description}</p>
-                    </div>
-                  </div>
-                  {isActive && (
-                    <Badge variant="secondary" className="mt-2">
-                      Current Step
-                    </Badge>
+              <div key={step.id} className="relative flex gap-6">
+                {/* Timeline Column */}
+                <div className="flex flex-col items-center">
+                  {/* Circle */}
+                  <button
+                    onClick={() => isAccessible && handleStepClick(step.id as Step)}
+                    disabled={!isAccessible}
+                    className={`
+                      relative flex items-center justify-center
+                      w-12 h-12 md:w-14 md:h-14
+                      rounded-full border-2 transition-all duration-300
+                      ${isCompleted ? 'bg-green-500 border-green-500 text-white' : ''}
+                      ${isActive ? 'bg-primary border-primary text-primary-foreground shadow-lg animate-pulse' : ''}
+                      ${!isActive && !isCompleted ? 'bg-white border-gray-300 text-gray-400' : ''}
+                      ${isAccessible ? 'cursor-pointer hover:scale-110' : 'cursor-not-allowed opacity-50'}
+                      z-10
+                    `}
+                  >
+                    {isCompleted ? (
+                      <CheckCircle className="w-6 h-6 md:w-7 md:h-7" />
+                    ) : (
+                      <StepIcon className="w-5 h-5 md:w-6 md:h-6" />
+                    )}
+                  </button>
+
+                  {/* Connecting Line */}
+                  {!isLast && (
+                    <div className={`
+                      w-0.5 flex-1 min-h-[100px]
+                      ${isCompleted ? 'bg-green-500' : 'bg-gray-200 border-l-2 border-dashed border-gray-300'}
+                    `} />
                   )}
-                  {isCompleted && (
-                    <Badge className="mt-2 bg-success">
-                      Completed
-                    </Badge>
-                  )}
-                </CardContent>
-              </Card>
+                </div>
+
+                {/* Content Column */}
+                <div className="flex-1 pb-8">
+                  <Card
+                    className={`
+                      cursor-pointer transition-all hover:shadow-medium
+                      ${isActive ? 'ring-2 ring-primary shadow-medium' : ''}
+                      ${!isAccessible ? 'opacity-50' : ''}
+                    `}
+                    onClick={() => isAccessible && handleStepClick(step.id as Step)}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold text-lg">{step.title}</h3>
+                            {isActive && (
+                              <Badge variant="secondary">
+                                Current Step
+                              </Badge>
+                            )}
+                            {isCompleted && (
+                              <Badge className="bg-green-500">
+                                Completed
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">{step.description}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
             );
           })}
         </div>

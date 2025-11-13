@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Lightbulb } from "lucide-react";
+import { ArrowRight, Lightbulb, Sparkles } from "lucide-react";
 import type { TechRequest } from "../VendorDiscovery";
 import { useToast } from "@/hooks/use-toast";
 
@@ -28,24 +28,34 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [aiSummary, setAiSummary] = useState<string>('');
+  const [additionalNotes, setAdditionalNotes] = useState<string>('');
 
   /**
-   * GAP-4 FIX: Load landing page inputs from localStorage on mount
+   * Load landing page inputs and create AI summary
    * - Reads data saved by AnimatedInputs.tsx
-   * - Pre-fills company info and tech needs
+   * - Generates AI summary from inputs
+   * - Auto-detects technology category
    * - Clears localStorage after loading (one-time use)
-   * - Shows success toast when pre-filled
    */
   useEffect(() => {
     const landingCompanyInfo = localStorage.getItem('landing_company_info');
     const landingTechNeeds = localStorage.getItem('landing_tech_needs');
 
     if (landingCompanyInfo || landingTechNeeds) {
-      // Pre-fill form data from landing page inputs
+      // Generate AI summary
+      const summary = `Based on your inputs, you're looking for: ${landingTechNeeds || 'technology solutions'}${landingCompanyInfo ? ` for ${landingCompanyInfo}` : ''}`;
+      setAiSummary(summary);
+
+      // Auto-detect category from tech needs
+      const detectedCategory = landingTechNeeds ? detectCategory(landingTechNeeds) : '';
+
+      // Pre-fill form data
       setFormData(prev => ({
         ...prev,
         companyInfo: landingCompanyInfo || prev.companyInfo,
-        description: landingTechNeeds || prev.description
+        description: landingTechNeeds || prev.description,
+        category: detectedCategory || prev.category
       }));
 
       // Clear localStorage after loading (one-time use)
@@ -54,12 +64,12 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
 
       // Show success feedback
       toast({
-        title: "✨ Pre-filled from landing page",
-        description: "We've loaded your inputs from the landing page to save you time!",
+        title: "✨ AI Summary Generated",
+        description: "We've analyzed your inputs and pre-selected the category!",
         duration: 3000,
       });
 
-      console.log('✅ Pre-filled from landing page inputs (GAP-4)');
+      console.log('✅ AI summary created and category auto-detected');
     }
   }, []); // Run once on mount
 
@@ -77,6 +87,49 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
     'AI & Machine Learning',
     'Other'
   ];
+
+  /**
+   * Auto-detect technology category based on description keywords
+   */
+  const detectCategory = (description: string): string => {
+    const lowerDesc = description.toLowerCase();
+
+    if (lowerDesc.includes('crm') || lowerDesc.includes('customer relationship') || lowerDesc.includes('sales')) {
+      return 'CRM Software';
+    }
+    if (lowerDesc.includes('project') || lowerDesc.includes('task') || lowerDesc.includes('workflow')) {
+      return 'Project Management';
+    }
+    if (lowerDesc.includes('analytics') || lowerDesc.includes('bi') || lowerDesc.includes('data visualization')) {
+      return 'Analytics & BI';
+    }
+    if (lowerDesc.includes('communication') || lowerDesc.includes('messaging') || lowerDesc.includes('chat')) {
+      return 'Communication Tools';
+    }
+    if (lowerDesc.includes('security') || lowerDesc.includes('firewall') || lowerDesc.includes('monitoring')) {
+      return 'Security Solutions';
+    }
+    if (lowerDesc.includes('devops') || lowerDesc.includes('infrastructure') || lowerDesc.includes('deployment')) {
+      return 'DevOps & Infrastructure';
+    }
+    if (lowerDesc.includes('hr') || lowerDesc.includes('human resources') || lowerDesc.includes('talent') || lowerDesc.includes('recruitment')) {
+      return 'HR & Talent Management';
+    }
+    if (lowerDesc.includes('marketing') || lowerDesc.includes('email campaign') || lowerDesc.includes('automation')) {
+      return 'Marketing Automation';
+    }
+    if (lowerDesc.includes('e-commerce') || lowerDesc.includes('ecommerce') || lowerDesc.includes('online store')) {
+      return 'E-commerce Platforms';
+    }
+    if (lowerDesc.includes('data') || lowerDesc.includes('database') || lowerDesc.includes('storage')) {
+      return 'Data Management';
+    }
+    if (lowerDesc.includes('ai') || lowerDesc.includes('machine learning') || lowerDesc.includes('ml')) {
+      return 'AI & Machine Learning';
+    }
+
+    return 'Other';
+  };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -108,12 +161,18 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
     e.preventDefault();
     if (validateForm()) {
       setIsSubmitting(true);
-      
+
+      // Merge additional notes with company info for complete context
+      const completeRequest = {
+        ...formData,
+        companyInfo: additionalNotes || formData.companyInfo
+      };
+
       // Save to database for analytics
-      await saveTechRequest(formData);
-      
+      await saveTechRequest(completeRequest);
+
       // Continue with the normal flow
-      onSubmit(formData);
+      onSubmit(completeRequest);
       setIsSubmitting(false);
     }
   };
@@ -135,14 +194,29 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Company Information */}
+        {/* AI Summary (if available from landing page) */}
+        {aiSummary && (
+          <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <Sparkles className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                <div className="space-y-2">
+                  <p className="font-medium text-sm text-primary">AI Summary</p>
+                  <p className="text-sm text-muted-foreground">{aiSummary}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Additional Notes */}
         <div className="space-y-2">
-          <Label htmlFor="companyInfo">Tell me more about your company</Label>
+          <Label htmlFor="additionalNotes">Would you like to add anything?</Label>
           <Textarea
-            id="companyInfo"
-            placeholder="Company size, industry, current tech stack, specific challenges, etc."
-            value={formData.companyInfo || ''}
-            onChange={(e) => setFormData({ ...formData, companyInfo: e.target.value })}
+            id="additionalNotes"
+            placeholder="Any additional context, requirements, or specific challenges..."
+            value={additionalNotes}
+            onChange={(e) => setAdditionalNotes(e.target.value)}
             className="min-h-[80px]"
           />
         </div>
@@ -150,8 +224,8 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
         {/* Technology Category */}
         <div className="space-y-2">
           <Label htmlFor="category">Technology Category *</Label>
-          <Select 
-            value={formData.category} 
+          <Select
+            value={formData.category}
             onValueChange={(value) => setFormData({ ...formData, category: value })}
           >
             <SelectTrigger className={errors.category ? 'border-destructive' : ''}>
