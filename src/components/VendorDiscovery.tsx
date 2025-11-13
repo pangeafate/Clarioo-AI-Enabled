@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -76,6 +77,7 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
   const [selectedVendors, setSelectedVendors] = useState<Vendor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [clickedStepTitle, setClickedStepTitle] = useState<string | null>(null);
 
   const storageKey = `workflow_${project.id}`;
 
@@ -264,14 +266,30 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
   const handleStepClick = async (stepId: Step) => {
     const stepIndex = steps.findIndex(step => step.id === stepId);
     if (stepIndex <= currentStepIndex) {
+      // Show step title briefly
+      const step = steps.find(s => s.id === stepId);
+      if (step) {
+        setClickedStepTitle(step.title);
+      }
+
       setCurrentStep(stepId);
-      await saveProjectState(stepId, { 
-        techRequest, 
-        criteria, 
-        selectedVendors 
+      await saveProjectState(stepId, {
+        techRequest,
+        criteria,
+        selectedVendors
       });
     }
   };
+
+  // Auto-hide clicked step title after 3 seconds
+  useEffect(() => {
+    if (clickedStepTitle) {
+      const timer = setTimeout(() => {
+        setClickedStepTitle(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [clickedStepTitle]);
 
   return (
     <div className={isEmbedded ? "bg-gradient-secondary" : "min-h-screen bg-gradient-secondary"}>
@@ -289,45 +307,62 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
           <Progress value={progress} className="h-2" />
         </div>
 
-        {/* Mobile Timeline - Horizontal at Top */}
-        <div className="lg:hidden mb-6 overflow-x-auto">
-          <div className="flex items-center gap-3 pb-4 min-w-max">
-            {steps.map((step, index) => {
-              const StepIcon = step.icon;
-              const isActive = step.id === currentStep;
-              const isCompleted = index < currentStepIndex;
-              const isAccessible = index <= currentStepIndex;
-              const isLast = index === steps.length - 1;
+        {/* Mobile Timeline - Horizontal Sticky at Top */}
+        <div className="lg:hidden sticky top-0 bg-gradient-secondary z-40 -mx-4 px-4 pb-2 pt-2">
+          <div className="overflow-x-auto">
+            <div className="flex items-center gap-3 pb-4 min-w-max">
+              {steps.map((step, index) => {
+                const StepIcon = step.icon;
+                const isActive = step.id === currentStep;
+                const isCompleted = index < currentStepIndex;
+                const isAccessible = index <= currentStepIndex;
+                const isLast = index === steps.length - 1;
 
-              return (
-                <div key={step.id} className="flex items-center gap-3">
-                  {/* Circle */}
-                  <button
-                    onClick={() => isAccessible && handleStepClick(step.id as Step)}
-                    disabled={!isAccessible}
-                    className={`
-                      relative flex items-center justify-center
-                      w-12 h-12 rounded-full border-2 transition-all duration-300 flex-shrink-0
-                      ${isActive ? 'bg-primary border-primary text-primary-foreground shadow-lg' : ''}
-                      ${isCompleted && !isActive ? 'bg-white border-primary text-primary' : ''}
-                      ${!isActive && !isCompleted ? 'bg-white border-gray-300 text-gray-400' : ''}
-                      ${isAccessible ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}
-                    `}
-                  >
-                    <StepIcon className="w-5 h-5" />
-                  </button>
+                return (
+                  <div key={step.id} className="flex items-center gap-3">
+                    {/* Circle */}
+                    <button
+                      onClick={() => isAccessible && handleStepClick(step.id as Step)}
+                      disabled={!isAccessible}
+                      className={`
+                        relative flex items-center justify-center
+                        w-12 h-12 rounded-full border-2 transition-all duration-300 flex-shrink-0
+                        ${isActive ? 'bg-primary border-primary text-primary-foreground shadow-lg' : ''}
+                        ${isCompleted && !isActive ? 'bg-white border-primary text-primary' : ''}
+                        ${!isActive && !isCompleted ? 'bg-white border-gray-300 text-gray-400' : ''}
+                        ${isAccessible ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}
+                      `}
+                    >
+                      <StepIcon className="w-5 h-5" />
+                    </button>
 
-                  {/* Connecting Line */}
-                  {!isLast && (
-                    <div className={`
-                      h-0.5 w-12
-                      ${index < currentStepIndex ? 'bg-primary' : 'bg-gray-200'}
-                    `} />
-                  )}
-                </div>
-              );
-            })}
+                    {/* Connecting Line */}
+                    {!isLast && (
+                      <div className={`
+                        h-0.5 w-12
+                        ${index < currentStepIndex ? 'bg-primary' : 'bg-gray-200'}
+                      `} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
+
+          {/* Step Title Display - Appears briefly when icon clicked */}
+          <AnimatePresence>
+            {clickedStepTitle && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="text-center py-2 text-sm font-medium text-primary bg-white/80 backdrop-blur-sm rounded-lg shadow-sm border border-primary/20"
+              >
+                {clickedStepTitle}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Main Layout with Sticky Timeline */}

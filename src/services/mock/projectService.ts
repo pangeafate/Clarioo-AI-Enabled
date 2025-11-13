@@ -6,7 +6,7 @@
  *
  * Mock Behavior:
  * - Full CRUD operations (Create, Read, Update, Delete)
- * - Ephemeral in-memory storage (resets on page refresh)
+ * - Persistent localStorage storage (survives page refresh)
  * - Simulates realistic network delays (200-500ms)
  * - Category and status-based filtering
  * - Workflow state tracking (5-step process)
@@ -41,8 +41,35 @@ export interface WorkflowStepData {
   [key: string]: any;
 }
 
-// In-memory project storage (ephemeral - resets on refresh)
-let projects: Project[] = [...projectsData] as Project[];
+// localStorage key for project persistence
+const PROJECTS_STORAGE_KEY = 'mock_projects';
+
+// Helper to get projects from localStorage
+const getStoredProjects = (): Project[] => {
+  try {
+    const stored = localStorage.getItem(PROJECTS_STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+    // If no stored projects, use initial dummy data
+    return [...projectsData] as Project[];
+  } catch (error) {
+    console.error('Failed to parse stored projects:', error);
+    return [...projectsData] as Project[];
+  }
+};
+
+// Helper to save projects to localStorage
+const saveProjects = (projectsToSave: Project[]): void => {
+  try {
+    localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projectsToSave));
+  } catch (error) {
+    console.error('Failed to save projects:', error);
+  }
+};
+
+// In-memory project storage with localStorage backup
+let projects: Project[] = getStoredProjects();
 
 /**
  * Get all projects for a user
@@ -204,6 +231,9 @@ export const createProject = async (
   // Add to in-memory storage
   projects.push(newProject);
 
+  // Persist to localStorage
+  saveProjects(projects);
+
   return {
     data: newProject,
     error: null
@@ -264,6 +294,9 @@ export const updateProject = async (
     updated_at: getCurrentTimestamp()
   };
 
+  // Persist to localStorage
+  saveProjects(projects);
+
   return {
     data: projects[projectIndex],
     error: null
@@ -291,6 +324,9 @@ export const deleteProject = async (
 
   // Remove project from storage
   projects.splice(projectIndex, 1);
+
+  // Persist to localStorage
+  saveProjects(projects);
 
   return { error: null };
 };
@@ -327,6 +363,9 @@ export const updateWorkflowState = async (
     },
     updated_at: getCurrentTimestamp()
   };
+
+  // Persist to localStorage
+  saveProjects(projects);
 
   return {
     data: projects[projectIndex],
@@ -378,6 +417,9 @@ export const completeWorkflowStep = async (
     },
     updated_at: getCurrentTimestamp()
   };
+
+  // Persist to localStorage
+  saveProjects(projects);
 
   return {
     data: projects[projectIndex],
@@ -434,9 +476,11 @@ export const getProjectsByStatus = async (
 /**
  * Reset projects to initial dummy data
  * Utility function for testing
+ * Also clears localStorage to start fresh
  */
 export const resetProjects = (): void => {
   projects = [...projectsData];
+  saveProjects(projects);
 };
 
 /**
