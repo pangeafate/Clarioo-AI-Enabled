@@ -141,9 +141,9 @@ export const ArtifactVisualization = () => {
               <MoveDown className="h-8 w-12 text-brand-blue" strokeWidth={2.5} />
             </motion.div>
 
-            {/* Processing Card - Circular */}
+            {/* Processing Card - Rounded Square */}
             <motion.div
-              className="relative bg-gradient-button rounded-full w-56 h-56 shadow-button-glow flex items-center justify-center"
+              className="relative bg-gradient-button rounded-2xl w-44 h-44 shadow-button-glow flex items-center justify-center"
               animate={{
                 boxShadow: [
                   '0 4px 14px rgba(99,102,241,0.4)',
