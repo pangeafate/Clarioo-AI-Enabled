@@ -145,6 +145,7 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
       const state: WorkflowState = {
         projectId: project.id,
         currentStep,
+        maxStepReached,
         lastSaved: new Date().toISOString(),
         techRequest,
         criteria,
@@ -159,7 +160,7 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
         console.error('Failed to save workflow state:', error);
       }
     }
-  }, [currentStep, techRequest, criteria, selectedVendors, isLoading, project.id, storageKey]);
+  }, [currentStep, maxStepReached, techRequest, criteria, selectedVendors, isLoading, project.id, storageKey]);
 
   /**
    * Auto-hide clicked step title after 3 seconds
@@ -386,7 +387,7 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
         {/* Main Layout with Sticky Timeline */}
         <div className="relative flex gap-8">
           {/* Sticky Timeline Navigation - Left Side (Desktop Only) */}
-          <div className="hidden lg:block sticky top-24 self-start">
+          <div className="hidden lg:block sticky top-24 self-start relative">
             <div className="flex flex-col items-center py-4">
               {steps.map((step, index) => {
                 const StepIcon = step.icon;
@@ -424,6 +425,21 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
                 );
               })}
             </div>
+
+            {/* Step Title Display - Appears briefly when icon clicked (Desktop) */}
+            <AnimatePresence>
+              {clickedStepTitle && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.3 }}
+                  className="absolute left-24 top-1/2 -translate-y-1/2 py-2 px-4 text-sm font-medium text-primary whitespace-nowrap"
+                >
+                  {clickedStepTitle}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Main Content Area */}

@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Lightbulb, Sparkles } from "lucide-react";
+import { ArrowRight, Lightbulb, Bot } from "lucide-react";
 import type { TechRequest } from "../VendorDiscovery";
 import { useToast } from "@/hooks/use-toast";
 
@@ -43,12 +43,12 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
     const landingTechNeeds = localStorage.getItem('landing_tech_needs');
 
     if (landingCompanyInfo || landingTechNeeds) {
-      // Generate AI summary
-      const summary = `Based on your inputs, you're looking for: ${landingTechNeeds || 'technology solutions'}${landingCompanyInfo ? ` for ${landingCompanyInfo}` : ''}`;
-      setAiSummary(summary);
-
       // Auto-detect category from tech needs
       const detectedCategory = landingTechNeeds ? detectCategory(landingTechNeeds) : '';
+
+      // Generate detailed AI summary based on detected category
+      const summary = generateDetailedSummary(detectedCategory, landingTechNeeds || '');
+      setAiSummary(summary);
 
       // Pre-fill form data with landing page inputs
       setFormData(prev => ({
@@ -150,6 +150,29 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
     return 'Other';
   };
 
+  /**
+   * Generate detailed mock summary based on category
+   * Creates realistic project descriptions for different technology needs
+   */
+  const generateDetailedSummary = (category: string, userInput: string): string => {
+    const summaries: Record<string, string> = {
+      'CRM Software': 'I am looking for a lightweight CRM for 50 sales people. The team is sitting remotely in different countries, and working from mobile phones. The CRM should be mobile-first, extremely easy to use, but expandable with addons. I am ready to evaluate both established solutions and startups alike.',
+      'Project Management': 'I need a project management tool for a distributed team of 30 people across 5 time zones. We handle multiple concurrent projects with complex dependencies and need real-time collaboration features. The solution should integrate with Slack and GitHub, support agile methodologies, and provide detailed reporting for stakeholders.',
+      'Analytics & BI': 'Looking for a business intelligence platform that can handle large datasets (10M+ rows) and provide real-time dashboards for executive leadership. We need self-service analytics for non-technical users, seamless integration with our SQL databases, and the ability to create custom visualizations. Mobile access is essential for our C-suite.',
+      'Communication Tools': 'Seeking a unified communication platform for 200+ employees that combines video conferencing, instant messaging, and file sharing. Must support international calling, have excellent mobile apps, and integrate with Microsoft 365. Priority is ease of use and reliability for daily all-hands meetings.',
+      'Security Solutions': 'We need an enterprise-grade security monitoring solution for our cloud infrastructure (AWS). Looking for real-time threat detection, automated incident response, and compliance reporting for SOC 2 and GDPR. The solution should integrate with our existing SIEM and provide 24/7 threat intelligence.',
+      'DevOps & Infrastructure': 'Searching for a CI/CD platform that can handle microservices architecture with 50+ services. Need container orchestration, automated testing, blue-green deployments, and seamless Kubernetes integration. Must support both on-premise and cloud deployments with detailed logging and monitoring.',
+      'HR & Talent Management': 'Looking for an all-in-one HR platform for a company of 150 employees. Need applicant tracking, onboarding workflows, performance management, and time-off tracking. Integration with payroll systems is critical, and the interface should be intuitive for both HR staff and employees.',
+      'Marketing Automation': 'Need a marketing automation platform that can handle multi-channel campaigns across email, social media, and SMS. Looking for advanced segmentation, A/B testing, lead scoring, and native CRM integration. Must support our enterprise-level traffic (500K contacts) with detailed analytics and ROI tracking.',
+      'E-commerce Platforms': 'Searching for a scalable e-commerce solution for a B2B marketplace with 5000+ SKUs. Need multi-vendor support, complex pricing rules, integration with ERP systems, and international shipping capabilities. Must handle high transaction volumes (10K+ orders/month) with PCI compliance.',
+      'Data Management': 'Looking for a modern data warehouse solution that can consolidate data from 15+ sources including CRM, ERP, and marketing tools. Need real-time data pipelines, data quality monitoring, and support for both structured and unstructured data. Cloud-native architecture preferred with strong data governance features.',
+      'AI & Machine Learning': 'Seeking an ML platform for deploying predictive models in production. Need support for Python/R, automated model training, version control, and real-time inference APIs. Must handle our scale (1M+ predictions/day) with monitoring for model drift and explainability features for regulatory compliance.',
+      'Other': userInput ? `Based on your description: "${userInput}", we'll help you find the right technology solutions that match your specific requirements. Our AI will analyze your needs and suggest the most suitable vendors in the market.` : 'Please provide more details about what technology you\'re looking for, and we\'ll help you find the perfect vendors for your specific needs.'
+    };
+
+    return summaries[category] || summaries['Other'];
+  };
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -200,7 +223,7 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <Lightbulb className="h-12 w-12 text-primary mx-auto mb-4" />
+        <Bot className="h-12 w-12 text-primary mx-auto mb-4" />
         <p className="text-muted-foreground">
           Tell us what technology you're exploring and we'll help you find the perfect vendors.
         </p>
@@ -212,9 +235,9 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
           <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
-                <Sparkles className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                <Bot className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                 <div className="space-y-2">
-                  <p className="font-medium text-sm text-primary">AI Summary</p>
+                  <p className="font-medium text-sm text-primary">Based on your input, this is what you are looking for:</p>
                   <p className="text-sm text-muted-foreground">{aiSummary}</p>
                 </div>
               </div>
