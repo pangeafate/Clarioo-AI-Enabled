@@ -29,15 +29,14 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [aiSummary, setAiSummary] = useState<string>('');
   const [additionalNotes, setAdditionalNotes] = useState<string>('');
   const [headerText, setHeaderText] = useState<string>(aiSummariesData.default);
 
   /**
-   * Load landing page inputs and create AI summary
+   * Load landing page inputs
    * - Reads data saved by AnimatedInputs.tsx
-   * - Generates AI summary from inputs
    * - Auto-detects technology category
+   * - Pre-fills form with landing page data
    * - Clears localStorage after loading (one-time use)
    */
   useEffect(() => {
@@ -47,10 +46,6 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
     if (landingCompanyInfo || landingTechNeeds) {
       // Auto-detect category from tech needs
       const detectedCategory = landingTechNeeds ? detectCategory(landingTechNeeds) : '';
-
-      // Generate detailed AI summary based on detected category
-      const summary = generateDetailedSummary(detectedCategory, landingTechNeeds || '');
-      setAiSummary(summary);
 
       // Pre-fill form data with landing page inputs
       setFormData(prev => ({
@@ -75,7 +70,7 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
         duration: 3000,
       });
 
-      console.log('✅ AI summary created and category auto-detected');
+      console.log('✅ Category auto-detected from landing page inputs');
     }
   }, []); // Run once on mount
 
@@ -312,21 +307,6 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* AI Summary (if available from landing page) */}
-        {aiSummary && (
-          <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <Bot className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                <div className="space-y-2">
-                  <p className="font-medium text-sm text-primary">Based on your input, this is what you are looking for:</p>
-                  <p className="text-sm text-muted-foreground">{aiSummary}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Additional Notes */}
         <div className="space-y-2">
           <Label htmlFor="additionalNotes">Would you like to add anything?</Label>
