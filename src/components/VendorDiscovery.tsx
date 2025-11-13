@@ -220,7 +220,7 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
   };
 
   const steps = [
-    { id: 'tech-input', title: 'Technology Exploration', icon: Search, description: 'Define what technology you need' },
+    { id: 'tech-input', title: 'Technology Exploration', icon: Search },
     { id: 'criteria', title: 'Criteria Building', icon: MessageSquare, description: 'AI helps build evaluation criteria' },
     { id: 'vendor-selection', title: 'Vendor Discovery', icon: Search, description: 'Find relevant vendors' },
     { id: 'vendor-comparison', title: 'Vendor Comparison', icon: Table, description: 'Compare vendors in detail' },
@@ -381,7 +381,7 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
         {/* Main Layout with Sticky Timeline */}
         <div className="relative flex gap-8">
           {/* Sticky Timeline Navigation - Left Side (Desktop Only) */}
-          <div className="hidden lg:block sticky top-24 self-start">
+          <div className="hidden lg:block lg:w-[220px] lg:flex-shrink-0 sticky top-24 self-start">
             {/* Step Title Display - Appears briefly when icon clicked (Desktop) - Fixed height to prevent layout shift */}
             <motion.div
               animate={{ opacity: clickedStepTitle ? 1 : 0 }}

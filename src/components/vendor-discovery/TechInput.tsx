@@ -329,7 +329,7 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Additional Notes */}
         <div className="space-y-2">
-          <Label htmlFor="additionalNotes">Would you like to add anything?</Label>
+          <Label htmlFor="additionalNotes" className="text-lg font-semibold text-gray-800 mb-3 block">Would you like to add anything?</Label>
           <Textarea
             id="additionalNotes"
             placeholder="Any additional context, requirements, or specific challenges..."
@@ -341,7 +341,7 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
 
         {/* Technology Category */}
         <div className="space-y-2">
-          <Label htmlFor="category">Doing a general research? then just pick up a category</Label>
+          <Label htmlFor="category" className="text-lg font-semibold text-gray-800 mb-3 block">Doing a general research? Just pick up a category.</Label>
           <Select
             value={formData.category}
             onValueChange={(value) => setFormData({ ...formData, category: value })}
