@@ -10,6 +10,7 @@ import { ArrowRight, Lightbulb, Bot } from "lucide-react";
 import type { TechRequest } from "../VendorDiscovery";
 import { useToast } from "@/hooks/use-toast";
 import aiSummariesData from "@/data/api/aiSummaries.json";
+import projectsData from "@/data/api/projects.json";
 
 interface TechInputProps {
   onSubmit: (request: TechRequest) => void;
@@ -31,6 +32,27 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [additionalNotes, setAdditionalNotes] = useState<string>('');
   const [headerText, setHeaderText] = useState<string>(aiSummariesData.default);
+
+  /**
+   * Load project data based on projectId
+   * - Finds the project in projects.json
+   * - Pre-fills category from project data
+   * - Triggers AI summary display via category useEffect
+   */
+  useEffect(() => {
+    if (projectId) {
+      const project = projectsData.find(p => p.id === projectId);
+      if (project && project.category) {
+        // Pre-fill category from project data
+        setFormData(prev => ({
+          ...prev,
+          category: project.category
+        }));
+
+        console.log(`✅ Category pre-filled from project: ${project.category}`);
+      }
+    }
+  }, [projectId]);
 
   /**
    * Load landing page inputs
