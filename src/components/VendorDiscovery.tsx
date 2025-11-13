@@ -368,11 +368,15 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
             </div>
           </div>
 
-          {/* Step Title Display - Appears briefly when icon clicked - Fixed height to prevent layout shift */}
+          {/* Step Title Display - Appears briefly when icon clicked - Collapses in mobile, fixed in desktop */}
           <motion.div
             animate={{ opacity: clickedStepTitle ? 1 : 0 }}
             transition={{ duration: 0.3 }}
-            className="text-center py-2 text-sm font-medium text-primary h-10 flex items-center justify-center"
+            className={`
+              text-center py-2 text-sm font-medium text-primary flex items-center justify-center
+              transition-all duration-300 overflow-hidden
+              ${clickedStepTitle ? 'max-h-10' : 'max-h-0 py-0'}
+            `}
           >
             {clickedStepTitle || '\u00A0'}
           </motion.div>
