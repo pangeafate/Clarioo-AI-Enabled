@@ -105,9 +105,9 @@ export const WorkflowNavigation = ({
   };
 
   return (
-    <div className={`sticky top-0 bg-gradient-secondary z-40 -mx-4 px-4 pb-4 pt-2 mb-6 ${className}`}>
+    <div className={`sticky top-0 bg-gradient-secondary z-40 -mx-4 px-4 py-2 ${className}`}>
       <div className="overflow-x-auto">
-        <div className="flex items-center justify-center gap-1.5 xs:gap-2 sm:gap-2.5 md:gap-3 pb-4 min-w-max">
+        <div className="flex items-center justify-center gap-1.5 xs:gap-2 sm:gap-2.5 md:gap-3 min-w-max">
           {WORKFLOW_STEPS.map((step, index) => {
             const StepIcon = step.icon;
             const isActive = step.id === currentStep;
@@ -152,9 +152,9 @@ export const WorkflowNavigation = ({
         animate={{ opacity: clickedStepTitle ? 1 : 0 }}
         transition={{ duration: 0.3 }}
         className={`
-          text-center py-2 text-xs xs:text-sm font-medium text-primary flex items-center justify-center
+          text-center text-xs xs:text-sm font-medium text-primary flex items-center justify-center
           transition-all duration-300 overflow-hidden
-          ${clickedStepTitle ? 'max-h-10' : 'max-h-0 py-0'}
+          ${clickedStepTitle ? 'max-h-10 py-2' : 'max-h-0 py-0'}
         `}
       >
         {clickedStepTitle || '\u00A0'}
