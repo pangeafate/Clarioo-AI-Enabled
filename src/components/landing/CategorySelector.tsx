@@ -116,9 +116,9 @@ export const CategorySelector = ({
           {/* Two-Container Design - Touching Pills */}
           <div className="flex items-center whitespace-nowrap">
             {/* Left Container: Text */}
-            <div className="bg-white rounded-l-full px-4 sm:px-6 py-3 sm:py-4">
+            <div className="bg-white rounded-l-full px-2 xs:px-3 sm:px-6 py-2 xs:py-2.5 sm:py-4">
               <span
-                className={`text-base sm:text-lg font-semibold ${
+                className={`text-xs xs:text-sm sm:text-lg font-semibold ${
                   isComponentDisabled
                     ? 'text-gray-400'
                     : 'bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent'
@@ -132,7 +132,7 @@ export const CategorySelector = ({
             <button
               onClick={() => !isComponentDisabled && setIsOpen(!isOpen)}
               disabled={isComponentDisabled}
-              className={`flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-3 sm:py-4 rounded-r-full font-semibold text-base sm:text-lg text-white transition-all ${
+              className={`flex items-center justify-center gap-1 xs:gap-1.5 sm:gap-2 px-2 xs:px-3 sm:px-6 py-2 xs:py-2.5 sm:py-4 rounded-r-full font-semibold text-xs xs:text-sm sm:text-lg text-white transition-all ${
                 isComponentDisabled
                   ? 'bg-gray-300 cursor-not-allowed'
                   : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
@@ -140,7 +140,7 @@ export const CategorySelector = ({
             >
               <span>category</span>
               <ChevronDown
-                className={`w-4 h-4 transition-transform ${
+                className={`w-3 h-3 xs:w-4 xs:h-4 transition-transform ${
                   isOpen ? 'rotate-180' : ''
                 }`}
               />
