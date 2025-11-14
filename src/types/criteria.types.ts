@@ -26,6 +26,7 @@ export interface Criterion {
   id: string;
   name: string;
   description?: string;
+  explanation?: string; // Detailed explanation of the criterion
   importance: ImportanceLevel;
   type: string; // e.g., 'Features', 'Performance', 'Security', 'Integration'
   weight?: number; // Numeric weight (0-100) derived from importance

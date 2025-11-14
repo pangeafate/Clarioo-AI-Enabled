@@ -16,6 +16,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ArrowRight, MessageSquare, Plus, Trash2, Bot, User, Star, Upload, Settings, Send } from "lucide-react";
+import { AccordionSection } from "./AccordionSection";
+import { CriterionEditSidebar } from "./CriterionEditSidebar";
 import * as XLSX from 'xlsx';
 import { useToast } from "@/hooks/use-toast";
 import type { TechRequest, Criteria } from "../VendorDiscovery";
@@ -35,6 +37,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
   const [criteria, setCriteria] = useState<Criteria[]>(initialCriteria || []);
   const [newCriterion, setNewCriterion] = useState({
     name: '',
+    explanation: '',
     importance: 'medium' as 'low' | 'medium' | 'high',
     type: 'feature' as string
   });
@@ -44,6 +47,16 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
   });
   const [newCustomType, setNewCustomType] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+
+  // SP_012: Accordion state for collapsible sections
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(['feature']) // Feature section expanded by default
+  );
+  const [editingCriterion, setEditingCriterion] = useState<Criteria | null>(null);
+  const [newCriterionCategory, setNewCriterionCategory] = useState<string | null>(null);
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+
   const { toast } = useToast();
 
   // Use custom hooks for business logic
@@ -286,7 +299,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
     };
 
     setCriteria(prev => [...prev, criterion]);
-    setNewCriterion({ name: '', importance: 'medium', type: 'feature' });
+    setNewCriterion({ name: '', explanation: '', importance: 'medium', type: 'feature' });
     
     toast({
       title: "Criterion added",
@@ -408,6 +421,95 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
     return ['feature', 'technical', 'business', 'compliance', ...customTypes];
   };
 
+  // SP_012: Accordion helper functions
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(section)) {
+        newSet.delete(section);
+      } else {
+        newSet.add(section);
+      }
+      return newSet;
+    });
+  };
+
+  const getCriteriaByType = (type: string) => {
+    return criteria.filter(c => c.type === type);
+  };
+
+  const getOtherTypes = () => {
+    const standardTypes = ['feature', 'technical', 'business', 'compliance'];
+
+    // Get types from criteria
+    const typesInCriteria = criteria
+      .map(c => c.type)
+      .filter(type => !standardTypes.includes(type));
+
+    // Combine with custom types and remove duplicates
+    const allCustomTypes = [...new Set([...customTypes, ...typesInCriteria])];
+
+    return allCustomTypes;
+  };
+
+  const handleAddCriterion = (categoryType: string) => {
+    setNewCriterionCategory(categoryType);
+  };
+
+  const handleCreateCriterion = (criterion: Criteria) => {
+    // Add the new criterion
+    setCriteria(prev => [...prev, criterion]);
+    setNewCriterionCategory(null);
+
+    toast({
+      title: "Criterion created",
+      description: `"${criterion.name}" has been added to your evaluation criteria.`
+    });
+  };
+
+  const handleCreateCategory = () => {
+    if (!newCategoryName.trim()) {
+      toast({
+        title: "Missing category name",
+        description: "Please enter a name for the category.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const allTypes = getAllTypes();
+    if (allTypes.includes(newCategoryName.toLowerCase())) {
+      toast({
+        title: "Category already exists",
+        description: "This category name already exists.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Add to custom types
+    const updatedCustomTypes = [...customTypes, newCategoryName.toLowerCase()];
+    setCustomTypes(updatedCustomTypes);
+    storageService.setItem('custom_criterion_types', updatedCustomTypes);
+
+    // Reset state
+    setIsCreatingCategory(false);
+    setNewCategoryName('');
+
+    // Expand the new section
+    setExpandedSections(prev => new Set([...prev, newCategoryName.toLowerCase()]));
+
+    toast({
+      title: "Category created",
+      description: `"${newCategoryName}" has been added as a new category.`
+    });
+  };
+
+  const handleCancelCreateCategory = () => {
+    setIsCreatingCategory(false);
+    setNewCategoryName('');
+  };
+
   return (
     <div className="space-y-6">
         {/* AI Chat Interface */}
@@ -497,7 +599,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
           </Card>
         )}
 
-        {/* Current Criteria - Excel-like Table with Tabs */}
+        {/* SP_012: Current Criteria - Accordion View */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
@@ -505,6 +607,110 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
               <Badge variant="secondary">{criteria.filter(c => c.importance === 'high').length} High Priority</Badge>
             </CardTitle>
           </CardHeader>
+          <CardContent className="space-y-2">
+            {/* Feature Section */}
+            <AccordionSection
+              title="Feature"
+              criteria={getCriteriaByType('feature')}
+              isExpanded={expandedSections.has('feature')}
+              onToggle={() => toggleSection('feature')}
+              onEditCriterion={(criterion) => setEditingCriterion(criterion)}
+              onAddCriterion={handleAddCriterion}
+            />
+
+            {/* Technical Section */}
+            <AccordionSection
+              title="Technical"
+              criteria={getCriteriaByType('technical')}
+              isExpanded={expandedSections.has('technical')}
+              onToggle={() => toggleSection('technical')}
+              onEditCriterion={(criterion) => setEditingCriterion(criterion)}
+              onAddCriterion={handleAddCriterion}
+            />
+
+            {/* Business Section */}
+            <AccordionSection
+              title="Business"
+              criteria={getCriteriaByType('business')}
+              isExpanded={expandedSections.has('business')}
+              onToggle={() => toggleSection('business')}
+              onEditCriterion={(criterion) => setEditingCriterion(criterion)}
+              onAddCriterion={handleAddCriterion}
+            />
+
+            {/* Compliance Section */}
+            <AccordionSection
+              title="Compliance"
+              criteria={getCriteriaByType('compliance')}
+              isExpanded={expandedSections.has('compliance')}
+              onToggle={() => toggleSection('compliance')}
+              onEditCriterion={(criterion) => setEditingCriterion(criterion)}
+              onAddCriterion={handleAddCriterion}
+            />
+
+            {/* Other Types Section - Custom categories */}
+            {getOtherTypes().map(type => (
+              <AccordionSection
+                key={type}
+                title={type.charAt(0).toUpperCase() + type.slice(1)}
+                criteria={getCriteriaByType(type)}
+                isExpanded={expandedSections.has(type)}
+                onToggle={() => toggleSection(type)}
+                onEditCriterion={(criterion) => setEditingCriterion(criterion)}
+                onAddCriterion={handleAddCriterion}
+              />
+            ))}
+
+            {/* Add New Category Placeholder */}
+            {!isCreatingCategory ? (
+              <button
+                onClick={() => setIsCreatingCategory(true)}
+                className="w-full border border-dashed border-gray-300 rounded-lg bg-white hover:border-primary hover:bg-primary/5 transition-all"
+              >
+                <div className="px-4 py-3 flex items-center justify-center gap-2 text-muted-foreground hover:text-primary group">
+                  <Plus className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                  <span className="font-medium">Add New Category</span>
+                </div>
+              </button>
+            ) : (
+              <div className="border rounded-lg bg-white border-l-4 border-l-purple-400">
+                <div className="px-4 py-3 flex items-center gap-2">
+                  <Input
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    placeholder="Category name (e.g., Security, Performance)"
+                    className="flex-1"
+                    autoFocus
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleCreateCategory();
+                      } else if (e.key === 'Escape') {
+                        handleCancelCreateCategory();
+                      }
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleCancelCreateCategory}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleCreateCategory}
+                  >
+                    Create
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Old table code - Remove from here */}
+        {false && (
+          <Card>
           <CardContent>
             <Tabs defaultValue="feature" className="w-full">
               <ScrollArea className="w-full">
@@ -734,6 +940,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
             </Tabs>
           </CardContent>
         </Card>
+        )}
 
         {/* Upload Excel File */}
         <Card>
@@ -773,119 +980,8 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
           </CardContent>
         </Card>
 
-        {/* Manage Custom Types */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Manage Custom Types
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="e.g., Security, Performance, UX"
-                value={newCustomType}
-                onChange={(e) => setNewCustomType(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addCustomType()}
-              />
-              <Button onClick={addCustomType} size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Type
-              </Button>
-            </div>
-            {customTypes.length > 0 && (
-              <div className="space-y-2">
-                <Label>Custom Types</Label>
-                <div className="flex flex-wrap gap-2">
-                  {customTypes.map((type) => (
-                    <div key={type} className="flex items-center gap-1">
-                      <Badge className="bg-purple-500 text-white">{type}</Badge>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeCustomType(type)}
-                        className="h-6 w-6 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Add New Criterion */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5" />
-              Add New Criterion
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="new-criterion">Criterion Name</Label>
-              <Input
-                id="new-criterion"
-                placeholder="e.g., Mobile App Quality, API Documentation"
-                value={newCriterion.name}
-                onChange={(e) => setNewCriterion({ ...newCriterion, name: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Importance</Label>
-                <Select
-                  value={newCriterion.importance}
-                  onValueChange={(value: 'low' | 'medium' | 'high') => 
-                    setNewCriterion({ ...newCriterion, importance: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Type</Label>
-                <Select
-                  value={newCriterion.type}
-                  onValueChange={(value: string) => 
-                    setNewCriterion({ ...newCriterion, type: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="feature">Feature</SelectItem>
-                    <SelectItem value="technical">Technical</SelectItem>
-                    <SelectItem value="business">Business</SelectItem>
-                    <SelectItem value="compliance">Compliance</SelectItem>
-                    {customTypes.map((type) => (
-                      <SelectItem key={type} value={type}>{type}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <Button onClick={addCriterion} className="w-full" variant="outline">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Criterion
-            </Button>
-          </CardContent>
-        </Card>
-
         <div className="flex justify-end">
-          <Button 
+          <Button
             onClick={handleComplete}
             variant="professional"
             size="lg"
@@ -896,6 +992,33 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
+
+        {/* Criterion Edit/Create Sidebar */}
+        <CriterionEditSidebar
+          criterion={editingCriterion}
+          isOpen={editingCriterion !== null || newCriterionCategory !== null}
+          onClose={() => {
+            setEditingCriterion(null);
+            setNewCriterionCategory(null);
+          }}
+          onSave={(criterion) => {
+            if (newCriterionCategory !== null) {
+              // Create mode
+              handleCreateCriterion(criterion);
+            } else {
+              // Edit mode
+              updateCriterion(criterion.id, criterion);
+              setEditingCriterion(null);
+            }
+          }}
+          onDelete={(id) => {
+            removeCriterion(id);
+            setEditingCriterion(null);
+          }}
+          customTypes={customTypes}
+          mode={newCriterionCategory !== null ? 'create' : 'edit'}
+          defaultCategory={newCriterionCategory || 'feature'}
+        />
     </div>
   );
 };

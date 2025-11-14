@@ -240,6 +240,54 @@ Vendora AI is now a **visual prototype** designed for team alignment and demonst
 
 ---
 
+#### Completed Sprint: SP_012 ✅
+**Sprint Name**: Criteria Builder Accordion Redesign
+**Duration**: 1 day (November 14, 2024)
+**Status**: ✅ Complete
+**Type**: UI/UX Enhancement - Mobile-First Redesign
+
+**Sprint Objectives**:
+1. Transform horizontal tab-based table layout into mobile-first vertical accordion
+2. Add `explanation` field to Criteria data structure for detailed descriptions
+3. Create visual priority indicator (SignalAntenna component with 1-3 bars)
+4. Implement collapsible sections for Feature, Technical, Business, Compliance, and Other categories
+5. Build AI-powered editing sidebar that slides in from the right
+6. Sort criteria by priority (High → Medium, hide Low) within each section
+7. Pre-populate all mockup data with detailed explanations
+
+**Key Deliverables**:
+- **Data Structure Updates**:
+  - Added `explanation: string` to Criteria interface in VendorDiscovery.tsx
+  - Updated useCriteriaGeneration.ts with explanation field
+  - Updated criteria.types.ts with optional explanation
+  - Pre-populated 20+ criteria with detailed explanations
+- **New Components** (4 files created):
+  - `SignalAntenna.tsx`: 1-3 bar priority indicator (gray/yellow/red)
+  - `CriterionCard.tsx`: Card-based criterion display with name, explanation, signal, AI button
+  - `AccordionSection.tsx`: Collapsible category sections with count display
+  - `CriterionEditSidebar.tsx`: Slide-in sidebar (400px desktop, full-width mobile) with Edit and Chat tabs
+- **CriteriaBuilder.tsx Refactor**:
+  - Replaced horizontal tabs with vertical accordion sections
+  - Added accordion state management (Set<string>)
+  - Implemented helper functions for category filtering
+  - Integrated all new components
+  - Maintained backward compatibility (old table wrapped in `{false &&}`)
+
+**Exit Criteria**: ✅ All Met
+- ✅ `explanation` field added to all Criteria interfaces
+- ✅ SignalAntenna component displays 1-3 bars based on importance
+- ✅ CriterionCard shows name, explanation, priority, AI edit button
+- ✅ AccordionSection implements collapsible categories with sorting
+- ✅ CriterionEditSidebar slides in with Edit and Chat tabs
+- ✅ All mockup data includes explanations
+- ✅ Build successful with 0 TypeScript errors
+- ✅ Mobile-optimized with card-based layouts
+- ✅ Documentation updated (PROGRESS.md, PROJECT_ROADMAP.md)
+
+**Sprint Plan**: [SP_012_Criteria_Builder_Accordion_Redesign.md](./SPRINTS/SP_012_Criteria_Builder_Accordion_Redesign.md)
+
+---
+
 #### Current Sprint: SP_007 🚀
 **Sprint Name**: Visual Design Enhancement & Mobile-First UI/UX
 **Duration**: 2-3 weeks (November 12 - December 3, 2024)

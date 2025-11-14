@@ -11,6 +11,7 @@ import CriteriaBuilder from "./vendor-discovery/CriteriaBuilder";
 import VendorSelection from "./vendor-discovery/VendorSelection";
 import VendorTable from "./vendor-discovery/VendorTable";
 import VendorInvite from "./vendor-discovery/VendorInvite";
+import criteriaData from '@/data/api/criteria.json';
 
 export type Step = 'criteria' | 'vendor-selection' | 'vendor-comparison' | 'invite-pitch';
 
@@ -37,6 +38,7 @@ export interface TechRequest {
 export interface Criteria {
   id: string;
   name: string;
+  explanation: string;
   importance: 'low' | 'medium' | 'high';
   type: string;
 }
@@ -67,6 +69,30 @@ export interface VendorDiscoveryProps {
   onBackToProjects?: () => void;
   isEmbedded?: boolean;
 }
+
+/**
+ * Helper function to backfill missing explanations from criteria.json
+ * Searches all categories in criteria.json to find matching criterion by name
+ */
+const backfillExplanation = (criterion: Criteria): string => {
+  if (criterion.explanation && criterion.explanation.trim() !== '') {
+    return criterion.explanation; // Already has explanation
+  }
+
+  // Search all categories in criteriaData for matching criterion by name
+  const allCategories = Object.values(criteriaData);
+  for (const categoryData of allCategories) {
+    const match = categoryData.find((c: any) => c.name === criterion.name);
+    if (match && match.explanation) {
+      console.log(`✅ Found explanation for "${criterion.name}"`);
+      return match.explanation;
+    }
+  }
+
+  // No match found - return empty string
+  console.warn(`⚠️ No explanation found for "${criterion.name}"`);
+  return '';
+};
 
 const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: VendorDiscoveryProps) => {
   const { user, signOut } = useAuth();
@@ -109,7 +135,22 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
           setCurrentStep(validatedStep);
           setMaxStepReached(state.maxStepReached || 0); // Default to 0 if not set
           setTechRequest(state.techRequest);
-          setCriteria(state.criteria);
+
+          // Data migration: Backfill missing explanations from criteria.json
+          const migratedCriteria = state.criteria.map(c => ({
+            ...c,
+            explanation: backfillExplanation(c)
+          }));
+          setCriteria(migratedCriteria);
+
+          // Debug: Log summary
+          const withoutExplanation = migratedCriteria.filter(c => !c.explanation || c.explanation.trim() === '').length;
+          if (withoutExplanation > 0) {
+            console.warn(`⚠️ ${withoutExplanation} of ${migratedCriteria.length} criteria still have no explanations after migration`);
+          } else {
+            console.log(`✅ All ${migratedCriteria.length} criteria have explanations`);
+          }
+
           setSelectedVendors(state.selectedVendors);
           setLastSaved(state.lastSaved);
 
