@@ -46,6 +46,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SignalAntenna } from './SignalAntenna';
+import { TYPOGRAPHY } from '@/styles/typography-config';
 import type { Criteria } from '../VendorDiscovery';
 
 export interface CriterionEditSidebarProps {
@@ -136,7 +137,7 @@ export const CriterionEditSidebar: React.FC<CriterionEditSidebarProps> = ({
           >
             {/* Header */}
             <div className="p-4 border-b flex items-center justify-between bg-primary text-primary-foreground">
-              <h2 className="text-lg font-semibold">
+              <h2 className={TYPOGRAPHY.heading.h5}>
                 {mode === 'create' ? 'Create Criterion' : 'Edit Criterion'}
               </h2>
               <Button
@@ -265,7 +266,7 @@ export const CriterionEditSidebar: React.FC<CriterionEditSidebarProps> = ({
                       <Card className="bg-blue-50 border-blue-100">
                         <CardContent className="p-3 flex gap-2">
                           <Bot className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                          <p className="text-sm text-muted-foreground">
+                          <p className={TYPOGRAPHY.muted.small}>
                             I can help you refine this criterion. Ask me questions or tell me how you'd like to improve it!
                           </p>
                         </CardContent>

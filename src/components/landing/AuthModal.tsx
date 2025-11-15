@@ -35,6 +35,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { TYPOGRAPHY } from '@/styles/typography-config';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -141,10 +142,10 @@ export const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProp
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md rounded-2xl shadow-elevated-combined">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-brand-blue to-brand-blueLight bg-clip-text text-transparent">
+          <DialogTitle className={`${TYPOGRAPHY.heading.h4} bg-gradient-to-r from-brand-blue to-brand-blueLight bg-clip-text text-transparent`}>
             {isSignUp ? 'Create Account' : 'Welcome Back'}
           </DialogTitle>
-          <DialogDescription className="text-neutral-slate">
+          <DialogDescription className={TYPOGRAPHY.muted.default}>
             {isSignUp
               ? 'Sign up to start discovering perfect vendors with AI'
               : 'Sign in to continue your vendor discovery journey'}
@@ -162,10 +163,10 @@ export const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProp
               className="flex flex-col items-center justify-center py-8 space-y-4"
             >
               <CheckCircle className="h-16 w-16 text-green-500" />
-              <p className="text-lg font-semibold text-neutral-navy">
+              <p className={TYPOGRAPHY.body.large}>
                 {isSignUp ? 'Account created successfully!' : 'Welcome back!'}
               </p>
-              <p className="text-sm text-neutral-slate">
+              <p className={TYPOGRAPHY.muted.small}>
                 Loading your projects...
               </p>
             </motion.div>
@@ -237,7 +238,7 @@ export const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProp
                   className="rounded-xl h-12"
                 />
                 {isSignUp && (
-                  <p className="text-xs text-neutral-slate">
+                  <p className={TYPOGRAPHY.form.helper}>
                     Minimum 6 characters
                   </p>
                 )}
@@ -251,7 +252,7 @@ export const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProp
                   className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700"
                 >
                   <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                  <p className="text-sm">{error}</p>
+                  <p className={TYPOGRAPHY.body.small}>{error}</p>
                 </motion.div>
               )}
 
@@ -259,7 +260,7 @@ export const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProp
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-12 rounded-xl bg-gradient-button text-white font-semibold shadow-button-glow hover:shadow-elevated-combined transition-all duration-300"
+                className={`w-full h-12 rounded-xl bg-gradient-button text-white ${TYPOGRAPHY.button.default} shadow-button-glow hover:shadow-elevated-combined transition-all duration-300`}
               >
                 {isLoading ? (
                   <>
@@ -272,20 +273,20 @@ export const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProp
               </Button>
 
               {/* Mode Switch */}
-              <div className="text-center text-sm text-neutral-slate">
+              <div className={`text-center ${TYPOGRAPHY.muted.small}`}>
                 {isSignUp ? 'Already have an account?' : "Don't have an account?"}
                 {' '}
                 <button
                   type="button"
                   onClick={handleModeSwitch}
-                  className="text-brand-blue font-semibold hover:underline"
+                  className={`text-brand-blue ${TYPOGRAPHY.button.small} hover:underline`}
                 >
                   {isSignUp ? 'Sign In' : 'Sign Up'}
                 </button>
               </div>
 
               {/* Prototype Notice */}
-              <div className="text-xs text-center text-neutral-slate bg-gray-50 p-3 rounded-xl">
+              <div className={`text-center ${TYPOGRAPHY.muted.xs} bg-gray-50 p-3 rounded-xl`}>
                 🎨 <strong>Prototype Mode:</strong> Any email/password will work for demonstration
               </div>
             </motion.form>

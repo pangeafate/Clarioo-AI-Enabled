@@ -13,7 +13,7 @@
 
 ## Executive Summary
 
-This sprint transforms the Vendora AI visual prototype from a functional demonstration into a design-led, mobile-first experience that embodies the vision outlined in VISION.md. The implementation focuses on creating a distinctive, premium aesthetic that differentiates from "vanilla" enterprise software while maintaining the simplicity and clarity that makes complex vendor decisions feel effortless.
+This sprint transforms the Clarioo visual prototype from a functional demonstration into a design-led, mobile-first experience that embodies the vision outlined in VISION.md. The implementation focuses on creating a distinctive, premium aesthetic that differentiates from "vanilla" enterprise software while maintaining the simplicity and clarity that makes complex vendor decisions feel effortless.
 
 **Core Philosophy**: Design-first development with exceptional UX that delights users on mobile devices (80-90% expected traffic).
 
@@ -239,7 +239,7 @@ Since this is a visual prototype:
 - [ ] Mobile layout: 1 card visible, swipe gestures
 - [ ] Auto-rotation: 4-second intervals
 - [ ] Controls: left/right arrows, pause/play button, keyboard support
-- [ ] Value props header: "How Vendora AI Works" + 3 benefit badges
+- [ ] Value props header: "How Clarioo Works" + 3 benefit badges
 
 #### Task 3.4: Artifact Visualization
 - [ ] Create animated visualization showing:

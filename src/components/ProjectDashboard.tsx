@@ -10,6 +10,8 @@ import { Calendar, FolderOpen, Edit, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import * as projectService from "@/services/mock/projectService";
+import { TYPOGRAPHY } from "@/styles/typography-config";
+import { LoadingState } from "@/components/shared/loading/LoadingState";
 
 interface Project {
   id: string;
@@ -168,23 +170,22 @@ const ProjectDashboard = ({
     }
   };
   if (loading) {
-    return <div className="min-h-screen bg-gradient-secondary flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading your projects...</p>
-        </div>
-      </div>;
+    return (
+      <div className="min-h-screen bg-gradient-secondary flex items-center justify-center">
+        <LoadingState message="Loading your projects..." />
+      </div>
+    );
   }
   return <div className="bg-gradient-secondary">
       <div className="container mx-auto px-4 py-8">
         <div id="projects-section" className="mb-8 scroll-mt-4">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-brand-blue to-brand-blueLight bg-clip-text text-transparent">
+          <h1 className={`${TYPOGRAPHY.heading.h2} bg-gradient-to-r from-brand-blue to-brand-blueLight bg-clip-text text-transparent`}>
             My Projects
           </h1>
         </div>
 
         <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-2 text-muted-foreground">
+          <div className={`flex items-center gap-2 ${TYPOGRAPHY.muted.default}`}>
             <FolderOpen className="h-5 w-5" />
             <span>{projects.length} projects</span>
           </div>
@@ -271,8 +272,8 @@ const ProjectDashboard = ({
         {projects.length === 0 ? <Card className="text-center py-12">
             <CardContent>
               <div className="text-6xl mb-4">🚀</div>
-              <h3 className="text-xl font-semibold mb-2">No projects yet</h3>
-              <p className="text-muted-foreground mb-6">
+              <h3 className={`${TYPOGRAPHY.heading.h4} mb-2`}>No projects yet</h3>
+              <p className={`${TYPOGRAPHY.muted.default} mb-6`}>
                 Use the "New Project" button above to create your first vendor discovery project
               </p>
             </CardContent>
@@ -302,7 +303,7 @@ const ProjectDashboard = ({
                     <Badge variant="secondary">
                       {project.status.replace('-', ' ')}
                     </Badge>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <div className={`flex items-center gap-1 ${TYPOGRAPHY.card.metadata}`}>
                       <Calendar className="h-3 w-3" />
                       {new Date(project.updated_at).toLocaleDateString()}
                     </div>

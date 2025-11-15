@@ -9,6 +9,7 @@ import type { TechRequest } from "../VendorDiscovery";
 import { useToast } from "@/hooks/use-toast";
 import aiSummariesData from "@/data/api/aiSummaries.json";
 import projectsData from "@/data/api/projects.json";
+import { TYPOGRAPHY } from '@/styles/typography-config';
 
 interface TechInputProps {
   onSubmit: (request: TechRequest) => void;
@@ -252,7 +253,7 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
             return (
               <span
                 key={index}
-                className="font-bold text-brand-blue animate-pulse-blue"
+                className={`${TYPOGRAPHY.special.badge} text-brand-blue animate-pulse-blue`}
               >
                 {part}
               </span>
@@ -319,7 +320,7 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
           <div className="absolute inset-0 bg-primary/10 rounded-2xl animate-pulse-subtle blur-sm" />
           <div className="relative border-2 border-primary/20 rounded-2xl p-6 bg-card/50 backdrop-blur-sm">
             <Bot className="h-12 w-12 text-primary mx-auto mb-4" />
-            <p className="text-muted-foreground">
+            <p className={TYPOGRAPHY.muted.default}>
               {highlightKeywords(headerText)}
             </p>
           </div>
@@ -329,7 +330,7 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Additional Notes */}
         <div className="space-y-2">
-          <Label htmlFor="additionalNotes" className="text-lg font-semibold text-gray-800 mb-3 block">Would you like to add anything?</Label>
+          <Label htmlFor="additionalNotes" className={`${TYPOGRAPHY.label.large} mb-3 block`}>Would you like to add anything?</Label>
           <Textarea
             id="additionalNotes"
             placeholder="Any additional context, requirements, or specific challenges..."
@@ -341,7 +342,7 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
 
         {/* Technology Category */}
         <div className="space-y-2">
-          <Label htmlFor="category" className="text-lg font-semibold text-gray-800 mb-3 block">Doing a general research? Just pick up a category.</Label>
+          <Label htmlFor="category" className={`${TYPOGRAPHY.label.large} mb-3 block`}>Doing a general research? Just pick up a category.</Label>
           <Select
             value={formData.category}
             onValueChange={(value) => setFormData({ ...formData, category: value })}
@@ -358,7 +359,7 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
             </SelectContent>
           </Select>
           {errors.category && (
-            <p className="text-sm text-destructive">{errors.category}</p>
+            <p className={TYPOGRAPHY.form.error}>{errors.category}</p>
           )}
         </div>
 
@@ -369,11 +370,11 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
           <div className="space-y-1.5 pl-1">
             {suggestions.map((suggestion, index) => (
               <div key={index} className="flex items-start gap-2">
-                <span className="text-brand-blue text-xs mt-0.5">◆</span>
+                <span className={`${TYPOGRAPHY.body.xs} text-brand-blue mt-0.5`}>◆</span>
                 <button
                   type="button"
                   onClick={() => setAdditionalNotes(suggestion)}
-                  className="text-sm text-brand-blue hover:underline text-left transition-all"
+                  className={`${TYPOGRAPHY.link.small} text-brand-blue text-left transition-all`}
                 >
                   {suggestion}
                 </button>

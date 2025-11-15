@@ -1,6 +1,6 @@
 # AI Prompts Documentation
 
-This document catalogs all AI prompts used in the Vendora AI Vendor Analyst application, organized by functionality category. Each prompt includes its location, purpose, and the complete prompt text.
+This document catalogs all AI prompts used in the Clarioo Vendor Analyst application, organized by functionality category. Each prompt includes its location, purpose, and the complete prompt text.
 
 **Last Updated:** 2025-10-26
 **AI Provider:** OpenAI API

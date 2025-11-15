@@ -33,6 +33,7 @@ import { motion } from 'framer-motion';
 import { AuthModal } from './AuthModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { TYPOGRAPHY } from '@/styles/typography-config';
 
 interface RegistrationToggleProps {
   isSignUp: boolean;
@@ -93,7 +94,7 @@ export const RegistrationToggle = ({
         className="flex flex-col items-center gap-3 px-4 mb-2 mt-16"
       >
         {/* Label */}
-        <h3 className="text-lg font-semibold text-neutral-warmBlack">
+        <h3 className={TYPOGRAPHY.heading.h5}>
           {isAuthenticated
             ? "You're signed in! Click toggle to sign out."
             : "Unlock full vendor discovery experience"
@@ -149,7 +150,7 @@ export const RegistrationToggle = ({
 
         {/* Helper Text - only shown when not authenticated */}
         {!isAuthenticated && (
-          <p className="text-sm text-neutral-warmGray text-center max-w-md">
+          <p className={`${TYPOGRAPHY.muted.default} text-center max-w-md`}>
             Click toggle to sign in or create an account to use AI features
           </p>
         )}

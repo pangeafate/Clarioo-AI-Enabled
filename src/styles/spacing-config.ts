@@ -82,14 +82,14 @@ export const SPACING = {
    * Spacing for landing page components
    */
   landing: {
-    // Category selector
+    // Category selector - Scales proportionally from 350px to desktop
     categorySelector: {
-      // Gradient outline wrapper
-      outline: 'p-[1px] xs:p-[1.5px] sm:p-[2px]',
-      // Text container (left pill)
-      textContainer: 'px-2 xs:px-3 sm:px-6 py-2 xs:py-2.5 sm:py-4',
-      // Button container (right pill)
-      buttonContainer: 'px-2 xs:px-3 sm:px-6 py-2 xs:py-2.5 sm:py-4',
+      // Gradient outline wrapper - thinner on small screens
+      outline: 'p-[0.75px] xs:p-[1px] sm:p-[1.5px] md:p-[2px]',
+      // Text container (left pill) - proportional padding
+      textContainer: 'px-1.5 xs:px-2 sm:px-3 md:px-6 py-1.5 xs:py-2 sm:py-2.5 md:py-4',
+      // Button container (right pill) - proportional padding
+      buttonContainer: 'px-1.5 xs:px-2 sm:px-3 md:px-6 py-1.5 xs:py-2 sm:py-2.5 md:py-4',
       // Dropdown panel
       panel: 'px-6 py-4',
     },

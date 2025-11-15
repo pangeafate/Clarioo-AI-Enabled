@@ -16,7 +16,7 @@
  * - Card: White bg, 16px border-radius, shadow, 24px padding
  * - Center focus: Middle card scaled 1.05x, side cards 0.7 opacity
  * - Screenshot: 280px height, device frame effect
- * - Value props above: "How Vendora AI Works" + 3 benefit badges
+ * - Value props above: "How Clarioo AI Works" + 3 benefit badges
  *
  * CARD STRUCTURE:
  * 1. Tech Exploration: Company + solution input
@@ -33,6 +33,7 @@ import useEmblaCarousel from 'embla-carousel-react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Play, Pause, ArrowRight, Search, FileCheck, Users, MessageSquare, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { TYPOGRAPHY } from '@/styles/typography-config';
 
 const workflowCards = [
   {
@@ -188,22 +189,22 @@ export const CardCarousel = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-neutral-navy mb-6">
+          <h2 className={`${TYPOGRAPHY.heading.h2} mb-6`}>
             How Clarioo AI Works
           </h2>
-          <p className="text-lg text-neutral-slate mb-8 max-w-2xl mx-auto">
+          <p className={`${TYPOGRAPHY.body.large} mb-8 max-w-2xl mx-auto`}>
             From requirements to vendor selection in 5 intelligent steps
           </p>
 
           {/* Value proposition badges */}
           <div className="flex flex-wrap justify-center gap-3">
-            <span className="px-6 py-3 bg-brand-blue/10 text-brand-blue rounded-full text-sm font-medium border border-brand-blue/20">
+            <span className={`px-6 py-3 bg-brand-blue/10 text-brand-blue rounded-full border border-brand-blue/20 ${TYPOGRAPHY.special.badge}`}>
               90% of routine work automated
             </span>
-            <span className="px-6 py-3 bg-brand-blue/10 text-brand-blue rounded-full text-sm font-medium border border-brand-blue/20">
+            <span className={`px-6 py-3 bg-brand-blue/10 text-brand-blue rounded-full border border-brand-blue/20 ${TYPOGRAPHY.special.badge}`}>
               Clear comparison criteria
             </span>
-            <span className="px-6 py-3 bg-brand-blue/10 text-brand-blue rounded-full text-sm font-medium border border-brand-blue/20">
+            <span className={`px-6 py-3 bg-brand-blue/10 text-brand-blue rounded-full border border-brand-blue/20 ${TYPOGRAPHY.special.badge}`}>
               Follows your business needs
             </span>
           </div>
@@ -251,7 +252,7 @@ export const CardCarousel = () => {
                         {/* Step badge */}
                         <div className="absolute top-6 left-6">
                           <div className="px-4 py-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md">
-                            <span className={`text-sm font-bold ${card.accentColor}`}>
+                            <span className={`font-bold ${card.accentColor} ${TYPOGRAPHY.special.badge}`}>
                               {card.step}
                             </span>
                           </div>
@@ -261,42 +262,42 @@ export const CardCarousel = () => {
                       {/* Card Content */}
                       <div className="bg-white p-8 flex-1 flex flex-col">
                         {/* Title */}
-                        <h3 className="text-2xl font-bold text-neutral-navy mb-3">
+                        <h3 className={`${TYPOGRAPHY.heading.h3} mb-3`}>
                           {card.title}
                         </h3>
 
                         {/* Description */}
-                        <p className="text-neutral-slate mb-6 leading-relaxed flex-1">
+                        <p className={`${TYPOGRAPHY.body.default} mb-6 flex-1`}>
                           {card.description}
                         </p>
 
                         {/* Process Flow - Compact */}
                         <div className="space-y-2 mb-6">
-                          <div className="flex items-center gap-2 text-sm text-neutral-slate">
+                          <div className={`flex items-center gap-2 ${TYPOGRAPHY.muted.default}`}>
                             <span className="font-medium">Input:</span>
-                            <span className="text-xs">{card.processFlow.input}</span>
+                            <span className={TYPOGRAPHY.muted.small}>{card.processFlow.input}</span>
                           </div>
-                          <div className={`flex items-center gap-2 text-sm font-semibold ${card.accentColor}`}>
+                          <div className={`flex items-center gap-2 font-semibold ${card.accentColor} ${TYPOGRAPHY.body.small}`}>
                             <ArrowRight className="h-4 w-4" />
-                            <span className="text-xs">{card.processFlow.aiProcessing}</span>
+                            <span className={TYPOGRAPHY.body.xs}>{card.processFlow.aiProcessing}</span>
                           </div>
-                          <div className="flex items-center gap-2 text-sm text-neutral-slate">
+                          <div className={`flex items-center gap-2 ${TYPOGRAPHY.muted.default}`}>
                             <span className="font-medium">Output:</span>
-                            <span className="text-xs">{card.processFlow.output}</span>
+                            <span className={TYPOGRAPHY.muted.small}>{card.processFlow.output}</span>
                           </div>
                         </div>
 
                         {/* Deliverable */}
                         <div className="mb-6 pb-6 border-b border-gray-100">
-                          <p className="text-xs text-neutral-slate mb-1">Deliverable:</p>
-                          <p className="text-sm font-semibold text-neutral-navy">
+                          <p className={`${TYPOGRAPHY.muted.small} mb-1`}>Deliverable:</p>
+                          <p className={`${TYPOGRAPHY.label.default}`}>
                             📄 {card.artifact}
                           </p>
                         </div>
 
                         {/* CTA Button */}
                         <Button
-                          className="w-full bg-gradient-to-r from-brand-blue to-brand-blueLight text-white hover:shadow-lg transition-all duration-300 rounded-xl h-12 text-base font-semibold"
+                          className={`w-full bg-gradient-to-r from-brand-blue to-brand-blueLight text-white hover:shadow-lg transition-all duration-300 rounded-xl h-12 ${TYPOGRAPHY.button.large}`}
                         >
                           {card.ctaText}
                           <ArrowRight className="h-4 w-4 ml-2" />

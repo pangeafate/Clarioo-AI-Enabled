@@ -20,6 +20,8 @@ import { useVendorComparison } from "@/hooks/useVendorComparison";
 import * as exportHelpers from "@/utils/exportHelpers";
 import type { TechRequest, Criteria, Vendor } from "../VendorDiscovery";
 import ExecutiveSummary from "./ExecutiveSummary";
+import { TYPOGRAPHY } from '@/styles/typography-config';
+import { LoadingState } from "@/components/shared/loading/LoadingState";
 interface VendorTableProps {
   vendors: Vendor[];
   criteria: Criteria[];
@@ -273,20 +275,19 @@ const VendorTable = ({
     }
   };
   if (isLoading) {
-    return <Card>
+    return (
+      <Card>
         <CardContent className="py-12">
-          <div className="text-center space-y-4">
-            <div className="inline-flex items-center gap-2 text-primary">
-              <RefreshCw className="h-6 w-6 animate-spin" />
-              <span className="text-lg font-medium">Generating comparison matrix...</span>
-            </div>
-            <p className="text-muted-foreground">
-              AI is generating detailed comparison scores for selected vendors
-            </p>
-            <Progress value={75} className="w-64 mx-auto" />
-          </div>
+          <LoadingState
+            icon={RefreshCw}
+            message="Generating comparison matrix..."
+            description="AI is generating detailed comparison scores for selected vendors"
+            showProgress={true}
+            progress={75}
+          />
         </CardContent>
-      </Card>;
+      </Card>
+    );
   }
   return <div className="space-y-6">
       {/* Results Summary */}
@@ -296,8 +297,8 @@ const VendorTable = ({
             <div className="flex items-center gap-2">
               <Search className="h-4 w-4 text-primary" />
               <div>
-                <p className="text-2xl font-bold">{vendors.length}</p>
-                <p className="text-sm text-muted-foreground">Vendors Found</p>
+                <p className={TYPOGRAPHY.heading.h3}>{vendors.length}</p>
+                <p className={TYPOGRAPHY.muted.small}>Vendors Found</p>
               </div>
             </div>
           </CardContent>
@@ -307,10 +308,10 @@ const VendorTable = ({
             <div className="flex items-center gap-2">
               <Star className="h-4 w-4 text-warning" />
               <div>
-                <p className="text-2xl font-bold">
+                <p className={TYPOGRAPHY.heading.h3}>
                   {vendors.length > 0 ? (vendors.reduce((sum, v) => sum + v.rating, 0) / vendors.length).toFixed(1) : '0'}
                 </p>
-                <p className="text-sm text-muted-foreground">Avg Rating</p>
+                <p className={TYPOGRAPHY.muted.small}>Avg Rating</p>
               </div>
             </div>
           </CardContent>
@@ -320,10 +321,10 @@ const VendorTable = ({
             <div className="flex items-center gap-2">
               <Award className="h-4 w-4 text-success" />
               <div>
-                <p className="text-2xl font-bold">
+                <p className={TYPOGRAPHY.heading.h3}>
                   {vendors.filter(v => calculateOverallScore(v, criteria) >= 4.0).length}
                 </p>
-                <p className="text-sm text-muted-foreground">Top Matches</p>
+                <p className={TYPOGRAPHY.muted.small}>Top Matches</p>
               </div>
             </div>
           </CardContent>
@@ -333,8 +334,8 @@ const VendorTable = ({
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-primary" />
               <div>
-                <p className="text-2xl font-bold">{criteria.length}</p>
-                <p className="text-sm text-muted-foreground">Criteria Used</p>
+                <p className={TYPOGRAPHY.heading.h3}>{criteria.length}</p>
+                <p className={TYPOGRAPHY.muted.small}>Criteria Used</p>
               </div>
             </div>
           </CardContent>
@@ -359,9 +360,9 @@ const VendorTable = ({
           <div className="text-center p-4 border rounded-lg">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-primary">🎨 Prototype Mode</span>
+              <span className={TYPOGRAPHY.label.default}>🎨 Prototype Mode</span>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className={TYPOGRAPHY.muted.xs}>
               Using curated comparison data for {techRequest.category}
             </p>
           </div>
@@ -492,7 +493,7 @@ const VendorTable = ({
                         {filteredAndSortedVendors.map((vendor, index) => <TableHead key={vendor.id} className="text-center min-w-[140px] max-w-[180px]">
                              <div className="space-y-1">
                                <div className="flex items-center justify-center gap-1">
-                                 <a href={`https://${vendor.website}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-sm text-primary hover:text-primary/80 transition-colors underline-offset-4 hover:underline">
+                                 <a href={`https://${vendor.website}`} target="_blank" rel="noopener noreferrer" className={`${TYPOGRAPHY.table.header} hover:text-primary/80 transition-colors underline-offset-4 hover:underline`}>
                                    {vendor.name}
                                  </a>
                                  <ExternalLink className="h-3 w-3" />
@@ -501,7 +502,7 @@ const VendorTable = ({
                                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                                 <span>{vendor.rating}</span>
                               </div>
-                              <div className="text-xs font-medium text-primary">
+                              <div className={TYPOGRAPHY.label.small}>
                                 Overall: {calculateOverallScore(vendor, criteria).toFixed(1)}
                               </div>
                             </div>
@@ -513,7 +514,7 @@ const VendorTable = ({
                       {criteria.filter(c => c.type === type).map(criterion => <TableRow key={criterion.id}>
                           <TableCell className="sticky left-0 z-10 bg-background border-r min-w-[180px] max-w-[220px] shadow-sm">
                             <div className="space-y-1">
-                              <div className="font-semibold break-words whitespace-normal leading-tight">{criterion.name}</div>
+                              <div className={`${TYPOGRAPHY.table.cell} font-semibold break-words whitespace-normal leading-tight`}>{criterion.name}</div>
                               <Badge variant="outline" className={getTypeColor(criterion.type)}>
                                 {criterion.type}
                               </Badge>
@@ -528,7 +529,7 @@ const VendorTable = ({
                               <div className="flex flex-col items-center gap-2 p-2">
                                 <div className="flex items-center gap-1">
                                   <Star className="h-4 w-4 fill-warning text-warning" />
-                                  <span className="text-xs font-bold text-primary">
+                                  <span className={TYPOGRAPHY.label.small}>
                                     {vendor.criteriaScores[criterion.id]?.toFixed(1) || 'N/A'}
                                   </span>
                                 </div>
@@ -537,10 +538,10 @@ const VendorTable = ({
                                      <Badge variant={vendor.criteriaAnswers[criterion.id].yesNo === 'yes' ? 'default' : vendor.criteriaAnswers[criterion.id].yesNo === 'partial' ? 'secondary' : 'destructive'} className="text-xs">
                                        {vendor.criteriaAnswers[criterion.id].yesNo === 'yes' ? 'Yes' : vendor.criteriaAnswers[criterion.id].yesNo === 'partial' ? 'Partial' : 'No'}
                                      </Badge>
-                                     <p className="text-xs text-muted-foreground leading-tight break-words">
+                                     <p className={`${TYPOGRAPHY.muted.xs} leading-tight break-words`}>
                                        {vendor.criteriaAnswers[criterion.id].comment}
                                      </p>
-                                     <a href={`https://${vendor.website}/features`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors">
+                                     <a href={`https://${vendor.website}/features`} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center gap-1 ${TYPOGRAPHY.link.small} hover:text-primary/80 transition-colors`}>
                                        <ExternalLink className="h-3 w-3" />
                                        Source
                                      </a>
@@ -549,7 +550,7 @@ const VendorTable = ({
                             </TableCell>)}
                         </TableRow>)}
                       {criteria.filter(c => c.type === type).length === 0 && <TableRow>
-                          <TableCell colSpan={filteredAndSortedVendors.length + 2} className="text-center text-muted-foreground py-8">
+                          <TableCell colSpan={filteredAndSortedVendors.length + 2} className={`text-center ${TYPOGRAPHY.muted.default} py-8`}>
                             No {type} criteria defined
                           </TableCell>
                         </TableRow>}

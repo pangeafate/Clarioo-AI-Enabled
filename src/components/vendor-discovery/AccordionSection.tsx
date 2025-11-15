@@ -31,6 +31,7 @@ import { ChevronDown, Plus } from 'lucide-react';
 import { CriterionCard } from './CriterionCard';
 import type { Criteria } from '../VendorDiscovery';
 import { SPACING } from '@/styles/spacing-config';
+import { TYPOGRAPHY } from '@/styles/typography-config';
 
 export interface AccordionSectionProps {
   title: string;
@@ -126,8 +127,8 @@ export const AccordionSection: React.FC<AccordionSectionProps> = ({
       >
         {/* Title and Count */}
         <div className="flex items-center gap-1.5 xs:gap-2">
-          <h3 className="font-semibold text-sm xs:text-base">{title}</h3>
-          <span className="text-xs xs:text-sm text-muted-foreground">
+          <h3 className={TYPOGRAPHY.heading.h6}>{title}</h3>
+          <span className={TYPOGRAPHY.muted.small}>
             {totalCount} - {highCount} High, {mediumCount} Medium
           </span>
         </div>
@@ -167,7 +168,7 @@ export const AccordionSection: React.FC<AccordionSectionProps> = ({
               >
                 <div className={`${SPACING.vendorDiscovery.accordion.addButton} flex items-center justify-center gap-1.5 xs:gap-2 text-muted-foreground hover:text-primary group`}>
                   <Plus className="h-4 w-4 xs:h-5 xs:w-5 group-hover:scale-110 transition-transform" />
-                  <span className="font-medium text-xs xs:text-sm sm:text-base">Add {title} Criterion</span>
+                  <span className={TYPOGRAPHY.button.default}>Add {title} Criterion</span>
                 </div>
               </button>
             </div>

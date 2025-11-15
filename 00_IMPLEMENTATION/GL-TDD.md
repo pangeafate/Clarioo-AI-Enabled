@@ -17,9 +17,10 @@ Test-Driven Development (TDD) ensures code correctness through a disciplined cyc
   
 ### The Five Commandments  
   
-1. **Never write production code without a failing test**  
-    - Test must exist and fail before implementation  
-   - Exception: Infrastructure setup and configuration  
+1. **Never write production code without a failing test**
+    - Test must exist and fail before implementation
+   - **Exception: Infrastructure setup and configuration**
+   - **Exception: Visual Prototype Phase (Phase 0)** - During visual prototype development, visual verification through browser testing replaces automated tests. Automated tests are required when transitioning to production phases.  
 2. **Never write more test than sufficient to fail**  
     - Including compilation/interpretation failures  
    - One assertion at a time when starting  
@@ -29,10 +30,41 @@ Test-Driven Development (TDD) ensures code correctness through a disciplined cyc
 4. **Never refactor with failing tests**  
     - All tests must be green before refactoring  
    - Run tests after every refactoring step  
-5. **Never commit with failing tests**  
-    - All tests must pass before version control commit  
-   - Broken tests = broken build  
-  
+5. **Never commit with failing tests**
+    - All tests must pass before version control commit
+   - Broken tests = broken build
+
+## Visual Prototype Phase Exception
+
+### Phase 0: Visual Prototype Development
+
+During the visual prototype phase (Phase 0), the primary goal is rapid visual iteration and stakeholder feedback. In this phase:
+
+**Testing Approach:**
+- **Visual Verification**: Manual browser testing replaces automated unit/integration tests
+- **Browser Tools**: Use DevTools, Playwright's Codegen for exploratory testing
+- **Mock Services**: All backend functionality uses mock services with JSON data
+- **Documentation**: Maintain comprehensive README-driven documentation
+
+**When Automated Tests Are Required:**
+- **Production Transition**: All automated tests MUST be written before moving features to production (Phase 1+)
+- **Complex Logic**: Business logic in hooks/utilities should have tests even in prototype phase
+- **Regression Prevention**: Critical user flows should have E2E tests before stakeholder demos
+
+**Exit Criteria for Prototype Phase:**
+- ✅ All features visually verified in target browsers (Chrome, Safari, Firefox)
+- ✅ Mobile responsiveness confirmed (350px - 1920px)
+- ✅ No console errors during normal usage
+- ✅ Mock services properly simulate all backend interactions
+- ✅ Comprehensive documentation exists for all features
+
+**Transition to Production:**
+When moving from Phase 0 → Phase 1, implement tests in this order:
+1. **E2E Tests First** - Critical user flows (Playwright)
+2. **Hook/Utility Tests** - Business logic layer (Vitest)
+3. **Component Tests** - UI components with complex state (React Testing Library)
+4. **Integration Tests** - Multi-component interactions
+
 ## Prescribed Technology Stack  
   
 ### JavaScript/TypeScript Projects  

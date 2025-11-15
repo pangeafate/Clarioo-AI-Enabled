@@ -1,10 +1,10 @@
-# FEATURE_LIST.md - Vendora AI Visual Prototype
+# FEATURE_LIST.md - Clarioo Visual Prototype
 
 ## Overview
 
 **🎨 THIS IS A VISUAL PROTOTYPE WITH DUMMY DATA**
 
-This document lists all features of the Vendora AI Visual Prototype. All features marked as "Demo Only" use mock services and dummy data for demonstration purposes. No backend connectivity or AI integration is active.
+This document lists all features of the Clarioo Visual Prototype. All features marked as "Demo Only" use mock services and dummy data for demonstration purposes. No backend connectivity or AI integration is active.
 
 **Current Mode**: Visual Prototype (Sprint 7 + SP_011 Planning)
 **Purpose**: Team alignment and design validation
@@ -31,7 +31,7 @@ This document lists all features of the Vendora AI Visual Prototype. All feature
 
 ## 1. Core Platform Features (Visual Demo Only)
 
-### 1.1 Authentication System
+### 1.1 Authentication System (F-001)
 **Status:** 🎨 Demo Only (Mock Auth)
 **Priority:** P0 (Visual Demonstration)
 **Implementation Files:**
@@ -56,7 +56,7 @@ This document lists all features of the Vendora AI Visual Prototype. All feature
 **Dummy Data:**
 - `src/data/api/auth.json` - Demo user credentials
 
-### 1.2 User Profile Management
+### 1.2 User Profile Management (F-002)
 **Status:** 🎨 Visual Demo (Static Profile)
 **Priority:** P1
 **Implementation:**
@@ -70,7 +70,7 @@ This document lists all features of the Vendora AI Visual Prototype. All feature
 
 **Note:** Full profile editing not in prototype scope
 
-### 1.3 Dashboard & Navigation
+### 1.3 Dashboard & Navigation (F-003)
 **Status:** 🎨 Fully Functional (UI Only)
 **Priority:** P0
 **Implementation Files:**
@@ -84,7 +84,7 @@ This document lists all features of the Vendora AI Visual Prototype. All feature
 - Quick actions toolbar (working)
 - Search functionality (UI only, no real search)
 
-### 1.4 Responsive Design
+### 1.4 Responsive Design (F-004)
 **Status:** ✅ Fully Functional (Unchanged)
 **Priority:** P0
 **Technical Stack:**
@@ -99,7 +99,7 @@ This document lists all features of the Vendora AI Visual Prototype. All feature
 
 ## 2. Project Management Features (Visual Demo Only)
 
-### 2.1 Project Creation
+### 2.1 Project Creation (F-005)
 **Status:** 🎨 Demo Only (Simulated)
 **Priority:** P0
 **Implementation Files:**
@@ -131,7 +131,7 @@ projects (
 - Simulated creation (returns to dashboard)
 - No persistence (resets on refresh)
 
-### 2.2 Project Dashboard Grid
+### 2.2 Project Dashboard Grid (F-006)
 **Status:** 🎨 Demo Only (Shows Dummy Data)
 **Priority:** P0
 **Implementation Files:**
@@ -145,7 +145,7 @@ projects (
 - Quick action buttons (simulated actions)
 - Responsive grid layout (1-3 columns, working)
 
-### 2.3 Project Status Management
+### 2.3 Project Status Management (F-007)
 **Status:** 🎨 Visual Demo (No Persistence)
 **Priority:** P0
 **Statuses (Visual Only):**
@@ -156,7 +156,7 @@ projects (
 
 **Note:** Status changes are visual only, reset on page refresh
 
-### 2.4 Workflow State Persistence
+### 2.4 Workflow State Persistence (F-008)
 **Status:** 🎨 Simulated (Ephemeral)
 **Priority:** P0
 **Technical Details (Prototype):**
@@ -175,7 +175,7 @@ projects (
 
 ## 3. AI Engine Features (Mock Data Only)
 
-### 3.1 OpenAI Integration
+### 3.1 OpenAI Integration (F-009)
 **Status:** 🗄️ Removed (Archived)
 **Priority:** P0 (Future)
 **Implementation Files:**
@@ -194,11 +194,11 @@ projects (
 - ~~O3 Model~~ → Pre-generated responses
 - ~~O4-mini~~ → Pre-generated responses
 
-### 3.2 Criteria Generation AI
+### 3.2 Criteria Generation AI (F-010)
 **Status:** 🎨 Mock Demo (Pre-Generated)
 **Priority:** P0
 **Implementation:**
-- `src/components/steps/CriteriaBuilder.tsx`
+- `src/pages/CriteriaBuilder.tsx`
 - `src/services/mock/aiService.ts`
 
 **Capabilities (Simulated):**
@@ -217,11 +217,11 @@ projects (
 }
 ```
 
-### 3.3 Vendor Discovery AI
+### 3.3 Vendor Discovery AI (F-011)
 **Status:** 🎨 Mock Demo (Pre-Selected)
 **Priority:** P0
 **Implementation:**
-- `src/components/steps/VendorSelection.tsx`
+- `src/pages/VendorSelection.tsx`
 - `src/services/mock/aiService.ts`
 
 **Capabilities (Simulated):**
@@ -241,11 +241,11 @@ projects (
 }
 ```
 
-### 3.4 Comparison Analysis AI
+### 3.4 Comparison Analysis AI (F-012)
 **Status:** 🎨 Mock Demo (Pre-Generated)
 **Priority:** P0
 **Implementation:**
-- `src/components/steps/VendorComparison.tsx`
+- `src/pages/Comparison.tsx`
 - `src/services/mock/aiService.ts`
 
 **Capabilities (Simulated):**
@@ -265,7 +265,7 @@ projects (
 }
 ```
 
-### 3.5 Email Generation AI
+### 3.5 Email Generation AI (F-013)
 **Status:** 🎨 Mock Demo (Templates)
 **Priority:** P0
 **Implementation:**
@@ -286,11 +286,11 @@ projects (
 }
 ```
 
-### 3.6 Chat-Based Refinement
+### 3.6 Chat-Based Refinement (F-014)
 **Status:** 🎨 Visual Demo (UI Only)
 **Priority:** P0
 **Implementation:**
-- `src/components/steps/CriteriaBuilder.tsx`
+- `src/pages/CriteriaBuilder.tsx`
 
 **Features (Demo):**
 - Chat interface functional
@@ -307,7 +307,7 @@ projects (
 - Prevents layout shift when step titles appear during workflow progression
 - Ensures consistent visual experience and smooth transitions between steps
 
-### 4.1 Step 1: Technology Requirements Input
+### 4.1 Step 1: Technology Requirements Input (F-015)
 **Status:** 🎨 Fully Functional (UI)
 **Priority:** P0
 **Implementation:**
@@ -335,11 +335,11 @@ projects (
 - One-viewport artifact visualization
 - Enhanced input field animations
 
-### 4.2 Step 2: Criteria Builder
+### 4.2 Step 2: Criteria Builder (F-016)
 **Status:** 🎨 Mock Demo (Pre-Generated)
 **Priority:** P0
 **Implementation:**
-- `src/components/steps/CriteriaBuilder.tsx`
+- `src/pages/CriteriaBuilder.tsx`
 - `src/services/mock/aiService.ts`
 
 **Features (Demo):**
@@ -356,11 +356,11 @@ projects (
 - Share functionality (link + PDF)
 - Viral link format design
 
-### 4.3 Step 3: Vendor Selection
+### 4.3 Step 3: Vendor Selection (F-017)
 **Status:** 🎨 Mock Demo (Pre-Selected)
 **Priority:** P0
 **Implementation:**
-- `src/components/steps/VendorSelection.tsx`
+- `src/pages/VendorSelection.tsx`
 - `src/services/mock/aiService.ts`
 
 **Removed:**
@@ -379,11 +379,11 @@ projects (
 - Enhanced vendor card design with company profile facts
 - "Aha feature" / "Killer feature" display
 
-### 4.4 Step 4: Vendor Comparison
+### 4.4 Step 4: Vendor Comparison (F-018)
 **Status:** 🎨 Mock Demo (Pre-Generated)
 **Priority:** P0
 **Implementation:**
-- `src/components/steps/VendorComparison.tsx`
+- `src/pages/Comparison.tsx`
 - `src/services/mock/aiService.ts`
 
 **Features (Demo):**
@@ -402,7 +402,7 @@ projects (
 - In-matrix AI chat for modifications
 - Enhanced share functionality (link + PDF)
 
-### 4.5 Step 5: Vendor Invitation
+### 4.5 Step 5: Vendor Invitation (F-019)
 **Status:** 🎨 Mock Demo (Templates)
 **Priority:** P0
 **Implementation:**
@@ -420,7 +420,7 @@ projects (
 
 ## 5. UI/UX Enhancement Features (Planned SP_007)
 
-### 5.1 Landing Page Enhancements
+### 5.1 Landing Page Enhancements (F-020)
 **Status:** 🟢 Phase 1 Complete with Refinements (SP_007 - 6/8 elements implemented)
 **Priority:** P0
 **Source:** VISION MODIFIED.md Section 1 + User Specifications
@@ -607,7 +607,7 @@ projects (
 - **Scroll-Triggered Animation**: Carousel starts animating when scrolled into view
 
 **Value Propositions (Above Carousel):**
-- Headline: "How Vendora AI Works"
+- Headline: "How Clarioo AI Works"
 - Subheadline: "From requirements to vendor selection in 5 intelligent steps"
 - Three key benefits displayed as badges/pills:
   - "⚡ 90% of routine work automated"
@@ -674,7 +674,7 @@ projects (
 
 **New Features (SP_011):**
 
-#### 5.1.0.1 View Toggle System
+#### 5.1.0.1 View Toggle System (Part of F-030)
 **Status:** ✅ Completed (November 13, 2024)
 **Description:** Switch between Landing (marketing) and Projects (workflow) views
 **Implementation Files:**
@@ -695,7 +695,7 @@ projects (
 - No page reloads - instant view switching
 - Mobile-responsive toggle button placement
 
-#### 5.1.0.2 Quick Project Creation from Categories
+#### 5.1.0.2 Quick Project Creation from Categories (F-027)
 **Status:** ✅ Completed (November 13, 2024)
 **Description:** Dropdown selector with 15+ software categories for instant project creation
 **Implementation Files:**
@@ -1161,18 +1161,19 @@ Instead of flat colors, use **layered gradient backgrounds** to create depth:
 
 ---
 
-### 5.2 Enhanced Criteria Visualization
+### 5.2 Enhanced Criteria Visualization (F-021)
 **Status:** 📅 Planned (SP_007)
 **Priority:** P0
 **Implementation Files:**
-- `src/components/steps/CriteriaBuilder.tsx`
+- `src/pages/CriteriaBuilder.tsx`
 - `src/components/CriteriaCard.tsx` - NEW - Enhanced criteria display
 
 **Planned Features:**
-- **Visual Hierarchy**
+- **Visual Hierarchy (F-028 - Criteria Hierarchy Visual Indicators)**
   - 3-5 key criteria highlighted with color/accent
   - Secondary criteria in gray/muted colors
-  - Collapsible secondary criteria
+  - Signal antenna visual indicators showing importance levels
+  - Collapsible secondary criteria (F-029 - Criteria Accordion)
   - Drag to reorder or promote criteria
 
 - **Interactive Tooltips**
@@ -1187,11 +1188,11 @@ Instead of flat colors, use **layered gradient backgrounds** to create depth:
   - Shareable link with preview
   - Social media optimization
 
-### 5.3 Vendor Discovery Animation
+### 5.3 Vendor Discovery Animation (F-022)
 **Status:** 📅 Planned (SP_007)
 **Priority:** P0
 **Implementation Files:**
-- `src/components/steps/VendorSelection.tsx`
+- `src/pages/VendorSelection.tsx`
 - `src/components/VendorLogoCarousel.tsx` - NEW
 
 **Planned Features:**
@@ -1213,11 +1214,11 @@ Instead of flat colors, use **layered gradient backgrounds** to create depth:
   - Clear visual separation
   - Different card styling
 
-### 5.4 Enhanced Comparison Matrix
+### 5.4 Enhanced Comparison Matrix (F-023)
 **Status:** 📅 Planned (SP_007)
 **Priority:** P0
 **Implementation Files:**
-- `src/components/steps/VendorComparison.tsx`
+- `src/pages/Comparison.tsx`
 - `src/components/ComparisonMatrix.tsx` - Enhanced
 
 **Planned Features:**
@@ -1251,7 +1252,7 @@ Instead of flat colors, use **layered gradient backgrounds** to create depth:
   - Viral format optimization
   - Branded templates
 
-### 5.5 Community Templates Section
+### 5.5 Community Templates Section (F-024)
 **Status:** 📅 Planned (SP_007)
 **Priority:** P1
 **Implementation Files:**
@@ -1277,7 +1278,7 @@ Instead of flat colors, use **layered gradient backgrounds** to create depth:
   - Diverse industries and use cases
   - Inspires user confidence
 
-### 5.6 Mobile-First Optimizations
+### 5.6 Mobile-First Optimizations (F-025)
 **Status:** 📅 Planned (SP_007)
 **Priority:** P0
 **Implementation:** Cross-cutting concern
@@ -1311,11 +1312,11 @@ Instead of flat colors, use **layered gradient backgrounds** to create depth:
 
 ## 6. Data Management Features (Partial Function)
 
-### 6.1 Excel Import
+### 6.1 Excel Import (F-031)
 **Status:** 🎨 Simulated (Shows Sample)
 **Priority:** P0
 **Implementation:**
-- `src/components/steps/CriteriaBuilder.tsx`
+- `src/pages/CriteriaBuilder.tsx`
 - ~~`xlsx` package~~ (kept for export)
 
 **Capabilities (Demo):**
@@ -1326,11 +1327,11 @@ Instead of flat colors, use **layered gradient backgrounds** to create depth:
 
 **Note:** Real import functionality removed for prototype
 
-### 6.2 Excel Export
+### 6.2 Excel Export (F-032)
 **Status:** ✅ Fully Functional (Unchanged)
 **Priority:** P0
 **Implementation:**
-- `src/components/steps/VendorComparison.tsx`
+- `src/pages/Comparison.tsx`
 - `xlsx` package (kept)
 
 **Export Options (All Working):**
@@ -1342,7 +1343,7 @@ Instead of flat colors, use **layered gradient backgrounds** to create depth:
 
 **Note:** Export still works with dummy data
 
-### 6.3 Database Architecture
+### 6.3 Database Architecture (F-033)
 **Status:** 🗄️ Removed (Archived)
 **Priority:** P0 (Future)
 **Database:** ~~PostgreSQL via Supabase~~ → JSON files
@@ -1386,9 +1387,9 @@ Instead of flat colors, use **layered gradient backgrounds** to create depth:
 
 ---
 
-## 6. Collaboration Features (Not in Prototype)
+## 7. Collaboration Features (Not in Prototype)
 
-### 6.1 Project Sharing
+### 7.1 Project Sharing (F-034)
 **Status:** 🔵 Future (Q2 2025)
 **Priority:** P1 (After Backend)
 **Planned Features:**
@@ -1422,7 +1423,7 @@ Instead of flat colors, use **layered gradient backgrounds** to create depth:
 
 ## 7. Integration Features (Not in Prototype)
 
-### 7.1 API Development
+### 8.1 API Development (F-037)
 **Status:** 🔵 Future (Q4 2025)
 **Priority:** P2 (Enterprise Phase)
 **Planned Endpoints:**
@@ -1432,7 +1433,7 @@ Instead of flat colors, use **layered gradient backgrounds** to create depth:
 - Rate limiting
 - API key management
 
-### 7.2 SSO Integration
+### 8.2 SSO Integration (F-038)
 **Status:** 🔵 Future (Q4 2025)
 **Priority:** P2 (Enterprise Phase)
 **Planned Support:**
@@ -1442,7 +1443,7 @@ Instead of flat colors, use **layered gradient backgrounds** to create depth:
 - Google Workspace
 - Okta
 
-### 7.3 ERP/Procurement Integration
+### 8.3 ERP/Procurement Integration (F-039)
 **Status:** 🔵 Future (Q1 2026)
 **Priority:** P3 (Long-term)
 **Planned Integrations:**
@@ -1456,7 +1457,7 @@ Instead of flat colors, use **layered gradient backgrounds** to create depth:
 
 ## 8. Vendor Ecosystem Features (Not in Prototype)
 
-### 8.1 Vendor Portal
+### 9.1 Vendor Portal (F-040)
 **Status:** 🔵 Future (Q1-Q2 2026)
 **Priority:** P3 (Ecosystem Phase)
 **Planned Features:**
@@ -1681,5 +1682,9 @@ All removed functional code is preserved in:
 **Next Update**: After SP_012 planning or new feature request
 
 ---
+
+*Version: 1.4*
+*Last Updated: November 15, 2024*
+*Status: Visual Prototype Phase with F-XXX Identifiers*
 
 *This document reflects the **visual prototype** phase. Feature statuses will be updated when backend integration begins (Q1 2025).*

@@ -26,6 +26,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { MessageSquare, Search, Table, Mail, LucideIcon } from 'lucide-react';
+import { TYPOGRAPHY } from '@/styles/typography-config';
 
 export type Step = 'criteria' | 'vendor-selection' | 'vendor-comparison' | 'invite-pitch';
 
@@ -152,7 +153,7 @@ export const WorkflowNavigation = ({
         animate={{ opacity: clickedStepTitle ? 1 : 0 }}
         transition={{ duration: 0.3 }}
         className={`
-          text-center text-xs xs:text-sm font-medium text-primary flex items-center justify-center
+          text-center ${TYPOGRAPHY.label.small} text-primary flex items-center justify-center
           transition-all duration-300 overflow-hidden
           ${clickedStepTitle ? 'max-h-10 py-2' : 'max-h-0 py-0'}
         `}

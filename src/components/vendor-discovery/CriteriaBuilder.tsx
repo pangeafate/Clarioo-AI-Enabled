@@ -26,6 +26,7 @@ import { useCriteriaChat } from "@/hooks/useCriteriaChat";
 import { storageService } from "@/services/storageService";
 import aiSummariesData from "@/data/api/aiSummaries.json";
 import { SPACING } from '@/styles/spacing-config';
+import { TYPOGRAPHY } from '@/styles/typography-config';
 
 interface CriteriaBuilderProps {
   techRequest: TechRequest;
@@ -158,7 +159,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
             return (
               <span
                 key={index}
-                className="font-bold text-brand-blue animate-pulse-blue"
+                className={`${TYPOGRAPHY.body.default.replace('font-normal', 'font-bold')} text-brand-blue animate-pulse-blue`}
               >
                 {part}
               </span>
@@ -539,7 +540,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
                             ? 'bg-primary text-primary-foreground'
                             : 'bg-white border border-blue-100'
                         }`}>
-                          <p className="text-sm leading-relaxed">
+                          <p className={`${TYPOGRAPHY.body.default} leading-relaxed`}>
                             {message.role === 'assistant' ? highlightKeywords(message.content) : message.content}
                           </p>
                         </div>
@@ -571,7 +572,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
 
               {/* Input Area - Fixed at bottom */}
               <div className="space-y-2 flex-shrink-0">
-                <Label className="text-sm font-medium text-gray-700">Would you like to add anything?</Label>
+                <Label className={TYPOGRAPHY.label.default}>Would you like to add anything?</Label>
                 <div className="flex gap-2">
                   <Textarea
                     placeholder="Any additional context, requirements, or specific challenges..."
@@ -603,7 +604,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
         {/* SP_012: Current Criteria - Accordion View */}
         <Card>
           <CardHeader className={SPACING.vendorDiscovery.criteria.header}>
-            <CardTitle className="flex items-center justify-between">
+            <CardTitle className={`${TYPOGRAPHY.card.title} flex items-center justify-between`}>
               Evaluation Criteria ({criteria.length})
               <Badge variant="secondary">{criteria.filter(c => c.importance === 'high').length} High Priority</Badge>
             </CardTitle>
@@ -670,7 +671,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
               >
                 <div className={`${SPACING.vendorDiscovery.accordion.header} flex items-center justify-center gap-1.5 xs:gap-2 text-muted-foreground hover:text-primary group`}>
                   <Plus className="h-4 w-4 xs:h-5 xs:w-5 group-hover:scale-110 transition-transform" />
-                  <span className="font-semibold text-sm xs:text-base">Add New Category</span>
+                  <span className={`${TYPOGRAPHY.button.default}`}>Add New Category</span>
                 </div>
               </button>
             ) : (
@@ -694,12 +695,14 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
                     size="sm"
                     variant="ghost"
                     onClick={handleCancelCreateCategory}
+                    className={TYPOGRAPHY.button.small}
                   >
                     Cancel
                   </Button>
                   <Button
                     size="sm"
                     onClick={handleCreateCategory}
+                    className={TYPOGRAPHY.button.small}
                   >
                     Create
                   </Button>
@@ -767,7 +770,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
                                        e.target.style.height = 'auto';
                                        e.target.style.height = e.target.scrollHeight + 'px';
                                      }}
-                                     className="border-0 bg-transparent p-0 min-h-0 font-medium focus-visible:ring-0 resize-none overflow-hidden"
+                                     className={`border-0 bg-transparent p-0 min-h-0 ${TYPOGRAPHY.body.default} focus-visible:ring-0 resize-none overflow-hidden`}
                                      style={{ height: 'auto' }}
                                      onInput={(e) => {
                                        const target = e.target as HTMLTextAreaElement;
@@ -832,7 +835,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
                             ))}
                             {criteria.filter(c => c.type === type).length === 0 && (
                               <TableRow>
-                                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                                <TableCell colSpan={4} className={`${TYPOGRAPHY.muted.default} text-center py-8`}>
                                   No {type} criteria defined yet
                                 </TableCell>
                               </TableRow>
@@ -862,7 +865,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
                                      e.target.style.height = 'auto';
                                      e.target.style.height = e.target.scrollHeight + 'px';
                                    }}
-                                   className="border-0 bg-transparent p-0 min-h-0 font-medium focus-visible:ring-0 resize-none overflow-hidden"
+                                   className={`border-0 bg-transparent p-0 min-h-0 ${TYPOGRAPHY.body.default} focus-visible:ring-0 resize-none overflow-hidden`}
                                    style={{ height: 'auto' }}
                                    onInput={(e) => {
                                      const target = e.target as HTMLTextAreaElement;
@@ -927,7 +930,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
                           ))}
                           {criteria.filter(c => c.type === type).length === 0 && (
                             <TableRow>
-                              <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                              <TableCell colSpan={4} className={`${TYPOGRAPHY.muted.default} text-center py-8`}>
                                 No {type} criteria defined yet
                               </TableCell>
                             </TableRow>
@@ -951,7 +954,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
               // TODO: Implement download functionality
               console.log('Download criteria list');
             }}
-            className="gap-2 min-w-[240px]"
+            className={`${TYPOGRAPHY.button.default} gap-2 min-w-[240px]`}
           >
             <Download className="h-4 w-4" />
             Download Criteria List
@@ -962,12 +965,12 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
         <div className="flex flex-col items-center gap-2">
           <Label
             htmlFor="excel-upload"
-            className="cursor-pointer inline-flex h-10 min-w-[240px] items-center justify-center gap-2 rounded-md border border-dashed border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+            className={`${TYPOGRAPHY.button.default} cursor-pointer inline-flex h-10 min-w-[240px] items-center justify-center gap-2 rounded-md border border-dashed border-input bg-background px-4 py-2 ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50`}
           >
             <Upload className="h-4 w-4" />
             Upload Criteria
           </Label>
-          <div className="text-xs text-muted-foreground text-center">
+          <div className={`${TYPOGRAPHY.muted.small} text-center`}>
             Accepted file types: Word, PDF, Excel
           </div>
           <input
@@ -979,7 +982,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
             className="hidden"
           />
           {isUploading && (
-            <div className="text-center text-sm text-muted-foreground">
+            <div className={`${TYPOGRAPHY.muted.default} text-center`}>
               Processing file...
             </div>
           )}
@@ -990,7 +993,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
             onClick={handleComplete}
             variant="professional"
             size="lg"
-            className="gap-2"
+            className={`${TYPOGRAPHY.button.large} gap-2`}
             disabled={criteria.length === 0}
           >
             Find Vendors

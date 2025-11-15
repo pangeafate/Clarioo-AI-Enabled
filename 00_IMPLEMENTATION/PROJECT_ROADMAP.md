@@ -1,16 +1,16 @@
-# PROJECT ROADMAP - Vendora AI Visual Prototype
+# PROJECT ROADMAP - Clarioo Visual Prototype
 
 ## Executive Summary
 
 **🎨 PROJECT STATUS: VISUAL PROTOTYPE MODE**
 
-Vendora AI is now a **visual prototype** designed for team alignment and demonstration purposes. The roadmap has been adjusted to reflect the current prototype nature of the project, with plans for future functional implementation when backend integration begins.
+Clarioo is now a **visual prototype** designed for team alignment and demonstration purposes. The roadmap has been adjusted to reflect the current prototype nature of the project, with plans for future functional implementation when backend integration begins.
 
 **Current Focus**: Visual demonstration of 21 implemented features using dummy data and mock services.
 
 **Vision**: To validate the UX/UI design and gather stakeholder feedback before investing in full backend integration and AI implementation.
 
-**Current Status**: Visual Prototype - Sprint 7 Active (Visual Design Enhancement & Mobile-First UI/UX)
+**Current Status**: Visual Prototype - Sprint 12 Planned (Criteria Builder Accordion Redesign)
 
 ---
 
@@ -86,6 +86,10 @@ Vendora AI is now a **visual prototype** designed for team alignment and demonst
 - Documentation fully updated
 - Code archived properly
 
+**Sprint Plan**: [SP_006_MVP_to_Visual_Prototype_Conversion.md](./SPRINTS/SP_006_MVP_to_Visual_Prototype_Conversion.md)
+
+---
+
 #### Current Sprint: SP_008 🔧
 **Sprint Name**: Service Layer and Type System Refactoring
 **Duration**: 3-4 days (November 12-15, 2024)
@@ -115,6 +119,8 @@ Vendora AI is now a **visual prototype** designed for team alignment and demonst
 - ✅ Test coverage thresholds met (80% lines, 75% branches)
 - ✅ Build successful with 0 errors
 - ✅ Documentation updated
+
+**Sprint Plan**: [SP_008_Service_Layer_and_Type_System_Refactoring.md](./SPRINTS/SP_008_Service_Layer_and_Type_System_Refactoring.md)
 
 #### Completed Sprint: SP_009 ✅
 **Sprint Name**: Critical UX Gaps & Foundation Fixes
@@ -184,7 +190,7 @@ Vendora AI is now a **visual prototype** designed for team alignment and demonst
 - ✅ Build successful with no errors
 - ✅ Documentation updated (PROGRESS.md, PROJECT_ROADMAP.md)
 
-**Sprint Plan**: [SP_010_Unified_Landing_Workflow_Integration.md](./SPRINTS/SP_010_Unified_Landing_Workflow_Integration.md)
+**Sprint Plan**: [SP_010_Unified_Landing_Workflow.md](./SPRINTS/SP_010_Unified_Landing_Workflow.md)
 
 ---
 
@@ -284,7 +290,70 @@ Vendora AI is now a **visual prototype** designed for team alignment and demonst
 - ✅ Mobile-optimized with card-based layouts
 - ✅ Documentation updated (PROGRESS.md, PROJECT_ROADMAP.md)
 
-**Sprint Plan**: [SP_012_Criteria_Builder_Accordion_Redesign.md](./SPRINTS/SP_012_Criteria_Builder_Accordion_Redesign.md)
+**Sprint Plan**: [SP_012_Criteria_Builder_Accordion.md](./SPRINTS/SP_012_Criteria_Builder_Accordion.md)
+
+---
+
+#### Planned Sprint: SP_013 📋
+**Sprint Name**: Component Reusability & Code Deduplication
+**Duration**: 5-7 days
+**Status**: 📋 Planned
+**Type**: Code Quality - Component Architecture Improvement
+**Priority**: High
+
+**Sprint Objectives**:
+1. Extract duplicate code into reusable shared components
+2. Create base chat architecture with specialized wrappers
+3. Implement hybrid organization approach (/components/shared/ + existing structure)
+4. Follow TDD principles: Write failing tests first for all extracted components
+5. Maintain backward compatibility: Update all component usages
+6. Improve code maintainability through single source of truth
+
+**Key Deliverables**:
+- **Phase 1 - Quick Wins**:
+  - LoadingState component (replaces 5 identical implementations)
+  - EmptyState component (replaces 3 identical implementations)
+  - StatsCard component (replaces 4 identical structures)
+  - AddVendorForm component (eliminates 100% duplicate code)
+
+- **Phase 2 - Chat Consolidation**:
+  - ChatInterface, ChatMessage, ChatInput, TypingIndicator components
+  - useChat base hook for message management
+  - useCriterionChat specialized hook
+  - Connect CriterionEditSidebar chat to AI service
+
+- **Phase 3 - Form Standardization**:
+  - FormDialog reusable modal component
+  - FormFieldGroup label + input wrapper
+  - Standardized validation patterns
+
+- **Phase 4 - Testing & Documentation**:
+  - 85%+ test coverage for all shared components
+  - README documentation for each component folder
+  - Integration tests for component interactions
+  - Update FEATURE_LIST.md and USER_STORIES.md
+
+**Expected Outcomes**:
+- Reduce code duplication by 800-1000 lines
+- Achieve 85%+ test coverage for shared components
+- Improve bundle size by 5-10%
+- Establish patterns for future component development
+- Enable faster feature development through reusable components
+
+**File Structure**:
+```
+/src/components/shared/
+  ├── loading/     (LoadingState component + tests)
+  ├── empty/       (EmptyState component + tests)
+  ├── stats/       (StatsCard component + tests)
+  ├── chat/        (ChatInterface, ChatMessage, ChatInput, TypingIndicator)
+  ├── forms/       (FormDialog, FormFieldGroup, AddVendorForm)
+  └── README.md
+```
+
+**Migration Plan**: 18 files to update across ProjectDashboard, VendorSelection, VendorTable, ExecutiveSummary, CriteriaBuilder, VendorDiscovery, VendorInvite, and CriterionEditSidebar
+
+**Sprint Plan**: [SP_013_Component_Reusability_Code_Deduplication.md](./SPRINTS/SP_013_Component_Reusability_Code_Deduplication.md)
 
 ---
 
@@ -330,7 +399,7 @@ Vendora AI is now a **visual prototype** designed for team alignment and demonst
        * CTA button ("Try Now", "See Example", "Learn More")
      - **Card Design**: White background, 16px border radius, shadow, 24px padding
      - **Center Focus**: Middle card scaled 1.05x, side cards at 0.7 opacity
-     - **Value Props Above**: "How Vendora AI Works" headline + 3 benefit badges
+     - **Value Props Above**: "How Clarioo AI Works" headline + 3 benefit badges
      - **Five Cards**: Tech Exploration, Criteria Building, Vendor Discovery, Comparison, Engagement
 - **Single-Page Scrollable Architecture** (Core Navigation Model):
   - After registration, users remain on same page - no separate page navigation
@@ -385,6 +454,8 @@ Vendora AI is now a **visual prototype** designed for team alignment and demonst
   - Typography uses warm grays (#4B5563 body, #1A1A1A headlines) not cold grays
   - Alternating section layouts visible (center, image-left, image-right pattern)
   - Interface demonstrably "not vanilla" - distinctive, premium aesthetic achieved
+
+**Sprint Plan**: [SP_007_Visual_Design_Enhancement_Mobile_First_UI_UX.md](./SPRINTS/SP_007_Visual_Design_Enhancement_Mobile_First_UI_UX.md)
 
 ---
 

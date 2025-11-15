@@ -41,6 +41,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { TYPOGRAPHY } from '@/styles/typography-config';
 
 interface ProjectConfirmationDialogProps {
   isOpen: boolean;
@@ -69,16 +70,16 @@ export const ProjectConfirmationDialog = ({
               You're about to create a new project:
             </p>
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="font-semibold text-gray-900">
+              <p className={TYPOGRAPHY.label.default}>
                 {projectTitle}
               </p>
               {projectDescription && (
-                <p className="text-sm text-gray-600 mt-1">
+                <p className={`${TYPOGRAPHY.muted.small} mt-1`}>
                   {projectDescription}
                 </p>
               )}
             </div>
-            <p className="text-sm">
+            <p className={TYPOGRAPHY.body.small}>
               This will switch you to the project view where you can start configuring your search criteria.
             </p>
           </AlertDialogDescription>

@@ -39,6 +39,7 @@ import {
 } from '@/components/ui/select';
 import { SOFTWARE_CATEGORIES } from '@/data/categories';
 import { ProjectConfirmationDialog } from './ProjectConfirmationDialog';
+import { TYPOGRAPHY } from '@/styles/typography-config';
 
 interface CategoryDropdownProps {
   onCreateProject: (title: string, description: string) => Promise<void>;
@@ -99,7 +100,7 @@ export const CategoryDropdown = ({
         {/* Label */}
         <label
           htmlFor="category-dropdown"
-          className={`block text-lg font-semibold mb-3 transition-colors ${
+          className={`block mb-3 transition-colors ${TYPOGRAPHY.label.large} ${
             isComponentDisabled
               ? 'text-gray-400'
               : 'text-gray-800'
@@ -107,7 +108,7 @@ export const CategoryDropdown = ({
         >
           Doing a general research? Just pick up a category.
           {hasInputValues && (
-            <span className="ml-2 text-xs text-gray-500">
+            <span className={`ml-2 ${TYPOGRAPHY.muted.xs} text-gray-500`}>
               (Clear input fields to use this dropdown)
             </span>
           )}
@@ -133,8 +134,8 @@ export const CategoryDropdown = ({
             {SOFTWARE_CATEGORIES.map((category) => (
               <SelectItem key={category.id} value={category.id}>
                 <div>
-                  <div className="font-medium">{category.label}</div>
-                  <div className="text-xs text-gray-500">
+                  <div className={TYPOGRAPHY.label.default}>{category.label}</div>
+                  <div className={`${TYPOGRAPHY.muted.xs} text-gray-500`}>
                     {category.description}
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-# Archived Functional Code - Vendora AI
+# Archived Functional Code - Clarioo
 
 ## Overview
 

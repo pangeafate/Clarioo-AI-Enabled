@@ -14,6 +14,7 @@ import VendorInvite from "./vendor-discovery/VendorInvite";
 import { WorkflowNavigation, WORKFLOW_STEPS, type Step } from "./WorkflowNavigation";
 import criteriaData from '@/data/api/criteria.json';
 import { SPACING } from '@/styles/spacing-config';
+import { TYPOGRAPHY } from '@/styles/typography-config';
 
 /**
  * GAP-1: Workflow State Persistence Structure
@@ -290,7 +291,7 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
       <div className="min-h-screen bg-gradient-secondary flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading project...</p>
+          <p className={TYPOGRAPHY.muted.default}>Loading project...</p>
         </div>
       </div>
     );
@@ -409,21 +410,21 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
             {techRequest && (
               <Card className="mt-8 bg-gradient-secondary border-0">
                 <CardHeader>
-                  <CardTitle className="text-lg">Request Summary</CardTitle>
+                  <CardTitle className={TYPOGRAPHY.card.title}>Request Summary</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Category</p>
-                      <p className="font-semibold">{techRequest.category}</p>
+                      <p className={TYPOGRAPHY.label.muted}>Category</p>
+                      <p className={TYPOGRAPHY.label.default}>{techRequest.category}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Criteria</p>
-                      <p className="font-semibold">{criteria.length} defined</p>
+                      <p className={TYPOGRAPHY.label.muted}>Criteria</p>
+                      <p className={TYPOGRAPHY.label.default}>{criteria.length} defined</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Vendors</p>
-                      <p className="font-semibold">{selectedVendors.length} selected</p>
+                      <p className={TYPOGRAPHY.label.muted}>Vendors</p>
+                      <p className={TYPOGRAPHY.label.default}>{selectedVendors.length} selected</p>
                     </div>
                   </div>
                 </CardContent>

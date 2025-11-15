@@ -1,6 +1,6 @@
 # Human-AI Interaction Workflow
 
-**Vendora AI Vendor Analyst - Conversational AI Flow**
+**Clarioo Vendor Analyst - Conversational AI Flow**
 
 This document shows the direct conversation between the user and AI throughout the application workflow, focusing only on human prompts and AI outputs.
 

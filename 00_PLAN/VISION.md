@@ -1,8 +1,8 @@
-# VISION.md - Vendora AI (Clarioo) Vendor Analyst
+# VISION.md - Clarioo Vendor Analyst
 
 ## Executive Summary
 
-Vendora AI (Clarioo) is an intelligent platform that revolutionizes the vendor discovery and evaluation process for businesses. By combining artificial intelligence with exceptional user experience design, Clarioo transforms the traditionally time-consuming and subjective vendor selection process into a delightful, data-driven, efficient, and transparent experience. Our mobile-first, minimalist design philosophy ensures that sophisticated vendor analysis is accessible anywhere, anytime, on any device.
+Clarioo is an intelligent platform that revolutionizes the vendor discovery and evaluation process for businesses. By combining artificial intelligence with exceptional user experience design, Clarioo transforms the traditionally time-consuming and subjective vendor selection process into a delightful, data-driven, efficient, and transparent experience. Our mobile-first, minimalist design philosophy ensures that sophisticated vendor analysis is accessible anywhere, anytime, on any device.
 
 ## Vision Statement
 
@@ -44,7 +44,7 @@ Clarioo is built on a foundation of exceptional user experience, distinguishing 
 
 ### Enhanced Visual Design (Clearbit-Inspired)
 
-To differentiate from generic "vanilla" enterprise software, Vendora AI adopts a **gradient-heavy, depth-rich visual language**:
+To differentiate from generic "vanilla" enterprise software, Clarioo adopts a **gradient-heavy, depth-rich visual language**:
 
 **Visual Sophistication:**
 - **Layered Gradients**: Soft coral/peach hero backgrounds with radial overlays create warmth
@@ -119,7 +119,7 @@ Single-viewport graphic showing:
 **6. Explanatory Content (Below Fold) - Interactive Card Carousel**
 
 **Headline Section:**
-- Main headline: "How Vendora AI Works"
+- Main headline: "How Clarioo AI Works"
 - Subheadline: "From requirements to vendor selection in 5 intelligent steps"
 - Three value proposition badges:
   - "⚡ 90% of routine work automated"
@@ -215,7 +215,7 @@ Traditional vendor selection processes suffer from:
 
 ## Our Solution
 
-Vendora AI provides an intelligent, five-step workflow that:
+Clarioo provides an intelligent, five-step workflow that:
 1. **Captures Requirements**: Structured collection of technology needs and constraints
 2. **Generates Criteria**: AI-powered creation of comprehensive evaluation criteria
 3. **Discovers Vendors**: Intelligent vendor identification and selection
@@ -240,7 +240,7 @@ Vendora AI provides an intelligent, five-step workflow that:
 - **Goal 9**: Become the go-to platform for B2B vendor discovery globally
 - **Goal 10**: Build AI-powered negotiation assistance and contract analysis
 - **Goal 11**: Create vendor ecosystem with reviews, ratings, and benchmarks
-- **Goal 12**: Establish Vendora as a verb in business vocabulary ("Let's Vendora this")
+- **Goal 12**: Establish Clarioo as a verb in business vocabulary ("Let's Clarioo this")
 
 ## Key Success Metrics
 
@@ -378,7 +378,7 @@ Vendora AI provides an intelligent, five-step workflow that:
 
 ## Conclusion
 
-Vendora AI (Clarioo) is positioned to transform how businesses discover and evaluate vendors. By combining artificial intelligence with exceptional user experience design, we're not just improving the existing process – we're reimagining it entirely. Our mobile-first, design-led approach ensures that sophisticated vendor analysis is accessible, delightful, and shareable. Our vision extends beyond being a tool to becoming an essential partner in every business's vendor selection journey – one that users love to use and recommend.
+Clarioo is positioned to transform how businesses discover and evaluate vendors. By combining artificial intelligence with exceptional user experience design, we're not just improving the existing process – we're reimagining it entirely. Our mobile-first, design-led approach ensures that sophisticated vendor analysis is accessible, delightful, and shareable. Our vision extends beyond being a tool to becoming an essential partner in every business's vendor selection journey – one that users love to use and recommend.
 
 ### What Makes Us Different
 
@@ -387,6 +387,58 @@ Vendora AI (Clarioo) is positioned to transform how businesses discover and eval
 - **Visual Transparency**: See the process, understand the reasoning
 - **Community Intelligence**: Learn from others, share your insights
 - **Viral Growth**: Product so good that users naturally share it
+
+## Brand Guidelines
+
+### Brand Name & Identity
+- **Name**: Clarioo (previously Vendora)
+- **Pronunciation**: Clar-ee-oh
+- **Meaning**: Derived from "clarity" - emphasizing clear, transparent vendor selection
+- **Voice**: Professional yet approachable, intelligent but not intimidating
+
+### Visual Identity
+**Color Palette:**
+- **Primary**: Purple/Indigo gradients (#6366F1 → #8B5CF6)
+- **Backgrounds**: Warm gradients (#FFE5DD → #FFF5F2) not flat white
+- **Text**: Warm grays (#4B5563 body, #1A1A1A headlines) not cold grays
+- **Accents**: Gradient buttons with colored shadows
+
+**Typography:**
+- **Headlines**: 56px desktop / 36px mobile, bold, often with gradient treatments
+- **Body**: 16px, readable, warm gray color
+- **Style**: Clean, modern, sans-serif fonts
+
+**Design Elements:**
+- **Shadows**: Multi-layer shadows for depth (not flat design)
+- **Borders**: Rounded corners (16-20px border radius)
+- **Gradients**: Liberal use of subtle gradients throughout
+- **Animations**: Smooth, delightful micro-interactions (pulsing, floating, shimmer)
+
+### Brand Personality
+- **Innovative**: Not vanilla enterprise software - distinctive and memorable
+- **Transparent**: Full process visibility, no black box AI
+- **Delightful**: Enjoyable to use, visually appealing, surprising interactions
+- **Intelligent**: AI-powered but human-centric
+- **Mobile-First**: Optimized for how people actually work
+
+### Design Inspiration
+- **Clearbit**: Gradient-heavy backgrounds, bold typography, layered shadows
+- **HubSpot**: Interactive carousels, engaging content presentation
+- **Shopify**: Clear value propositions, user-friendly workflows
+- **iPod**: Circular navigation, intuitive interactions
+
+### Communication Style
+- **Tone**: Confident but not arrogant, helpful but not patronizing
+- **Language**: Clear and concise, avoid jargon, explain complex concepts simply
+- **Messaging**: Focus on user benefits, speed, and AI intelligence
+- **Examples**: "90% routine work automated" not "Advanced AI algorithms"
+
+### Brand Promises
+1. **Clarity**: Make complex vendor decisions simple and transparent
+2. **Speed**: Automate 90% of routine vendor discovery work
+3. **Intelligence**: AI-powered but human-understandable reasoning
+4. **Delight**: Enterprise software that users actually enjoy using
+5. **Trust**: Full transparency in process and recommendations
 
 ---
 

@@ -28,6 +28,7 @@ import { Bot } from 'lucide-react';
 import { SignalAntenna } from './SignalAntenna';
 import type { Criteria } from '../VendorDiscovery';
 import { SPACING } from '@/styles/spacing-config';
+import { TYPOGRAPHY } from '@/styles/typography-config';
 
 export interface CriterionCardProps {
   criterion: Criteria;
@@ -40,7 +41,7 @@ export const CriterionCard: React.FC<CriterionCardProps> = ({ criterion, onEdit 
       <CardContent className={SPACING.vendorDiscovery.criterion.content}>
         {/* Header: Name, Priority, AI Button */}
         <div className={`flex items-start justify-between ${SPACING.vendorDiscovery.criterion.headerGap} mb-1.5 xs:mb-2`}>
-          <h4 className="font-semibold text-sm xs:text-base flex-1 leading-snug">
+          <h4 className={`${TYPOGRAPHY.card.title} flex-1`}>
             {criterion.name}
           </h4>
 
@@ -63,7 +64,7 @@ export const CriterionCard: React.FC<CriterionCardProps> = ({ criterion, onEdit 
 
         {/* Explanation */}
         {criterion.explanation && (
-          <p className="text-xs xs:text-sm text-muted-foreground leading-relaxed">
+          <p className={TYPOGRAPHY.card.description}>
             {criterion.explanation}
           </p>
         )}

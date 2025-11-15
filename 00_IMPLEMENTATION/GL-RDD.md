@@ -1,5 +1,11 @@
-# README-Driven Development Framework  
-  
+# README-Driven Development Framework
+
+**Version**: 1.0
+**Last Updated**: November 15, 2024
+**Status**: Active Development Guidelines
+
+---
+
 ## Philosophy  
   
 README-Driven Development (RDD) treats documentation as the primary design artifact. By writing documentation first, we clarify intent, establish contracts, and create a shared understanding before implementation begins.  

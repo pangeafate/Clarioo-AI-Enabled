@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Mail, Phone, Globe, Star, Calendar, Send, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { TYPOGRAPHY } from '@/styles/typography-config';
 import type { Vendor, Criteria, TechRequest } from '../VendorDiscovery';
 
 interface VendorInviteProps {
@@ -128,8 +129,8 @@ Best regards,
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">Invite Vendors to Pitch</h2>
-        <p className="text-muted-foreground">
+        <h2 className={`${TYPOGRAPHY.heading.h2} mb-2`}>Invite Vendors to Pitch</h2>
+        <p className={TYPOGRAPHY.muted.default}>
           Select vendors you'd like to invite to present their solutions
         </p>
       </div>
@@ -230,10 +231,10 @@ Best regards,
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-2xl font-bold text-muted-foreground">#{index + 1}</span>
+                          <span className={TYPOGRAPHY.heading.h2}>#{index + 1}</span>
                           <div>
-                            <h3 className="font-semibold text-lg">{vendor.name}</h3>
-                            <p className="text-sm text-muted-foreground">{vendor.description}</p>
+                            <h3 className={TYPOGRAPHY.heading.h5}>{vendor.name}</h3>
+                            <p className={TYPOGRAPHY.muted.small}>{vendor.description}</p>
                           </div>
                         </div>
                         {isInvited && (
@@ -247,7 +248,7 @@ Best regards,
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
                         <div className="flex items-center gap-2">
                           <Star className="h-4 w-4 text-yellow-500" />
-                          <span className="font-medium">{vendor.rating}/5</span>
+                          <span className={TYPOGRAPHY.label.default}>{vendor.rating}/5</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge variant="secondary">
@@ -256,29 +257,29 @@ Best regards,
                         </div>
                         <div className="flex items-center gap-2">
                           <Globe className="h-4 w-4 text-muted-foreground" />
-                          <a 
-                            href={vendor.website} 
-                            target="_blank" 
+                          <a
+                            href={vendor.website}
+                            target="_blank"
                             rel="noopener noreferrer"
-                            className="text-sm text-primary hover:underline"
+                            className={TYPOGRAPHY.link.small}
                             onClick={(e) => e.stopPropagation()}
                           >
                             Website
                           </a>
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className={TYPOGRAPHY.muted.small}>
                           {vendor.pricing}
                         </div>
                       </div>
 
                       <div className="flex flex-wrap gap-1">
                         {vendor.features.slice(0, 3).map((feature, idx) => (
-                          <Badge key={idx} variant="outline" className="text-xs">
+                          <Badge key={idx} variant="outline" className={TYPOGRAPHY.special.badge}>
                             {feature}
                           </Badge>
                         ))}
                         {vendor.features.length > 3 && (
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className={TYPOGRAPHY.special.badge}>
                             +{vendor.features.length - 3} more
                           </Badge>
                         )}
@@ -301,13 +302,13 @@ Best regards,
                           </DialogHeader>
                           <div className="space-y-4">
                             <div>
-                              <Label className="font-medium">Subject:</Label>
-                              <p className="text-sm mt-1">{previewEmail(vendor).subject}</p>
+                              <Label className={TYPOGRAPHY.label.default}>Subject:</Label>
+                              <p className={`${TYPOGRAPHY.body.small} mt-1`}>{previewEmail(vendor).subject}</p>
                             </div>
                             <Separator />
                             <div>
-                              <Label className="font-medium">Body:</Label>
-                              <div className="mt-2 p-3 bg-muted rounded-lg text-sm whitespace-pre-wrap">
+                              <Label className={TYPOGRAPHY.label.default}>Body:</Label>
+                              <div className={`mt-2 p-3 bg-muted rounded-lg ${TYPOGRAPHY.body.small} whitespace-pre-wrap`}>
                                 {previewEmail(vendor).body}
                               </div>
                             </div>
@@ -316,7 +317,7 @@ Best regards,
                                 <Separator />
                                 <div className="flex items-center gap-2">
                                   <Calendar className="h-4 w-4" />
-                                  <span className="text-sm">
+                                  <span className={TYPOGRAPHY.body.small}>
                                     Proposed meeting: {inviteEmail.meetingDate} at {inviteEmail.meetingTime}
                                   </span>
                                 </div>
@@ -339,16 +340,16 @@ Best regards,
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div>
-              <div className="text-2xl font-bold text-primary">{vendors.length}</div>
-              <p className="text-sm text-muted-foreground">Total Vendors</p>
+              <div className={`${TYPOGRAPHY.heading.h2} text-primary`}>{vendors.length}</div>
+              <p className={TYPOGRAPHY.muted.small}>Total Vendors</p>
             </div>
             <div>
-              <div className="text-2xl font-bold text-primary">{selectedVendors.size}</div>
-              <p className="text-sm text-muted-foreground">Selected for Invite</p>
+              <div className={`${TYPOGRAPHY.heading.h2} text-primary`}>{selectedVendors.size}</div>
+              <p className={TYPOGRAPHY.muted.small}>Selected for Invite</p>
             </div>
             <div>
-              <div className="text-2xl font-bold text-success">{invitedVendors.size}</div>
-              <p className="text-sm text-muted-foreground">Invitations Sent</p>
+              <div className={`${TYPOGRAPHY.heading.h2} text-success`}>{invitedVendors.size}</div>
+              <p className={TYPOGRAPHY.muted.small}>Invitations Sent</p>
             </div>
           </div>
         </CardContent>

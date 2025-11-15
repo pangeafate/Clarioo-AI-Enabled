@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/popover';
 import { PROJECT_EXAMPLES } from '@/data/projectExamples';
 import { ProjectConfirmationDialog } from './ProjectConfirmationDialog';
+import { TYPOGRAPHY } from '@/styles/typography-config';
 
 interface ExamplesBulletPopoverProps {
   onCreateProject: (title: string, description: string) => Promise<void>;
@@ -90,7 +91,7 @@ export const ExamplesBulletPopover = ({
         </PopoverTrigger>
         <PopoverContent className="w-80" align="start">
           <div className="space-y-3">
-            <h3 className="font-semibold text-sm text-gray-900">
+            <h3 className={TYPOGRAPHY.label.default}>
               Need inspiration? Try these examples:
             </h3>
             <ul className="space-y-2">
@@ -98,7 +99,7 @@ export const ExamplesBulletPopover = ({
                 <li key={example.id}>
                   <button
                     onClick={() => handleExampleClick(example.id)}
-                    className="w-full text-left text-sm text-gray-700 hover:text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full text-left ${TYPOGRAPHY.body.small} hover:text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   >
                     <span className="flex items-start gap-2">
                       <span className="text-blue-500 mt-0.5">•</span>

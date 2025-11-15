@@ -1,21 +1,24 @@
-# USER_STORIES.md - Vendora AI Vendor Analyst
+# USER_STORIES.md - Clarioo Vendor Analyst
 
 ## Overview
 
-This document contains comprehensive user stories for the Vendora AI platform, organized by user personas and mapped to specific features and implementation files.
+This document contains comprehensive user stories for the Clarioo platform, organized by user personas and mapped to specific features and implementation files.
 
 ## User Personas
 
-1. **Sarah** - IT Manager at a mid-size company (Primary Persona)
-2. **Michael** - Procurement Specialist at an enterprise
-3. **Jessica** - Startup Founder evaluating first vendors
-4. **David** - Operations Director managing multiple vendor relationships
-5. **Vendor Representative** - Software/Service provider responding to RFPs
+1. **Alex** - Technology Decision Maker (Primary Persona)
+   - Responsible for evaluating and selecting vendors across all organizational needs
+   - Manages the complete vendor discovery journey from requirements to final selection
+   - Handles project creation, criteria building, vendor comparison, and stakeholder collaboration
+
+2. **Vendor Representative** - Software/Service provider responding to RFPs
+   - Receives and responds to evaluation invitations
+   - Manages company profile and vendor information
 
 ## Epic 1: User Authentication & Profile Management
 
 ### US-1.1: User Registration
-**As** Sarah, an IT Manager
+**As** Alex
 **I want to** create an account with my company email
 **So that** I can access the vendor discovery platform securely
 **Acceptance Criteria:**
@@ -24,12 +27,12 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 - Automatic profile creation upon registration
 - Company information captured during signup
 
-**Implementation:** `src/pages/Auth.tsx`, `src/hooks/useAuth.tsx`
-**Database:** `profiles` table with RLS policies
+**Implementation:** `src/components/landing/AuthModal.tsx`, `src/hooks/useAuth.tsx`
+**Data:** `src/data/api/auth.json` (mock service)
 **Status:** ✅ Implemented
 
 ### US-1.2: User Login
-**As** Sarah
+**As** Alex
 **I want to** securely log in to my account
 **So that** I can access my saved projects and vendor evaluations
 **Acceptance Criteria:**
@@ -38,7 +41,8 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 - Redirect to dashboard after login
 - Error messages for invalid credentials
 
-**Implementation:** `src/pages/Auth.tsx`, `src/contexts/AuthContext.tsx`
+**Implementation:** `src/components/landing/AuthModal.tsx`, `src/hooks/useAuth.tsx`
+**Data:** `src/data/api/auth.json` (mock service)
 **Status:** ✅ Implemented
 
 ### US-1.3: Profile Management
@@ -65,8 +69,8 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 - Category selection
 - Auto-save as draft
 
-**Implementation:** `src/components/ProjectDashboard.tsx`, `src/components/NewProjectDialog.tsx`
-**Database:** `projects` table
+**Implementation:** `src/pages/Index.tsx`, `src/components/projects/NewProjectDialog.tsx`
+**Data:** `src/data/api/projects.json` (mock service)
 **Status:** ✅ Implemented
 
 ### US-2.2: View Project Dashboard
@@ -80,7 +84,8 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 - Quick actions (edit/delete/archive)
 - Search and filter capabilities
 
-**Implementation:** `src/components/ProjectDashboard.tsx`
+**Implementation:** `src/pages/Index.tsx`
+**Data:** `src/data/api/projects.json` (mock service)
 **Status:** ✅ Implemented
 
 ### US-2.3: Resume Project Workflow
@@ -93,8 +98,8 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 - Ability to jump to any completed step
 - Data retention across sessions
 
-**Implementation:** `src/components/VendorDiscovery.tsx`
-**Database:** `projects.workflow_state` JSONB field
+**Implementation:** `src/pages/TechInput.tsx` through `src/pages/SendInvitation.tsx`
+**Data:** `src/data/api/projects.json` (workflow state in JSON)
 **Status:** ✅ Implemented
 
 ## Epic 3: Vendor Discovery Workflow - Step 1 (Requirements)
@@ -109,8 +114,8 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 - Company size indicator
 - Special requirements field
 
-**Implementation:** `src/components/VendorDiscovery.tsx` (Step 1)
-**Database:** `tech_requests` table
+**Implementation:** `src/pages/TechInput.tsx`
+**Data:** `src/data/api/techInput.json` (mock service)
 **Status:** ✅ Implemented
 
 ### US-3.2: Save Requirements as Template
@@ -125,6 +130,50 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 
 **Status:** 🔄 Planned
 
+### US-3.3: Quick Project Creation from Category
+**As** Sarah
+**I want to** quickly create a project by selecting a software category
+**So that** I can start vendor discovery without filling detailed forms
+**Acceptance Criteria:**
+- Category dropdown with 15+ predefined categories (CRM, Marketing, HR, etc.)
+- Single-click project creation from category selection
+- Confirmation dialog before project creation
+- Category pre-fills requirements field
+- Seamless transition to workflow
+
+**Implementation:** `src/components/landing/CategoryDropdown.tsx`, `src/components/landing/ProjectConfirmationDialog.tsx`
+**Related Feature:** F-027 (Category Selector)
+**Status:** ✅ Implemented (SP_011)
+
+### US-3.4: Quick Project Creation from Examples
+**As** Jessica, a Startup Founder
+**I want to** create projects from example use cases
+**So that** I can get started without knowing exact requirements
+**Acceptance Criteria:**
+- Example projects popover with 4+ clickable examples
+- One-click project creation from example
+- Example pre-fills all initial requirements
+- Clear indication that project is based on example template
+
+**Implementation:** `src/components/landing/ExamplesBulletPopover.tsx`
+**Related Feature:** F-027 (Category Selector - Examples)
+**Status:** ✅ Implemented (SP_011)
+
+### US-3.5: Registration-Free Project Creation
+**As** Sarah
+**I want to** create and explore projects without registering first
+**So that** I can evaluate the platform before committing
+**Acceptance Criteria:**
+- No authentication required for project creation
+- Landing view and project view toggle
+- Clear distinction between marketing content and workflow
+- Seamless experience without login prompts
+- Option to register later to save progress
+
+**Implementation:** `src/components/landing/ViewToggleButton.tsx`, `src/components/landing/RegistrationToggle.tsx`
+**Related Feature:** F-030 (Registration-Free Experience)
+**Status:** ✅ Implemented (SP_011)
+
 ## Epic 4: Vendor Discovery Workflow - Step 2 (Criteria)
 
 ### US-4.1: Generate Evaluation Criteria
@@ -137,8 +186,8 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 - Each criterion has clear description
 - Automatic relevance scoring
 
-**Implementation:** `src/components/VendorDiscovery.tsx` (Step 2)
-**OpenAI Integration:** `src/services/openai.ts`
+**Implementation:** `src/pages/CriteriaBuilder.tsx`
+**Data:** `src/data/api/criteria.json`, `src/services/mock/aiService.ts` (pre-generated AI responses)
 **Status:** ✅ Implemented
 
 ### US-4.2: Refine Criteria via Chat
@@ -151,7 +200,8 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 - Add/remove/modify criteria via chat
 - See changes in real-time
 
-**Implementation:** `src/components/steps/CriteriaBuilder.tsx`
+**Implementation:** `src/pages/CriteriaBuilder.tsx`, `src/hooks/useCriteriaChat.ts`
+**Data:** `src/data/api/criteria.json` (mock AI chat responses)
 **Status:** ✅ Implemented
 
 ### US-4.3: Import Criteria from Excel
@@ -164,7 +214,7 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 - Preview before import
 - Merge with AI-generated criteria
 
-**Implementation:** `src/components/steps/CriteriaBuilder.tsx`
+**Implementation:** `src/pages/CriteriaBuilder.tsx`
 **Library:** `xlsx` package
 **Status:** ✅ Implemented
 
@@ -180,6 +230,51 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 
 **Status:** 🔄 Planned
 
+### US-4.5: View Criteria in Accordion Layout
+**As** Sarah
+**I want to** view criteria organized by category in an accordion layout
+**So that** I can focus on one category at a time and navigate easily on mobile
+**Acceptance Criteria:**
+- Vertical accordion with collapsible category sections
+- Section headers show criterion count and importance summary
+- Smooth expand/collapse animations
+- Multiple sections can be open simultaneously
+- Mobile-optimized card-based layout
+
+**Implementation:** `src/components/vendor-discovery/AccordionSection.tsx`, `src/components/vendor-discovery/CriteriaAccordion.tsx`
+**Related Feature:** F-029 (Criteria Accordion)
+**Status:** 📋 Planned (SP_012)
+
+### US-4.6: Visual Importance Indicators
+**As** Sarah
+**I want to** see criterion importance visually represented
+**So that** I can quickly identify high-priority criteria
+**Acceptance Criteria:**
+- Signal antenna icon with filled/unfilled bars
+- High importance = 3 filled bars
+- Medium importance = 2 filled bars
+- Low importance = 1 filled bar
+- Color-coded importance levels (orange/yellow/gray)
+
+**Implementation:** `src/components/vendor-discovery/SignalAntenna.tsx`, `src/components/vendor-discovery/CriteriaCard.tsx`
+**Related Feature:** F-028 (Criteria Hierarchy - Visual Indicators)
+**Status:** 📋 Planned (SP_012)
+
+### US-4.7: Edit Criteria with AI Sidebar
+**As** Sarah
+**I want to** edit criteria using an AI-powered sidebar
+**So that** I can refine criteria with conversational assistance
+**Acceptance Criteria:**
+- Right-side editing panel slides in when criterion is clicked
+- AI chat interface for criterion refinement
+- Edit name, explanation, importance, and type
+- Real-time validation and suggestions
+- Save/cancel actions
+
+**Implementation:** `src/components/vendor-discovery/CriterionEditSidebar.tsx`
+**Related Feature:** F-029 (Criteria Accordion - Edit Interface)
+**Status:** 📋 Planned (SP_012)
+
 ## Epic 5: Vendor Discovery Workflow - Step 3 (Vendor Selection)
 
 ### US-5.1: Discover Relevant Vendors
@@ -192,8 +287,8 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 - Relevance score/ranking
 - Mix of established and emerging vendors
 
-**Implementation:** `src/components/steps/VendorSelection.tsx`
-**Database:** `vendor_selections` table
+**Implementation:** `src/pages/VendorSelection.tsx`
+**Data:** `src/data/api/vendors.json` (mock vendor database)
 **Status:** ✅ Implemented
 
 ### US-5.2: Add Custom Vendors
@@ -206,7 +301,8 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 - Bulk import from list
 - Duplicate detection
 
-**Implementation:** `src/components/steps/VendorSelection.tsx`
+**Implementation:** `src/pages/VendorSelection.tsx`
+**Data:** `src/data/api/vendors.json`
 **Status:** ✅ Implemented
 
 ### US-5.3: Remove/Exclude Vendors
@@ -219,7 +315,8 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 - Ability to re-add removed vendors
 - Exclusion list for future searches
 
-**Implementation:** `src/components/steps/VendorSelection.tsx`
+**Implementation:** `src/pages/VendorSelection.tsx`
+**Data:** `src/data/api/vendors.json`
 **Status:** ✅ Implemented
 
 ## Epic 6: Vendor Discovery Workflow - Step 4 (Comparison)
@@ -235,7 +332,8 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 - Strengths/weaknesses highlighted
 - Key differentiators identified
 
-**Implementation:** `src/components/steps/VendorComparison.tsx`
+**Implementation:** `src/pages/Comparison.tsx`, `src/hooks/useVendorComparison.ts`
+**Data:** `src/data/api/vendors.json`, pre-calculated scores
 **Status:** ✅ Implemented
 
 ### US-6.2: Export Comparison to Excel
@@ -248,7 +346,7 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 - Formatted for readability
 - Multiple export formats (detailed/summary)
 
-**Implementation:** `src/components/steps/VendorComparison.tsx`
+**Implementation:** `src/pages/Comparison.tsx`, `src/utils/exportHelpers.ts`
 **Library:** `xlsx` package
 **Status:** ✅ Implemented
 
@@ -264,7 +362,23 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 
 **Status:** 🔄 Planned
 
-### US-6.4: Collaborate on Evaluation
+### US-6.4: Mobile-Optimized Experience
+**As** Sarah (using mobile device)
+**I want to** access all features on my smartphone or tablet
+**So that** I can work on vendor discovery while on the go
+**Acceptance Criteria:**
+- Responsive design for screens as small as 350px width
+- Touch-optimized interactions (tap, swipe, scroll)
+- Mobile-friendly navigation and workflow steps
+- Optimized spacing and typography for mobile readability
+- Fast load times on mobile networks
+- Vertical layouts and collapsible sections for small screens
+
+**Implementation:** Mobile-first CSS, responsive components across entire app, `src/styles/spacing-config.ts`, `src/styles/typography-config.ts`
+**Related Feature:** F-030 (Mobile Optimization)
+**Status:** ✅ Implemented (SP_011)
+
+### US-6.5: Collaborate on Evaluation
 **As** Sarah
 **I want to** share the comparison with my team for input
 **So that** we can make a collective decision
@@ -372,7 +486,7 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 
 ### US-10.1: Integrate with Procurement Systems
 **As** Michael
-**I want to** integrate Vendora with our ERP system
+**I want to** integrate Clarioo with our ERP system
 **So that** vendor selections flow into our procurement workflow
 **Acceptance Criteria:**
 - API for data exchange
@@ -444,7 +558,7 @@ This document contains comprehensive user stories for the Vendora AI platform, o
 
 ---
 
-*Version: 1.1*
-*Last Updated: November 2024*
+*Version: 1.2*
+*Last Updated: November 15, 2024*
 *Total User Stories: 33*
 *Implemented: 12 | Planned: 11 | Future: 10*

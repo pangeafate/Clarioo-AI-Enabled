@@ -27,6 +27,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { FileText, Brain, CheckCircle2, MoveRight, MoveDown } from 'lucide-react';
+import { TYPOGRAPHY } from '@/styles/typography-config';
 
 const artifacts = [
   {
@@ -80,10 +81,10 @@ export const ArtifactVisualization = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-neutral-navy mb-4">
+          <h2 className={TYPOGRAPHY.heading.h2 + ' mb-4'}>
             See Every Step of the Process
           </h2>
-          <p className="text-lg text-neutral-slate max-w-2xl mx-auto">
+          <p className={TYPOGRAPHY.muted.large + ' max-w-2xl mx-auto'}>
             Complete transparency from input to output. Watch how AI transforms your requirements into actionable insights.
           </p>
         </motion.div>
@@ -106,10 +107,10 @@ export const ArtifactVisualization = () => {
                 <div className="w-10 h-10 xs:w-12 xs:h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-brand-blue/10 flex items-center justify-center text-brand-blue mb-1 xs:mb-2 sm:mb-2.5 md:mb-3">
                   {current.inputIcon}
                 </div>
-                <h3 className="font-semibold text-neutral-navy mb-0.5 xs:mb-1 text-[10px] xs:text-xs sm:text-sm">
+                <h3 className={TYPOGRAPHY.label.default + ' mb-0.5 xs:mb-1'}>
                   {current.input}
                 </h3>
-                <p className="text-[8px] xs:text-[9px] sm:text-xs text-neutral-slate">
+                <p className={TYPOGRAPHY.muted.small}>
                   What you provide
                 </p>
               </div>
@@ -162,10 +163,10 @@ export const ArtifactVisualization = () => {
                 >
                   <Brain className="h-6 w-6 xs:h-7 xs:w-7 sm:h-8 sm:w-8 md:h-10 md:w-10" />
                 </motion.div>
-                <h3 className="font-semibold mb-0.5 xs:mb-1 text-[10px] xs:text-xs sm:text-sm md:text-base">
+                <h3 className={TYPOGRAPHY.label.default + ' mb-0.5 xs:mb-1 !text-white'}>
                   {current.process}
                 </h3>
-                <p className="text-[8px] xs:text-[9px] sm:text-xs md:text-sm opacity-90">
+                <p className={TYPOGRAPHY.muted.small + ' !text-white opacity-90'}>
                   AI at work
                 </p>
               </div>
@@ -206,10 +207,10 @@ export const ArtifactVisualization = () => {
                 <div className="w-10 h-10 xs:w-12 xs:h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-brand-blueLight/10 flex items-center justify-center text-brand-blueLight mb-1 xs:mb-2 sm:mb-2.5 md:mb-3">
                   {current.outputIcon}
                 </div>
-                <h3 className="font-semibold text-neutral-navy mb-0.5 xs:mb-1 text-[10px] xs:text-xs sm:text-sm">
+                <h3 className={TYPOGRAPHY.label.default + ' mb-0.5 xs:mb-1'}>
                   {current.output}
                 </h3>
-                <p className="text-[8px] xs:text-[9px] sm:text-xs text-neutral-slate">
+                <p className={TYPOGRAPHY.muted.small}>
                   What you get
                 </p>
               </div>
@@ -225,7 +226,7 @@ export const ArtifactVisualization = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
-            className="text-center text-lg text-neutral-slate mt-8"
+            className={'text-center mt-8 ' + TYPOGRAPHY.muted.default}
           >
             {current.description}
           </motion.p>

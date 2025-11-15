@@ -22,6 +22,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import type { TechRequest, Criteria, Vendor } from "../VendorDiscovery";
 import { useVendorDiscovery } from "@/hooks/useVendorDiscovery";
+import { TYPOGRAPHY } from "@/styles/typography-config";
+import { LoadingState } from "@/components/shared/loading/LoadingState";
 
 interface VendorSelectionProps {
   criteria: Criteria[];
@@ -174,16 +176,13 @@ const VendorSelection = ({ criteria, techRequest, onComplete }: VendorSelectionP
     return (
       <Card>
         <CardContent className="py-12">
-          <div className="text-center space-y-4">
-            <div className="inline-flex items-center gap-2 text-primary">
-              <RefreshCw className="h-6 w-6 animate-spin" />
-              <span className="text-lg font-medium">Discovering vendors...</span>
-            </div>
-            <p className="text-muted-foreground">
-              AI is finding {techRequest.category} vendors based on your requirements
-            </p>
-            <Progress value={75} className="w-64 mx-auto" />
-          </div>
+          <LoadingState
+            icon={RefreshCw}
+            message="Discovering vendors..."
+            description={`AI is finding ${techRequest.category} vendors based on your requirements`}
+            showProgress={true}
+            progress={75}
+          />
         </CardContent>
       </Card>
     );
@@ -209,9 +208,9 @@ const VendorSelection = ({ criteria, techRequest, onComplete }: VendorSelectionP
           <div className="text-center p-4 border rounded-lg">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-primary">🎨 Prototype Mode</span>
+              <span className={`${TYPOGRAPHY.label.small} text-primary`}>🎨 Prototype Mode</span>
             </div>
-            <p className="text-xs text-muted-foreground">Using curated vendor data for {techRequest.category}</p>
+            <p className={TYPOGRAPHY.muted.xs}>Using curated vendor data for {techRequest.category}</p>
           </div>
         </CardContent>
       </Card>
@@ -328,22 +327,22 @@ const VendorSelection = ({ criteria, techRequest, onComplete }: VendorSelectionP
                   
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-sm">{vendor.name}</h3>
+                      <h3 className={TYPOGRAPHY.card.metadata}>{vendor.name}</h3>
                       <div className="flex items-center gap-1">
                         <Star className="h-3 w-3 fill-warning text-warning" />
-                        <span className="text-xs">{vendor.rating}</span>
+                        <span className={TYPOGRAPHY.body.xs}>{vendor.rating}</span>
                       </div>
                     </div>
-                    
-                    <p className="text-xs text-muted-foreground leading-tight">
+
+                    <p className={`${TYPOGRAPHY.card.metadata} leading-tight`}>
                       {vendor.description}
                     </p>
-                    
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">{vendor.pricing}</span>
-                      <a 
-                        href={`https://${vendor.website}`} 
-                        target="_blank" 
+
+                    <div className={`flex items-center justify-between ${TYPOGRAPHY.body.xs}`}>
+                      <span className={TYPOGRAPHY.muted.xs}>{vendor.pricing}</span>
+                      <a
+                        href={`https://${vendor.website}`}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-primary hover:text-primary/80"
                         onClick={(e) => e.stopPropagation()}
@@ -357,9 +356,9 @@ const VendorSelection = ({ criteria, techRequest, onComplete }: VendorSelectionP
               </Card>
             ))}
           </div>
-          
+
           {vendors.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className={`text-center py-8 ${TYPOGRAPHY.muted.default}`}>
               No vendors found. Try adjusting your search criteria or add vendors manually.
             </div>
           )}
@@ -371,10 +370,10 @@ const VendorSelection = ({ criteria, techRequest, onComplete }: VendorSelectionP
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <p className="font-medium">
+              <p className={TYPOGRAPHY.body.default}>
                 {selectedVendorIds.size} of {vendors.length} vendors selected
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className={TYPOGRAPHY.muted.small}>
                 Ready to proceed with detailed comparison analysis
               </p>
             </div>

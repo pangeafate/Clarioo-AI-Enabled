@@ -1,17 +1,48 @@
-# PROJECT PROGRESS - Vendora AI Visual Prototype
+# PROJECT PROGRESS - Clarioo Visual Prototype
 
 ## Document Overview
 
-This document tracks the progress of all sprints, features, and milestones in the Vendora AI project. Each sprint is documented with objectives, deliverables, technical details, and completion metrics.
+This document tracks the progress of all sprints, features, and milestones in the Clarioo project. Each sprint is documented with objectives, deliverables, technical details, and completion metrics.
 
 **Current Project Status**: 🎨 Visual Prototype - Unified Experience Architecture
-**Latest Sprint**: Budget & Urgency Field Removal (UX Simplification)
-**Last Updated**: November 12, 2024
-**Version**: 3.3.1
+**Latest Sprint**: Criteria Builder Accordion Redesign (Planned)
+**Last Updated**: November 15, 2024
+**Version**: 3.5.0
 
 ---
 
 ## Sprint History
+
+### Sprint SP_012: Criteria Builder Accordion Redesign 📋
+**Status**: 📋 Planned
+**Duration**: 2-3 days
+**Planned**: November 14-16, 2024
+**Type**: UX Enhancement - Mobile-First Criteria Management
+
+#### Objectives
+Transform the Criteria Builder's horizontal tab-based table into a vertical accordion-based card layout optimized for mobile devices. Replace the Excel-like table with a more intuitive, mobile-friendly interface featuring collapsible category sections, card-based criterion display, signal antenna importance indicators, and an AI-powered editing sidebar.
+
+**Key Goals**:
+1. Improve mobile usability with vertical accordion layout
+2. Add explanations to criteria for better context
+3. Implement visual priority sorting within categories
+4. Create intuitive editing experience with AI sidebar
+5. Enhance visual hierarchy with signal antenna importance icons
+
+#### Key Deliverables
+**New Components Created**:
+1. **AccordionSection.tsx**: Collapsible category section with criterion count and importance summary
+2. **CriteriaCard.tsx**: Card-based criterion display with name, explanation, and signal antenna
+3. **CriterionEditSidebar.tsx**: Right-side AI-powered editing panel with chat interface
+4. **SignalAntenna.tsx**: Visual importance indicator using filled/unfilled antenna bars
+
+**Component Modifications**:
+- **CriteriaBuilder.tsx**: Replace horizontal tabs with vertical accordion structure
+- **WorkflowNavigation.tsx**: Update navigation to support criteria editing sidebar
+
+**Detailed Documentation**: See [SP_012_Criteria_Builder_Accordion_Redesign.md](./00_IMPLEMENTATION/SPRINTS/SP_012_Criteria_Builder_Accordion_Redesign.md)
+
+---
 
 ### Sprint SP_011: Registration-Free Landing Experience ✅
 **Status**: ✅ Complete
@@ -1025,6 +1056,7 @@ Convert functional MVP to visual prototype by removing backend dependencies and 
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 3.5.0 | 2024-11-15 | Documentation Alignment - Added SP_012, CODEBASE_STRUCTURE.md |
 | 3.4.0 | 2024-11-13 | Landing Page Refinements & GitHub Pages Deployment |
 | 3.3.1 | 2024-11-12 | Budget & Urgency Field Removal - UX Simplification |
 | 3.3.0 | 2024-11-12 | SP_010 Unified Landing & Workflow Integration |
@@ -1033,7 +1065,7 @@ Convert functional MVP to visual prototype by removing backend dependencies and 
 
 ---
 
-*This document is maintained as part of the Vendora AI project documentation suite. For architectural details, see PROJECT_ROADMAP.md. For current implementation status, see this document.*
+*This document is maintained as part of the Clarioo project documentation suite. For architectural details, see PROJECT_ROADMAP.md. For current implementation status, see this document.*
 
 **Last Updated**: November 13, 2024
 **Maintained By**: Development Team

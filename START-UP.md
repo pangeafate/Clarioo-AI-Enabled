@@ -1,35 +1,191 @@
-  
-When not familiar with the codebase and the project:  
-1. Read VISION, VISUALISATION, PIPELINE, USER_STORIES, FEATURE_LIST to understand what we are building 
-2. Then read and understand the codebase to see where we are with the development progress  
-3. Check USER_STORIES.md to understand the userstories, see what is implemented and how it is enabled with the specific features from the FEATURE_LIST.md. If the USER_STORIES.md  doesn’t exist - create one based on the PLAN.md  User stories must be connected to the features in the FEATURE_LIST.md and indicating whether they are implemented. Don’t write code - just plain english.  
-4. Check FEATURE_LIST.md. If it doesn’t exist - create one based on the codebase and PLAN.md.  Features must have the completion indicator and where they exist (name of the file and line numbers), for those features already implemented. Don’t write code - just plain english.  
-5. Then read GL-RDD.md, GL-TDD.md, GL-ERROR-LOGGING - the development principles that you must follow  
-6. Then check PIPELINE.md to understand rules and guidelines to follow when developing the project. 
-7. Then check ARCHITECTURE.md If it doesn’t exist - use appropriate agent to create target state ARCHITECTURE of the application using charts and other necessary visual elements. Plain english, no code.  
-8. Then check the PROJECT_ROADMAP.md which is the implementation plan for the features from MVP to the target state with the completion indication. If it doesn’t exist - create it and populate it based on the learnings from the previous steps.  Don’t write code - just plain english.  
-9. Then check progress, the PROGRESS.md is the list of the SPRINTS. These are individual “sprint” plans (SP). If the file doesn’t exist - create it and leave empty.  
-10. The folder structure for the main documentation files above should be:  
-    1. 00_PLAN (folder): PIPELINE, USER_STORIES, FEATURE_LIST, VISION
-    2. 00_IMPLEMENTATION(folder): GL-RDD, GL-TDD, GL-ERROR-LOGGING, PROJECT_ROADMAP, PROGRESS, SPRINTS (folder): SP-files  
-  
-When working on the project:  
-11. Follow closely GL-RDD.md, GL-ERROR-LOGGING.md  GL-TDD.md  
-12. Before building any feature - check  PROJECT_ROADMAP.md, then create the sprint plan in the 00_IMPLEMENTATION >> SPRINTS folder, name it in the following way “SP_ID_what is being done.md”, for example if the sprint is about PostgreSQL to Supabase migration and it it sprint number 5 in the roadmap, you name it “SP_005_PostgreSQL_to_Supabase_migration.md“ -  
-   13. This sprint plan should exactly describe what you are going to implement in plain english and without code. Use charts or illustrations where necessary.  
-   14. After creating the SP- file list it in the PROGRESS. md (only condensed description of the Sprint needs to be included)  
-   15. After having implemented the SP update the PROGRESS.md PROJECT_ROADMAP.md FEATURE_LIST.md and USER_STORIES.md. Use appropriate agent.  
-   16. If the work on the sprint will produce more than 1 file - create a “SP_ID_what is being done” folder under SPRINTS folder and put all files there  
-17. Aways follow test driven development  
-18. For complex multi-step problems, use the sequential_thinking MCP tool to break down and analyze the task systematically  
-19. Use appropriate agents and MCP servers  
-  
-  
-  
-# MCP Server Usage Guidelines  
-  
-  
-- USE SUBAGENTS FOR MCP CALLS  
-- **Combine multiple MCPs** for complex tasks (e.g., use Playwright to test a Neo4j-powered app)  
-- **Use Context 7 first** when working with popular frameworks to get current documentation  
-- **Specify browser and device** for Playwright when testing responsive designs
+# START-UP Guide for New AI Agents
+
+This guide helps new AI agents quickly understand the Clarioo codebase and development workflow.
+
+---
+
+## When NOT Familiar with the Codebase
+
+Follow these steps in order to understand the project:
+
+### Step 1: Understand the Vision (5 minutes)
+Read these documents to understand WHAT we're building:
+
+1. **VISION.md** (`/00_PLAN/VISION.md`) - Product vision, design philosophy, brand guidelines
+2. **USER_STORIES.md** (`/00_PLAN/USER_STORIES.md`) - User requirements and acceptance criteria
+3. **FEATURE_LIST.md** (`/00_PLAN/FEATURE_LIST.md`) - Feature inventory with implementation status
+
+**Goal**: Understand the product vision, target users, and feature scope.
+
+---
+
+### Step 2: Understand the Architecture (10 minutes)
+Read these documents to understand HOW it's built:
+
+1. **ARCHITECTURE.md** (`/00_IMPLEMENTATION/ARCHITECTURE.md`) - System architecture with visual diagrams
+2. **CODEBASE_STRUCTURE.md** (`/00_IMPLEMENTATION/CODEBASE_STRUCTURE.md`) - Detailed file organization and module boundaries
+
+**Goal**: Understand the technical architecture and codebase organization.
+
+**Missing Files?** If ARCHITECTURE.md or CODEBASE_STRUCTURE.md don't exist, use appropriate agents to create them based on the actual codebase structure. Include charts and visual elements.
+
+---
+
+### Step 3: Understand Development Principles (5 minutes)
+Read the development guidelines you MUST follow:
+
+1. **GL-RDD.md** (`/00_IMPLEMENTATION/GL-RDD.md`) - README-Driven Development guidelines
+2. **GL-TDD.md** (`/00_IMPLEMENTATION/GL-TDD.md`) - Test-Driven Development framework (note prototype phase exception)
+3. **GL-ERROR-LOGGING.md** (`/00_IMPLEMENTATION/GL-ERROR-LOGGING.md`) - Error handling and logging standards
+
+**Goal**: Understand the development methodology and coding standards.
+
+---
+
+### Step 4: Understand Implementation Progress (5 minutes)
+Read these documents to understand WHERE we are:
+
+1. **PROJECT_ROADMAP.md** (`/00_IMPLEMENTATION/PROJECT_ROADMAP.md`) - Implementation plan from MVP to target state
+2. **PROGRESS.md** (`/00_IMPLEMENTATION/PROGRESS.md`) - Sprint history and current status
+3. **SPRINTS folder** (`/00_IMPLEMENTATION/SPRINTS/`) - Individual sprint plan files
+
+**Goal**: Understand completed work, current sprint, and what's planned next.
+
+**Missing Files?**
+- If PROJECT_ROADMAP.md doesn't exist, create it based on FEATURE_LIST.md and codebase analysis
+- If PROGRESS.md doesn't exist, create it with empty sprint history
+
+---
+
+### Step 5: Verify Folder Structure (1 minute)
+Ensure these folders exist with correct organization:
+
+```
+/
+├── 00_PLAN/
+│   ├── VISION.md
+│   ├── USER_STORIES.md
+│   └── FEATURE_LIST.md
+│
+└── 00_IMPLEMENTATION/
+    ├── ARCHITECTURE.md
+    ├── CODEBASE_STRUCTURE.md
+    ├── GL-RDD.md
+    ├── GL-TDD.md
+    ├── GL-ERROR-LOGGING.md
+    ├── PROJECT_ROADMAP.md
+    ├── PROGRESS.md
+    └── SPRINTS/
+        ├── SP_XXX_Description.md (main sprint files)
+        └── SP_XXX_Description/ (folders for multi-file sprints)
+```
+
+---
+
+## When Working on the Project
+
+### Development Workflow
+
+**Before Building Any Feature:**
+
+1. **Check PROJECT_ROADMAP.md** - Find the sprint number and verify it's planned
+2. **Create Sprint Plan** in `/00_IMPLEMENTATION/SPRINTS/`
+   - Naming: `SP_XXX_Description.md` (e.g., `SP_005_PostgreSQL_to_Supabase_Migration.md`)
+   - Content: Plain English description of what will be implemented (no code)
+   - Include charts/diagrams where helpful
+3. **Update PROGRESS.md** - Add the sprint to the history with condensed description
+
+**While Building:**
+
+4. **Follow GL-RDD.md** - Write README/documentation before code
+5. **Follow GL-TDD.md** - Write tests before implementation (or use visual verification for prototype phase)
+6. **Follow GL-ERROR-LOGGING.md** - Implement proper error handling
+
+**After Completing Sprint:**
+
+7. **Update Documentation** using appropriate agent:
+   - PROGRESS.md (mark sprint complete)
+   - PROJECT_ROADMAP.md (update status)
+   - FEATURE_LIST.md (mark features implemented)
+   - USER_STORIES.md (update implementation status)
+
+**For Multi-File Sprints:**
+
+8. **Create Sprint Folder** if the sprint produces multiple files:
+   - Create: `/00_IMPLEMENTATION/SPRINTS/SP_XXX_Description/`
+   - Put all supplementary files in this folder
+   - Keep main sprint plan at root level: `SP_XXX_Description.md`
+
+---
+
+## Best Practices
+
+### Always Follow These Principles
+
+1. ✅ **Test-Driven Development** - Write failing tests first (or visual verification for prototype)
+2. ✅ **README-Driven Development** - Document before implementing
+3. ✅ **Use Appropriate Agents** - Leverage specialized agents for complex tasks
+4. ✅ **Run Agents in Parallel** - Use multiple agents simultaneously when possible
+5. ✅ **Sequential Thinking** - Use sequential_thinking MCP for complex multi-step problems
+
+### Never Do These Things
+
+1. ❌ **Don't skip documentation** - Always update all affected documentation files
+2. ❌ **Don't write code before tests** - Except infrastructure and prototype phase
+3. ❌ **Don't commit failing tests** - All tests must pass before commit
+4. ❌ **Don't use Docker** - Until project is production-ready (per CLAUDE.md)
+5. ❌ **Don't push to GitHub** - Unless explicitly requested by user
+
+---
+
+## MCP Server Usage Guidelines
+
+### General Rules
+
+- **USE SUBAGENTS FOR MCP CALLS** - Never call MCP tools directly from main agent
+- **Combine Multiple MCPs** - For complex tasks (e.g., Playwright + Neo4j testing)
+- **Use Context 7 First** - Get current documentation for popular frameworks
+- **Specify Browser/Device** - For Playwright when testing responsive designs
+
+### Available MCP Servers
+
+- **Playwright** - Browser automation and testing
+- **Sequential Thinking** - Complex multi-step problem analysis
+- **Context 7** - Access to current framework documentation
+- **Browser Tools** - DevTools integration, screenshots, audits
+- **Fetch** - Web content fetching with image support
+- **n8n** - Workflow automation
+- **DigitalOcean** - Infrastructure management
+
+---
+
+## Quick Reference
+
+### Current Project Status
+
+- **Phase**: Visual Prototype (Phase 0)
+- **Technology**: React 18.3.1 + TypeScript 5.5.3 + Vite 5.4.2
+- **Backend**: Mock services with JSON data (no real backend yet)
+- **Testing**: Visual verification (automated tests required for production)
+- **Next Phase**: Backend foundation with Supabase + OpenAI
+
+### Key Files to Check First
+
+1. `PROGRESS.md` - Current sprint and latest changes
+2. `PROJECT_ROADMAP.md` - Implementation timeline
+3. `CODEBASE_STRUCTURE.md` - File organization
+4. `ARCHITECTURE.md` - System design
+
+### Common Tasks
+
+| Task | Steps |
+|------|-------|
+| **Start new feature** | Check roadmap → Create sprint plan → Update PROGRESS.md → Build → Update docs |
+| **Fix bug** | Identify → Write failing test → Fix → Verify all tests pass → Update docs |
+| **Review code** | Check GL-RDD → Check GL-TDD → Verify layer boundaries → Check error handling |
+| **Deploy changes** | Don't use Docker → Wait for production phase → Follow deployment sprint plan |
+
+---
+
+*Last Updated: November 15, 2024*
+*Version: 2.0*

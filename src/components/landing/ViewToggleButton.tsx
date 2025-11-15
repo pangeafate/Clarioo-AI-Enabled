@@ -28,6 +28,7 @@
 
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { TYPOGRAPHY, TEXT_COLORS } from '@/styles/typography-config';
 
 interface ViewToggleButtonProps {
   currentView: 'landing' | 'project';
@@ -45,7 +46,7 @@ export const ViewToggleButton = ({ currentView, onToggle }: ViewToggleButtonProp
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       transition={{ duration: 0.3 }}
-      className="flex items-center gap-1 xs:gap-2 px-3 xs:px-5 sm:px-8 py-1.5 xs:py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-full shadow-md hover:shadow-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105"
+      className={`flex items-center gap-1 xs:gap-2 px-3 xs:px-5 sm:px-8 py-1.5 xs:py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-purple-600 ${TEXT_COLORS.white} rounded-full shadow-md hover:shadow-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105`}
       aria-label={isLandingView ? 'Switch to Projects view' : 'Switch to Home view'}
     >
       {!isLandingView && (
@@ -58,7 +59,7 @@ export const ViewToggleButton = ({ currentView, onToggle }: ViewToggleButtonProp
         </motion.div>
       )}
 
-      <span className="text-xs xs:text-sm sm:text-base">
+      <span className={TYPOGRAPHY.button.small}>
         {isLandingView ? 'Projects' : 'Home'}
       </span>
 

@@ -30,6 +30,7 @@ import { ChevronDown, Check } from 'lucide-react';
 import { SOFTWARE_CATEGORIES } from '@/data/categories';
 import { ProjectConfirmationDialog } from './ProjectConfirmationDialog';
 import { SPACING } from '@/styles/spacing-config';
+import { TYPOGRAPHY } from '@/styles/typography-config';
 
 interface CategorySelectorProps {
   onCreateProject: (title: string, description: string) => Promise<void>;
@@ -119,13 +120,13 @@ export const CategorySelector = ({
             {/* Left Container: Text */}
             <div className={`bg-white rounded-l-full ${SPACING.landing.categorySelector.textContainer} flex items-center`}>
               <span
-                className={`text-xs xs:text-sm sm:text-lg font-semibold leading-none ${
+                className={`${TYPOGRAPHY.button.default} leading-none whitespace-nowrap ${
                   isComponentDisabled
                     ? 'text-gray-400'
                     : 'bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent'
                 }`}
               >
-                Doing a general research? Just pick up a
+                Doing a general research? Just pick a
               </span>
             </div>
 
@@ -133,7 +134,7 @@ export const CategorySelector = ({
             <button
               onClick={() => !isComponentDisabled && setIsOpen(!isOpen)}
               disabled={isComponentDisabled}
-              className={`flex items-center justify-center gap-1 xs:gap-1.5 sm:gap-2 ${SPACING.landing.categorySelector.buttonContainer} rounded-r-full font-semibold text-xs xs:text-sm sm:text-lg text-white leading-none transition-all ${
+              className={`flex items-center justify-center gap-0.5 xs:gap-1 sm:gap-1.5 md:gap-2 ${SPACING.landing.categorySelector.buttonContainer} rounded-r-full ${TYPOGRAPHY.button.default} text-white leading-none whitespace-nowrap transition-all ${
                 isComponentDisabled
                   ? 'bg-gray-300 cursor-not-allowed'
                   : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
@@ -141,7 +142,7 @@ export const CategorySelector = ({
             >
               <span>category</span>
               <ChevronDown
-                className={`w-3 h-3 xs:w-4 xs:h-4 transition-transform ${
+                className={`w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 transition-transform ${
                   isOpen ? 'rotate-180' : ''
                 }`}
               />
@@ -151,7 +152,7 @@ export const CategorySelector = ({
 
         {/* Helper Text */}
         {hasInputValues && (
-          <p className="text-xs text-gray-500 mt-2 text-center">
+          <p className={`${TYPOGRAPHY.muted.small} mt-2 text-center`}>
             Clear input fields to use this selector
           </p>
         )}
@@ -186,10 +187,10 @@ export const CategorySelector = ({
 
                     {/* Category Info */}
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 mb-1">
+                      <h4 className={`${TYPOGRAPHY.card.title} mb-1`}>
                         {cat.label}
                       </h4>
-                      <p className="text-sm text-gray-500 line-clamp-1">
+                      <p className={`${TYPOGRAPHY.muted.small} line-clamp-1`}>
                         {cat.description}
                       </p>
                     </div>

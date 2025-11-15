@@ -1,5 +1,11 @@
-# Error Logging and Handling Framework  
-  
+# Error Logging and Handling Framework
+
+**Version**: 1.0
+**Last Updated**: November 15, 2024
+**Status**: Active Development Guidelines
+
+---
+
 ## Philosophy  
   
 Error handling is a critical aspect of robust software development. This framework establishes a comprehensive, proactive approach to error management that integrates with our README-Driven Development (RDD) and Test-Driven Development (TDD) principles.  
