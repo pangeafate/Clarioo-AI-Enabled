@@ -123,24 +123,88 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
   const criteria = isWorkflowMode ? workflowCriteriaFormatted : standaloneCriteria;
   const shortlist = isWorkflowMode ? workflowShortlist : standaloneShortlist;
 
-  // Round-robin carousel indices for 3 vendor cards
-  // Each carousel cycles through all available vendors
+  // === MOBILE STATE (3 vendor carousels) ===
   const [vendor1Index, setVendor1Index] = useState(0);
   const [vendor2Index, setVendor2Index] = useState(Math.min(1, shortlist.length - 1));
   const [vendor3Index, setVendor3Index] = useState(Math.min(2, shortlist.length - 1));
 
-  // Current vendors (with round-robin allocation)
+  // === DESKTOP STATE (5 columns with screen pagination) ===
+  const [desktopScreen, setDesktopScreen] = useState(0); // Current screen (0, 1, 2, ...)
+  const [desktopColumnIndices, setDesktopColumnIndices] = useState<number[]>([0, 1, 2, 3, 4]);
+  const [expandedColumnIndex, setExpandedColumnIndex] = useState<number | null>(null);
+
+  // Calculate total screens for desktop (5 vendors per screen)
+  const totalDesktopScreens = Math.ceil(shortlist.length / 5) || 1;
+  const isFirstScreen = desktopScreen === 0;
+  const isLastScreen = desktopScreen === totalDesktopScreens - 1;
+
+  // Get vendors for current desktop screen
+  const getDesktopVendors = (): (ComparisonVendor | null)[] => {
+    const startIdx = desktopScreen * 5;
+    const vendors: (ComparisonVendor | null)[] = [];
+
+    for (let i = 0; i < 5; i++) {
+      const actualIndex = desktopColumnIndices[i];
+      if (actualIndex !== undefined && actualIndex < shortlist.length) {
+        vendors.push(shortlist[actualIndex]);
+      } else {
+        vendors.push(null); // Placeholder
+      }
+    }
+
+    return vendors;
+  };
+
+  // Update column indices when screen changes
+  const handleDesktopScreenChange = (direction: 'next' | 'previous') => {
+    const newScreen = direction === 'next' ? desktopScreen + 1 : desktopScreen - 1;
+    if (newScreen >= 0 && newScreen < totalDesktopScreens) {
+      setDesktopScreen(newScreen);
+      const startIdx = newScreen * 5;
+      setDesktopColumnIndices([
+        startIdx,
+        startIdx + 1,
+        startIdx + 2,
+        startIdx + 3,
+        startIdx + 4,
+      ]);
+      setExpandedColumnIndex(null); // Close any expanded card
+    }
+  };
+
+  // Handle individual column navigation (cycle through all vendors)
+  const handleDesktopColumnNavigate = (columnIndex: number, direction: 'next' | 'previous') => {
+    setDesktopColumnIndices(prev => {
+      const newIndices = [...prev];
+      const currentIdx = newIndices[columnIndex];
+
+      if (direction === 'next') {
+        newIndices[columnIndex] = (currentIdx + 1) % shortlist.length;
+      } else {
+        newIndices[columnIndex] = currentIdx === 0 ? shortlist.length - 1 : currentIdx - 1;
+      }
+
+      return newIndices;
+    });
+  };
+
+  // Handle column expansion (only one at a time)
+  const handleColumnToggleExpand = (columnIndex: number) => {
+    setExpandedColumnIndex(prev => prev === columnIndex ? null : columnIndex);
+  };
+
+  // Current mobile vendors (with round-robin allocation)
   const vendor1 = shortlist[vendor1Index] ?? null;
   const vendor2 = shortlist[vendor2Index] ?? null;
   const vendor3 = shortlist[vendor3Index] ?? null;
 
-  // Navigation handlers - cycle through ALL vendors in round-robin fashion
+  // Mobile navigation handlers
   const handleVendor1Navigate = (direction: 'next' | 'previous') => {
     setVendor1Index(prev => {
       if (direction === 'next') {
-        return (prev + 1) % shortlist.length; // Wrap to start
+        return (prev + 1) % shortlist.length;
       } else {
-        return prev === 0 ? shortlist.length - 1 : prev - 1; // Wrap to end
+        return prev === 0 ? shortlist.length - 1 : prev - 1;
       }
     });
   };
@@ -164,6 +228,15 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
       }
     });
   };
+
+  // Placeholder for Add Vendor dialog
+  const handleAddVendor = () => {
+    // TODO: Open Add Vendor dialog from VendorSelection
+    console.log('Add Vendor clicked');
+  };
+
+  // Get desktop vendors for display
+  const desktopVendors = getDesktopVendors();
 
   if (shortlist.length === 0) {
     return (
@@ -206,55 +279,84 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Vendor Cards - Stacked Vertically */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="space-y-3 mb-6"
-        >
-          {/* Vendor 1 Card */}
-          {vendor1 && (
-            <VendorCard
-              vendor={vendor1}
-              currentIndex={vendor1Index}
-              totalVendors={shortlist.length}
-              onNavigate={handleVendor1Navigate}
-            />
-          )}
+        {/* === MOBILE LAYOUT (< 768px) === */}
+        <div className="md:hidden">
+          {/* Vendor Cards - Stacked Vertically */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="space-y-3 mb-6"
+          >
+            {/* Vendor 1 Card */}
+            {vendor1 && (
+              <VendorCard
+                vendor={vendor1}
+                currentIndex={vendor1Index}
+                totalVendors={shortlist.length}
+                onNavigate={handleVendor1Navigate}
+              />
+            )}
 
-          {/* Vendor 2 Card (only show if 2+ vendors) */}
-          {shortlist.length >= 2 && vendor2 && (
-            <VendorCard
-              vendor={vendor2}
-              currentIndex={vendor2Index}
-              totalVendors={shortlist.length}
-              onNavigate={handleVendor2Navigate}
-            />
-          )}
+            {/* Vendor 2 Card (only show if 2+ vendors) */}
+            {shortlist.length >= 2 && vendor2 && (
+              <VendorCard
+                vendor={vendor2}
+                currentIndex={vendor2Index}
+                totalVendors={shortlist.length}
+                onNavigate={handleVendor2Navigate}
+              />
+            )}
 
-          {/* Vendor 3 Card (only show if 3+ vendors) */}
-          {shortlist.length >= 3 && vendor3 && (
-            <VendorCard
-              vendor={vendor3}
-              currentIndex={vendor3Index}
-              totalVendors={shortlist.length}
-              onNavigate={handleVendor3Navigate}
-            />
-          )}
-        </motion.div>
+            {/* Vendor 3 Card (only show if 3+ vendors) */}
+            {shortlist.length >= 3 && vendor3 && (
+              <VendorCard
+                vendor={vendor3}
+                currentIndex={vendor3Index}
+                totalVendors={shortlist.length}
+                onNavigate={handleVendor3Navigate}
+              />
+            )}
+          </motion.div>
 
-        {/* Vertical Bar Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-        >
-          <VerticalBarChart
-            vendors={[vendor1, vendor2, vendor3].filter(Boolean)}
-            criteria={criteria}
-          />
-        </motion.div>
+          {/* Vertical Bar Chart - Mobile (3 columns) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <VerticalBarChart
+              vendors={[vendor1, vendor2, vendor3].filter(Boolean)}
+              criteria={criteria}
+            />
+          </motion.div>
+        </div>
+
+        {/* === DESKTOP LAYOUT (≥ 768px) === */}
+        <div className="hidden md:block">
+          {/* Vertical Bar Chart - Desktop (5 columns) with integrated column headers */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <VerticalBarChart
+              vendors={desktopVendors}
+              criteria={criteria}
+              columnCount={5}
+              desktopVendors={desktopVendors}
+              desktopColumnIndices={desktopColumnIndices}
+              expandedColumnIndex={expandedColumnIndex}
+              onColumnNavigate={handleDesktopColumnNavigate}
+              onColumnToggleExpand={handleColumnToggleExpand}
+              onAddVendor={handleAddVendor}
+              totalVendors={shortlist.length}
+              isFirstScreen={isFirstScreen}
+              isLastScreen={isLastScreen}
+              onScreenChange={handleDesktopScreenChange}
+            />
+          </motion.div>
+        </div>
       </div>
     </div>
   );

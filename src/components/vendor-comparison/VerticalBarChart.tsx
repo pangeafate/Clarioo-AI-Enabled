@@ -9,26 +9,39 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, ChevronDown, ChevronRight, Star, HelpCircle, Check, Minus } from 'lucide-react';
+import { Bot, ChevronDown, ChevronRight, ChevronLeft, Star, HelpCircle, Check, Minus } from 'lucide-react';
 import { ComparisonVendor, CriterionState } from '../../types/comparison.types';
 import { Criterion } from '../../types';
 import { SignalAntenna } from '../vendor-discovery/SignalAntenna';
 import { Button } from '../ui/button';
 import { TYPOGRAPHY } from '../../styles/typography-config';
+import { DesktopColumnHeader } from './DesktopColumnHeader';
 
 interface VerticalBarChartProps {
   vendors: (ComparisonVendor | null)[];
   criteria: Criterion[];
   onCriterionClick?: (criterionId: string) => void;
   className?: string;
+  columnCount?: 3 | 5; // Number of columns (3 for mobile, 5 for desktop)
+  // Desktop header props
+  desktopVendors?: (ComparisonVendor | null)[];
+  desktopColumnIndices?: number[];
+  expandedColumnIndex?: number | null;
+  onColumnNavigate?: (columnIndex: number, direction: 'next' | 'previous') => void;
+  onColumnToggleExpand?: (columnIndex: number) => void;
+  onAddVendor?: () => void;
+  totalVendors?: number;
+  isFirstScreen?: boolean;
+  isLastScreen?: boolean;
+  onScreenChange?: (direction: 'next' | 'previous') => void;
 }
 
 /**
  * Render icon/text for 4-state criterion evaluation
- * - yes: Green "Yes" text
- * - no: Red "No" text
- * - unknown: Gray ? icon in circle
- * - star: Gold star icon
+ * - yes: Green checkmark with green circle background
+ * - no: Gray minus with gray circle background
+ * - unknown: Gray ? icon with gray circle background
+ * - star: Gold star with yellow circle background
  */
 const renderCriterionState = (state: CriterionState, criterionIndex: number, vendorIndex: number) => {
   const baseDelay = criterionIndex * 0.05 + vendorIndex * 0.1;
@@ -42,7 +55,9 @@ const renderCriterionState = (state: CriterionState, criterionIndex: number, ven
           transition={{ duration: 0.3, delay: baseDelay }}
           className="flex items-center justify-center h-full"
         >
-          <Check className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 md:bg-green-100/70 flex items-center justify-center">
+            <Check className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+          </div>
         </motion.div>
       );
 
@@ -54,7 +69,9 @@ const renderCriterionState = (state: CriterionState, criterionIndex: number, ven
           transition={{ duration: 0.3, delay: baseDelay }}
           className="flex items-center justify-center h-full"
         >
-          <Minus className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 md:bg-gray-100/70 flex items-center justify-center">
+            <Minus className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+          </div>
         </motion.div>
       );
 
@@ -66,7 +83,9 @@ const renderCriterionState = (state: CriterionState, criterionIndex: number, ven
           transition={{ duration: 0.3, delay: baseDelay }}
           className="flex items-center justify-center h-full"
         >
-          <HelpCircle className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 md:bg-gray-100/70 flex items-center justify-center">
+            <HelpCircle className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+          </div>
         </motion.div>
       );
 
@@ -78,7 +97,9 @@ const renderCriterionState = (state: CriterionState, criterionIndex: number, ven
           transition={{ duration: 0.4, delay: baseDelay }}
           className="flex items-center justify-center h-full"
         >
-          <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 fill-yellow-500" />
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 md:bg-yellow-100/70 flex items-center justify-center">
+            <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 fill-yellow-500" />
+          </div>
         </motion.div>
       );
 
@@ -140,9 +161,26 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
   criteria,
   onCriterionClick,
   className = '',
+  columnCount = 3,
+  // Desktop header props
+  desktopVendors,
+  desktopColumnIndices,
+  expandedColumnIndex,
+  onColumnNavigate,
+  onColumnToggleExpand,
+  onAddVendor,
+  totalVendors = 0,
+  isFirstScreen = true,
+  isLastScreen = true,
+  onScreenChange,
 }) => {
-  // Filter out null vendors
+  // Check if desktop headers should be shown
+  const showDesktopHeaders = columnCount === 5 && desktopVendors && desktopColumnIndices;
+  // Filter out null vendors for display, but keep track of all slots
   const activeVendors = vendors.filter((v): v is ComparisonVendor => v !== null);
+
+  // Grid column classes based on columnCount
+  const gridColsClass = columnCount === 5 ? 'grid-cols-5' : 'grid-cols-3';
 
   // Accordion state - all sections expanded by default
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
@@ -219,8 +257,9 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
     <div className={`vertical-bar-chart bg-white rounded-2xl border-2 border-gray-200 overflow-hidden ${className}`}>
       {/* Header: Evaluation Criteria */}
       <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex items-stretch gap-2 sm:gap-3">
+          {/* Title section */}
+          <div className="flex-shrink-0 w-40 xs:w-44 sm:w-52 lg:w-60">
             <h3 className="text-base sm:text-lg font-bold text-gray-900">
               Evaluation Criteria ({criteria.length})
             </h3>
@@ -228,6 +267,60 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
               {totalHighPriority} High Priority
             </p>
           </div>
+
+          {/* Gap matching the layout */}
+          <div className="w-2 sm:w-3 flex-shrink-0" />
+
+          {/* Screen navigation - Previous (Desktop only) - right before vendor cards */}
+          {showDesktopHeaders && (
+            <div className="hidden md:flex flex-shrink-0 w-8 items-center justify-center">
+              {!isFirstScreen && onScreenChange && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => onScreenChange('previous')}
+                  className="h-7 w-7 rounded-full border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-100"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Desktop Column Headers (hidden on mobile) */}
+          {showDesktopHeaders && (
+            <div className="hidden md:grid flex-1 grid-cols-5 gap-1 xs:gap-1.5 sm:gap-2">
+              {desktopVendors.map((vendor, idx) => (
+                <DesktopColumnHeader
+                  key={`desktop-col-${idx}-${vendor?.id ?? 'placeholder'}`}
+                  vendor={vendor}
+                  currentIndex={desktopColumnIndices[idx] ?? idx}
+                  totalVendors={totalVendors}
+                  onNavigate={(direction) => onColumnNavigate?.(idx, direction)}
+                  onAddVendor={onAddVendor}
+                  isExpanded={expandedColumnIndex === idx}
+                  onToggleExpand={() => onColumnToggleExpand?.(idx)}
+                  columnPosition={idx}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Screen navigation - Next (Desktop only) */}
+          {showDesktopHeaders && (
+            <div className="hidden md:flex flex-shrink-0 w-8 items-center justify-center">
+              {!isLastScreen && onScreenChange && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => onScreenChange('next')}
+                  className="h-7 w-7 rounded-full border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-100"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -283,28 +376,34 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
                   >
                     <div className="p-3 sm:p-4 space-y-3 bg-white relative">
                       {/* Rotated Vendor Names - Spanning entire category section */}
-                      <div className="absolute top-0 bottom-0 pointer-events-none flex" style={{ left: '0.75rem', right: '0.75rem' }}>
+                      {/* Key includes all vendor IDs to force re-render when vendors change */}
+                      <div
+                        key={`watermarks-${category}-${activeVendors.map(v => v.id).join('-')}`}
+                        className="absolute top-0 bottom-0 pointer-events-none flex gap-2 sm:gap-3"
+                        style={{ left: '0.75rem', right: '0.75rem' }}
+                      >
                         {/* Spacer matching criterion card width */}
                         <div className="flex-shrink-0 w-40 xs:w-44 sm:w-52 lg:w-60" />
-                        {/* Gap matching the layout */}
-                        <div className="w-2 sm:w-3 flex-shrink-0" />
+                        {/* Left spacers matching criterion row layout - only on desktop when headers are shown */}
+                        {showDesktopHeaders && <div className="hidden md:block w-[52px] sm:w-[60px] flex-shrink-0" />}
                         {/* Vendor columns */}
-                        <div className="flex-1 grid grid-cols-3 gap-1 xs:gap-1.5 sm:gap-2 h-full">
-                          {activeVendors.map((vendor) => (
-                            <div key={`watermark-${vendor.id}`} className="relative h-full flex items-start justify-center pt-6 sm:pt-8">
+                        <div className={`flex-1 grid ${gridColsClass} gap-1 xs:gap-1.5 sm:gap-2 h-full overflow-visible`}>
+                          {activeVendors.map((vendor, idx) => (
+                            <div key={`watermark-${category}-${idx}-${vendor.id}`} className="relative h-full flex items-start justify-center pt-6 sm:pt-8 overflow-visible">
                               <span
                                 style={{
                                   color: vendor.color.hex,
                                   writingMode: 'vertical-rl',
-                                  transform: 'rotate(180deg) translateX(-55%)',
                                 }}
-                                className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold opacity-[0.15] whitespace-nowrap"
+                                className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold opacity-[0.15] whitespace-nowrap [transform:rotate(180deg)_translateX(-70%)] md:[transform:rotate(180deg)_translateX(-90%)]"
                               >
                                 {vendor.name}
                               </span>
                             </div>
                           ))}
                         </div>
+                        {/* Right spacer matching header layout - only on desktop when headers are shown */}
+                        {showDesktopHeaders && <div className="hidden md:block w-10 flex-shrink-0" />}
                       </div>
                       {categoryCriteria.map((criterion, criterionIndex) => {
                         const importance = criterion.importance;
@@ -352,8 +451,12 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
                               </div>
                             </button>
 
-                            {/* 3 Vendor Columns - Icon/Text Display */}
-                            <div className="flex-1 grid grid-cols-3 gap-1 xs:gap-1.5 sm:gap-2 items-center min-h-[40px] xs:min-h-[50px] sm:min-h-[60px]">
+                            {/* Left spacers matching header layout - only on desktop when headers are shown */}
+                            {/* Gap div (w-2 sm:w-3) + flex gap (gap-2 sm:gap-3) + Navigation button spacer (w-8) + flex gap */}
+                            {showDesktopHeaders && <div className="hidden md:block w-[52px] sm:w-[60px] flex-shrink-0" />}
+
+                            {/* Vendor Columns - Icon/Text Display */}
+                            <div className={`flex-1 grid ${gridColsClass} gap-1 xs:gap-1.5 sm:gap-2 items-center min-h-[40px] xs:min-h-[50px] sm:min-h-[60px] relative z-10`}>
                               {activeVendors.map((vendor, vendorIndex) => {
                                 const state = vendor.scores.get(criterion.id) ?? 'unknown';
 
@@ -367,6 +470,9 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
                                 );
                               })}
                             </div>
+
+                            {/* Right spacer matching header layout - only on desktop when headers are shown */}
+                            {showDesktopHeaders && <div className="hidden md:block w-10 flex-shrink-0" />}
                           </div>
                         );
                       })}
@@ -379,9 +485,9 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
         })}
       </div>
 
-      {/* Bottom Legend - All 3 Vendors */}
+      {/* Bottom Legend - All Vendors */}
       <div className="border-t-2 border-gray-200 bg-gray-50 px-3 sm:px-6 py-2 sm:py-3">
-        <div className="flex gap-2 xs:gap-3 sm:gap-6 justify-center flex-wrap">
+        <div className="flex gap-2 xs:gap-3 sm:gap-4 justify-center flex-wrap">
           {activeVendors.map((vendor) => {
             return (
               <div key={vendor.id} className="flex items-center gap-1 xs:gap-1.5 sm:gap-2">
