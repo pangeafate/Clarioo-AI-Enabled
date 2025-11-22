@@ -215,10 +215,12 @@ export const LandingPage = () => {
    * Uses company info and solution inputs to pre-fill project data
    */
   const handleCreateProject = async () => {
-    if (!companyInput.trim() || !solutionInput.trim()) {
+    // Allow project creation if either input has more than 10 characters
+    const hasEnoughCharacters = companyInput.length > 10 || solutionInput.length > 10;
+    if (!hasEnoughCharacters) {
       toast({
         title: "Missing information",
-        description: "Please fill in both input fields before creating a project.",
+        description: "Please enter at least 10 characters in one of the input fields.",
         variant: "destructive",
       });
       return;
@@ -237,11 +239,21 @@ export const LandingPage = () => {
       setShowCreationAnimation(true);
     }, 100);
 
+    // Build project name and description based on available inputs
+    const projectName = solutionInput.trim()
+      ? `${solutionInput.substring(0, 50)}${solutionInput.length > 50 ? '...' : ''}`
+      : `${companyInput.substring(0, 50)}${companyInput.length > 50 ? '...' : ''}`;
+
+    const descriptionParts = [];
+    if (companyInput.trim()) descriptionParts.push(`Company: ${companyInput}`);
+    if (solutionInput.trim()) descriptionParts.push(`Looking for: ${solutionInput}`);
+    const projectDescription = descriptionParts.join('\n\n');
+
     try {
       const { data, error } = await projectService.createProject({
         user_id: user?.id || 'user_demo_12345',
-        name: `${solutionInput.substring(0, 50)}...`, // Use solution as project name
-        description: `Company: ${companyInput}\n\nLooking for: ${solutionInput}`,
+        name: projectName,
+        description: projectDescription,
         category: 'General',
         status: 'draft',
         workflow_state: {

@@ -34,6 +34,7 @@
       "name": "Salesforce",
       "logo": "https://logo.clearbit.com/salesforce.com",
       "website": "https://salesforce.com",
+      "email": "sales@salesforce.com",
       "killerFeature": "Enterprise-grade customization & AI-powered Einstein",
       "executiveSummary": "Salesforce is the world's leading cloud-based CRM platform, trusted by enterprises globally. Known for its robust ecosystem and AI-powered Einstein intelligence, it offers unparalleled scalability and customization options for complex sales operations.",
       "keyFeatures": [
@@ -56,6 +57,7 @@
       "name": "HubSpot",
       "logo": "https://logo.clearbit.com/hubspot.com",
       "website": "https://hubspot.com",
+      "email": "sales@hubspot.com",
       "killerFeature": "Free tier with powerful marketing automation",
       "executiveSummary": "HubSpot offers a comprehensive CRM suite with exceptional marketing automation and sales tools. Its free tier is generous, and the platform is known for its user-friendly interface and strong content management capabilities, making it ideal for growing businesses.",
       "keyFeatures": [
@@ -78,6 +80,7 @@
       "name": "Pipedrive",
       "logo": "https://logo.clearbit.com/pipedrive.com",
       "website": "https://pipedrive.com",
+      "email": "sales@pipedrive.com",
       "killerFeature": "Intuitive pipeline-focused sales management",
       "executiveSummary": "Pipedrive is a sales-focused CRM built by salespeople for salespeople. Its visual pipeline management and deal-tracking capabilities make it exceptionally easy to manage your sales process and forecast revenue accurately.",
       "keyFeatures": [
@@ -100,6 +103,7 @@
       "name": "Zoho CRM",
       "logo": "https://logo.clearbit.com/zoho.com",
       "website": "https://zoho.com/crm",
+      "email": "sales@zoho.com",
       "killerFeature": "Cost-effective with AI assistant Zia",
       "executiveSummary": "Zoho CRM provides a cost-effective solution with AI-powered sales assistant (Zia) and extensive customization options. It's part of the larger Zoho ecosystem, offering seamless integration with other Zoho business applications.",
       "keyFeatures": [
@@ -122,6 +126,7 @@
       "name": "monday.com CRM",
       "logo": "https://logo.clearbit.com/monday.com",
       "website": "https://monday.com",
+      "email": "sales@monday.com",
       "killerFeature": "Highly customizable workflows with no-code automation",
       "executiveSummary": "monday.com CRM brings the visual, no-code flexibility of monday.com to customer relationship management. With customizable boards and automations, it adapts to any sales workflow while maintaining simplicity and ease of use.",
       "keyFeatures": [
@@ -144,6 +149,7 @@
       "name": "Freshsales",
       "logo": "https://logo.clearbit.com/freshworks.com",
       "website": "https://freshworks.com/crm",
+      "email": "sales@freshworks.com",
       "killerFeature": "Built-in phone & email with AI-powered lead scoring",
       "executiveSummary": "Freshsales by Freshworks is a modern CRM with built-in phone, email, and activity capture. Its AI-powered lead scoring and deal insights help sales teams prioritize effectively and close deals faster.",
       "keyFeatures": [
@@ -188,6 +194,7 @@
       "name": "Copper",
       "logo": "https://logo.clearbit.com/copper.com",
       "website": "https://copper.com",
+      "email": "sales@copper.com",
       "killerFeature": "Native Google Workspace integration for Gmail users",
       "executiveSummary": "Copper (formerly ProsperWorks) is designed specifically for Google Workspace users, living directly inside Gmail. It automatically captures contacts and interactions, minimizing manual data entry for Google-centric teams.",
       "keyFeatures": [
@@ -232,6 +239,7 @@
       "name": "Close",
       "logo": "https://logo.clearbit.com/close.com",
       "website": "https://close.com",
+      "email": "sales@close.com",
       "killerFeature": "Built for inside sales teams with power dialer",
       "executiveSummary": "Close is built for inside sales teams that live on the phone. With built-in calling, SMS, and email, plus powerful automation and reporting, it's designed to maximize productivity for high-volume outbound sales teams.",
       "keyFeatures": [
@@ -702,6 +710,123 @@
       "expires_at": "2099-12-31T23:59:59Z",
       "expires_in": 2147483647,
       "token_type": "bearer"
+    }
+  },
+  "executiveSummary": {
+    "title": "CRM System Selection - Executive Summary",
+    "generatedAt": "2024-11-22T10:30:00Z",
+    "sections": {
+      "keyCriteria": {
+        "title": "Key Criteria Overview",
+        "content": "Based on your evaluation framework, the following criteria are most critical to your CRM selection:",
+        "highPriority": [
+          "Contact Management System",
+          "Sales Pipeline Visualization",
+          "Email Integration (Gmail/Outlook)",
+          "Mobile App Availability",
+          "Reporting & Analytics Dashboard",
+          "Real-time Synchronization",
+          "System Performance & Speed",
+          "Multi-user Collaboration",
+          "Pricing Model & Affordability",
+          "Customer Support Quality",
+          "Data Security & Encryption",
+          "GDPR Compliance"
+        ]
+      },
+      "vendorRecommendations": {
+        "title": "Top Vendor Recommendations",
+        "topPicks": [
+          {
+            "rank": 1,
+            "name": "Salesforce",
+            "matchScore": 92,
+            "reasoning": "Best overall match for enterprise needs with strongest performance in contact management, reporting/analytics, and security compliance. Ideal if budget is flexible and you need maximum customization and scalability."
+          },
+          {
+            "rank": 2,
+            "name": "HubSpot",
+            "matchScore": 89,
+            "reasoning": "Excellent balance of features and usability with superior onboarding resources. Best choice if you value ease of adoption and have mixed marketing/sales needs. Strong email integration and lead scoring capabilities."
+          },
+          {
+            "rank": 3,
+            "name": "Pipedrive",
+            "matchScore": 87,
+            "reasoning": "Best value for sales-focused teams prioritizing pipeline management and mobile access. Offers transparent, affordable pricing with excellent visual pipeline tools. Limited API access may be a concern for complex integrations."
+          }
+        ]
+      },
+      "keyDifferentiators": {
+        "title": "Key Differentiators Between Top Vendors",
+        "differentiators": [
+          {
+            "category": "Customization & Flexibility",
+            "leader": "Salesforce",
+            "details": "Salesforce offers unmatched customization with custom fields, workflows, and the AppExchange marketplace. HubSpot provides good customization within its ecosystem. Pipedrive is more limited but simpler."
+          },
+          {
+            "category": "Ease of Use",
+            "leader": "HubSpot",
+            "details": "HubSpot has the most intuitive interface and best onboarding experience. Pipedrive is also user-friendly. Salesforce has a steeper learning curve due to its extensive features."
+          },
+          {
+            "category": "Pricing & Value",
+            "leader": "Pipedrive/HubSpot",
+            "details": "Pipedrive offers the most transparent and affordable pricing. HubSpot provides excellent value with its free tier. Salesforce is the most expensive but offers enterprise-grade capabilities."
+          },
+          {
+            "category": "AI & Automation",
+            "leader": "Salesforce",
+            "details": "Salesforce Einstein provides the most advanced AI capabilities. HubSpot offers strong marketing automation. Pipedrive has basic automation features."
+          },
+          {
+            "category": "Mobile Experience",
+            "leader": "Pipedrive",
+            "details": "Pipedrive has the most polished mobile app experience. All three offer mobile apps, but Pipedrive's is considered best for on-the-go sales teams."
+          }
+        ]
+      },
+      "riskFactors": {
+        "title": "Risk Factors & Call Preparation",
+        "description": "Critical questions and considerations for your vendor evaluation calls:",
+        "questionsToAsk": [
+          {
+            "vendor": "Salesforce",
+            "questions": [
+              "What is the total cost of ownership including implementation, training, and ongoing admin support?",
+              "How long does typical implementation take for a team of our size?",
+              "What support tier is included in our pricing, and what are the response time SLAs?",
+              "Can you provide references from companies in our industry with similar team sizes?"
+            ]
+          },
+          {
+            "vendor": "HubSpot",
+            "questions": [
+              "What features are limited on our chosen tier that we might need later?",
+              "How does pricing scale as we add more users and contacts?",
+              "What is the process for migrating our existing data from [current system]?",
+              "Can you demonstrate the reporting capabilities for our specific KPIs?"
+            ]
+          },
+          {
+            "vendor": "Pipedrive",
+            "questions": [
+              "What workarounds exist for the limited API access?",
+              "How do you handle custom workflows beyond the standard pipeline stages?",
+              "What integrations are available for our tech stack?",
+              "Can you show us how teams of our size typically organize their pipelines?"
+            ]
+          }
+        ],
+        "generalConsiderations": [
+          "Request a trial period with full feature access before committing",
+          "Verify data export capabilities and migration support if switching vendors later",
+          "Confirm GDPR compliance documentation and data processing agreements",
+          "Ask about upcoming feature releases and product roadmap",
+          "Clarify contract terms, cancellation policies, and price lock periods"
+        ]
+      }
     }
   },
   "projects": [

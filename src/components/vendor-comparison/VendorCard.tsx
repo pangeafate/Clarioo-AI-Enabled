@@ -7,11 +7,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Info, Bot, Trash2, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ComparisonVendor } from '../../types/comparison.types';
 import { Button } from '../ui/button';
 import { SPACING } from '../../styles/spacing-config';
+import { useToast } from '../../hooks/use-toast';
 
 interface VendorCardProps {
   vendor: ComparisonVendor | null;
@@ -20,6 +21,8 @@ interface VendorCardProps {
   onNavigate: (direction: 'next' | 'previous') => void;
   onInfoClick?: () => void;
   className?: string;
+  isShortlisted?: boolean;
+  onToggleShortlist?: (vendorId: string) => void;
 }
 
 const colorClasses = {
@@ -53,7 +56,10 @@ export const VendorCard: React.FC<VendorCardProps> = ({
   onNavigate,
   onInfoClick,
   className = '',
+  isShortlisted = false,
+  onToggleShortlist,
 }) => {
+  const { toast } = useToast();
   const hasPrevious = currentIndex > 0;
   const hasNext = currentIndex < totalVendors - 1;
 
@@ -62,6 +68,31 @@ export const VendorCard: React.FC<VendorCardProps> = ({
 
   // Expansion state for accordion
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Star shine animation state
+  const [isShining, setIsShining] = useState(false);
+
+  const handleToggleShortlist = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (vendor && onToggleShortlist) {
+      onToggleShortlist(vendor.id);
+      if (!isShortlisted) {
+        // Adding to shortlist
+        setIsShining(true);
+        setTimeout(() => setIsShining(false), 600);
+        toast({
+          title: "Added to the shortlist for outreach",
+          description: `${vendor.name} has been shortlisted.`
+        });
+      } else {
+        // Removing from shortlist
+        toast({
+          title: "Removed from shortlist",
+          description: `${vendor.name} has been removed from the shortlist.`
+        });
+      }
+    }
+  };
 
   // Calculate vendors to left and right
   const vendorsToLeft = currentIndex;
@@ -136,30 +167,37 @@ export const VendorCard: React.FC<VendorCardProps> = ({
           transition={{ duration: 0.2 }}
           onClick={() => setIsExpanded(!isExpanded)}
           style={{
-            backgroundColor: vendor?.color ? `${vendor.color.hex}15` : '#f3f4f6',
             borderColor: vendor?.color?.hex ?? '#d1d5db'
           }}
-          className={`flex-1 flex items-center border-2 rounded-2xl ${SPACING.vendorComparison.card.container} min-w-0 overflow-hidden cursor-pointer hover:shadow-md transition-shadow`}
+          className={`flex-1 flex items-center border-2 rounded-2xl ${SPACING.vendorComparison.card.container} min-w-0 overflow-hidden cursor-pointer hover:shadow-md transition-shadow relative bg-white`}
         >
-          {/* Left 40%: Vendor Info - Company Name + Match % stacked */}
-          <div className={`flex-[0.4] min-w-0 ${SPACING.vendorComparison.card.leftSection}`}>
-            <div style={{ color: vendor?.color?.hex ?? '#111827' }} className="font-semibold truncate text-sm sm:text-base leading-tight">
-              {vendor?.name ?? 'No vendor selected'}
-            </div>
-            <div style={{ color: vendor?.color?.hex ?? '#111827' }} className="text-xs sm:text-sm opacity-80 mt-1">
-              Match {vendor?.matchPercentage ?? 0}%
-            </div>
+          {/* Info Icon - Top Right */}
+          <div className="absolute top-2 right-2">
+            <Info className="h-4 w-4 text-gray-400" />
           </div>
 
-          {/* Right 60%: Killer Feature with semi-transparent white overlay - LARGER */}
-          <div className="flex-[0.6] min-w-0 flex items-center justify-end">
-            {vendor?.killerFeature && (
-              <div className={`bg-white/60 backdrop-blur-sm rounded-lg ${SPACING.vendorComparison.card.rightSection} w-full`}>
-                <div className="text-[10px] sm:text-xs font-medium text-gray-800 line-clamp-2 leading-snug">
-                  {vendor.killerFeature}
-                </div>
-              </div>
+          {/* Logo + Vendor Info */}
+          <div className="flex items-center gap-3 min-w-0 pr-6">
+            {/* Company Logo */}
+            {vendor?.website && (
+              <img
+                src={`https://img.logo.dev/${vendor.website.replace(/^https?:\/\//, '').split('/')[0]}?token=pk_Fvbs8Zl6SWiC5WEoP8Qzbg`}
+                alt={`${vendor.name} logo`}
+                className="w-8 h-8 rounded-md object-contain flex-shrink-0 bg-white"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
             )}
+            {/* Vendor Info - Company Name + Match % stacked */}
+            <div className={`min-w-0 ${SPACING.vendorComparison.card.leftSection}`}>
+              <div style={{ color: vendor?.color?.hex ?? '#111827' }} className="font-semibold truncate text-sm sm:text-base leading-tight">
+                {vendor?.name ?? 'No vendor selected'}
+              </div>
+              <div style={{ color: vendor?.color?.hex ?? '#111827' }} className="text-xs sm:text-sm opacity-80 mt-1">
+                Match {vendor?.matchPercentage ?? 0}%
+              </div>
+            </div>
           </div>
         </motion.div>
 
@@ -214,21 +252,103 @@ export const VendorCard: React.FC<VendorCardProps> = ({
           >
             <div
               style={{
-                backgroundColor: vendor.color ? `${vendor.color.hex}10` : '#f9fafb',
                 borderColor: vendor.color?.hex ?? '#d1d5db'
               }}
-              className="mt-2 border-2 rounded-2xl p-4 sm:p-6"
+              className="mt-2 border-2 rounded-2xl p-4 sm:p-6 bg-white"
             >
+              {/* Star Icon Row - Add to Shortlist - Centered and x2 larger */}
+              <div className="flex flex-col items-center mb-4">
+                <button
+                  onClick={handleToggleShortlist}
+                  className="p-2 hover:bg-yellow-50 rounded-full transition-colors"
+                  title={isShortlisted ? "Remove from shortlist" : "Add to shortlist"}
+                >
+                  <motion.div
+                    animate={isShining ? {
+                      scale: [1, 1.3, 1],
+                      rotate: [0, 15, -15, 0],
+                    } : {}}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <Star
+                      className={`h-8 w-8 transition-colors ${
+                        isShortlisted
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-gray-400 hover:text-yellow-400'
+                      } ${isShining ? 'drop-shadow-[0_0_16px_rgba(250,204,21,0.8)]' : ''}`}
+                    />
+                  </motion.div>
+                </button>
+                <span className="text-xs text-gray-500 mt-2">Select for outreach</span>
+              </div>
+
+              {/* Vendor Name Header - matches desktop */}
+              <div className="mb-4 pb-3 border-b border-gray-200">
+                <div className="flex items-start justify-between">
+                  <h3
+                    style={{ color: vendor.color?.hex ?? '#111827' }}
+                    className="text-lg font-bold"
+                  >
+                    {vendor.name}
+                  </h3>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // TODO: Handle AI edit for vendor
+                      }}
+                      className="h-6 w-6 hover:bg-gray-100"
+                      title="Edit vendor"
+                    >
+                      <Bot className="h-3.5 w-3.5 text-gray-500" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // TODO: Handle delete vendor
+                      }}
+                      className="h-6 w-6 hover:bg-red-50"
+                      title="Delete vendor"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-gray-500 hover:text-red-500" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <span
+                    style={{ color: vendor.color?.hex ?? '#111827' }}
+                    className="text-sm font-medium"
+                  >
+                    {vendor.matchPercentage}% Match
+                  </span>
+                  {vendor.website && (
+                    <a
+                      href={vendor.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-blue-600 hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Visit website
+                    </a>
+                  )}
+                </div>
+              </div>
+
               {/* Executive Summary */}
               {vendor.executiveSummary && (
                 <div className="mb-4">
-                  <h3
+                  <h4
                     style={{ color: vendor.color?.hex ?? '#111827' }}
-                    className="text-sm sm:text-base font-semibold mb-2"
+                    className="text-sm font-semibold mb-2"
                   >
                     About {vendor.name}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">
+                  </h4>
+                  <p className="text-sm text-gray-700 leading-relaxed">
                     {vendor.executiveSummary}
                   </p>
                 </div>
@@ -237,14 +357,14 @@ export const VendorCard: React.FC<VendorCardProps> = ({
               {/* Research Insights */}
               {vendor.keyFeatures && vendor.keyFeatures.length > 0 && (
                 <div>
-                  <h3
+                  <h4
                     style={{ color: vendor.color?.hex ?? '#111827' }}
-                    className="text-sm sm:text-base font-semibold mb-2"
+                    className="text-sm font-semibold mb-2"
                   >
                     Research Insights
-                  </h3>
-                  <ul className="space-y-1.5 sm:space-y-2">
-                    {vendor.keyFeatures.map((feature, index) => (
+                  </h4>
+                  <ul className="space-y-2">
+                    {vendor.keyFeatures.slice(0, 5).map((feature, index) => (
                       <li key={index} className="flex items-start gap-2">
                         <span
                           style={{ color: vendor.color?.hex ?? '#6b7280' }}
@@ -252,7 +372,7 @@ export const VendorCard: React.FC<VendorCardProps> = ({
                         >
                           •
                         </span>
-                        <span className="text-xs sm:text-sm text-gray-700 leading-snug">
+                        <span className="text-sm text-gray-700 leading-snug">
                           {feature}
                         </span>
                       </li>

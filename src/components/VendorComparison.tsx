@@ -10,14 +10,19 @@
  * 2. Workflow mode: Accept vendors/criteria from workflow (vendor-comparison step)
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Share2, ArrowRight } from 'lucide-react';
 import { ComparisonVendor, VENDOR_COLOR_PALETTE } from '../types/comparison.types';
 import { Criterion } from '../types';
 import { VendorCard } from './vendor-comparison/VendorCard';
 import { VerticalBarChart } from './vendor-comparison/VerticalBarChart';
+import { ShareDialog } from './vendor-discovery/ShareDialog';
+import { ExecutiveSummaryDialog } from './vendor-comparison/ExecutiveSummaryDialog';
+import { Button } from './ui/button';
 import mockAIdata from '../data/mockAIdata.json';
 import { TechRequest, Vendor as WorkflowVendor, Criteria as WorkflowCriteria } from './VendorDiscovery';
+import { TYPOGRAPHY } from '../styles/typography-config';
 
 interface VendorComparisonProps {
   // Standalone mode props
@@ -30,6 +35,8 @@ interface VendorComparisonProps {
   techRequest?: TechRequest;
   onComplete?: () => void;
   onVendorsGenerated?: (vendors: WorkflowVendor[]) => void;
+  shortlistedVendorIds?: string[];
+  onShortlistChange?: (shortlistedIds: string[]) => void;
 }
 
 export const VendorComparison: React.FC<VendorComparisonProps> = ({
@@ -40,6 +47,8 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
   techRequest,
   onComplete,
   onVendorsGenerated,
+  shortlistedVendorIds: externalShortlistedIds,
+  onShortlistChange,
 }) => {
   // Determine if we're in workflow mode or standalone mode
   const isWorkflowMode = !!workflowVendors && !!workflowCriteria;
@@ -122,6 +131,49 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
   // Use workflow data if available, otherwise use standalone data
   const criteria = isWorkflowMode ? workflowCriteriaFormatted : standaloneCriteria;
   const shortlist = isWorkflowMode ? workflowShortlist : standaloneShortlist;
+
+  // === SHORTLIST STATE ===
+  // Use external state in workflow mode, local state in standalone mode
+  const [localShortlistedIds, setLocalShortlistedIds] = useState<Set<string>>(new Set());
+
+  // In workflow mode, use external state; in standalone mode, use local state
+  const shortlistedVendorIds = isWorkflowMode && externalShortlistedIds
+    ? new Set(externalShortlistedIds)
+    : localShortlistedIds;
+
+  // === SHARE DIALOG STATE ===
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+
+  // === EXECUTIVE SUMMARY DIALOG STATE ===
+  const [isExecutiveSummaryOpen, setIsExecutiveSummaryOpen] = useState(false);
+
+  // Listen for custom event from parent VendorDiscovery to open Executive Summary
+  useEffect(() => {
+    const handleOpenExecutiveSummary = () => {
+      setIsExecutiveSummaryOpen(true);
+    };
+
+    window.addEventListener('openExecutiveSummary', handleOpenExecutiveSummary);
+    return () => {
+      window.removeEventListener('openExecutiveSummary', handleOpenExecutiveSummary);
+    };
+  }, []);
+
+  const toggleShortlist = (vendorId: string) => {
+    const newSet = new Set(shortlistedVendorIds);
+    if (newSet.has(vendorId)) {
+      newSet.delete(vendorId);
+    } else {
+      newSet.add(vendorId);
+    }
+
+    // In workflow mode, call external callback; in standalone mode, update local state
+    if (isWorkflowMode && onShortlistChange) {
+      onShortlistChange(Array.from(newSet));
+    } else {
+      setLocalShortlistedIds(newSet);
+    }
+  };
 
   // === MOBILE STATE (3 vendor carousels) ===
   const [vendor1Index, setVendor1Index] = useState(0);
@@ -251,36 +303,12 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
     );
   }
 
-  const projectName = isWorkflowMode
-    ? (techRequest?.description || 'Vendor Comparison')
-    : mockAIdata.project.name;
-
-  const projectCategory = isWorkflowMode
-    ? (techRequest?.category || '')
-    : mockAIdata.project.category;
-
   return (
     <div className={`vendor-comparison-container bg-gray-50 min-h-screen ${className}`}>
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-                {projectName}
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                {projectCategory} • {shortlist.length} vendors
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* === MOBILE LAYOUT (< 768px) === */}
-        <div className="md:hidden">
+        {/* === MOBILE LAYOUT (< 1024px) === */}
+        <div className="lg:hidden">
           {/* Vendor Cards - Stacked Vertically */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -295,6 +323,8 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
                 currentIndex={vendor1Index}
                 totalVendors={shortlist.length}
                 onNavigate={handleVendor1Navigate}
+                isShortlisted={shortlistedVendorIds.has(vendor1.id)}
+                onToggleShortlist={toggleShortlist}
               />
             )}
 
@@ -305,6 +335,8 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
                 currentIndex={vendor2Index}
                 totalVendors={shortlist.length}
                 onNavigate={handleVendor2Navigate}
+                isShortlisted={shortlistedVendorIds.has(vendor2.id)}
+                onToggleShortlist={toggleShortlist}
               />
             )}
 
@@ -315,6 +347,8 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
                 currentIndex={vendor3Index}
                 totalVendors={shortlist.length}
                 onNavigate={handleVendor3Navigate}
+                isShortlisted={shortlistedVendorIds.has(vendor3.id)}
+                onToggleShortlist={toggleShortlist}
               />
             )}
           </motion.div>
@@ -332,8 +366,8 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
           </motion.div>
         </div>
 
-        {/* === DESKTOP LAYOUT (≥ 768px) === */}
-        <div className="hidden md:block">
+        {/* === DESKTOP LAYOUT (≥ 1024px) === */}
+        <div className="hidden lg:block">
           {/* Vertical Bar Chart - Desktop (5 columns) with integrated column headers */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -354,9 +388,72 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
               isFirstScreen={isFirstScreen}
               isLastScreen={isLastScreen}
               onScreenChange={handleDesktopScreenChange}
+              shortlistedVendorIds={shortlistedVendorIds}
+              onToggleShortlist={toggleShortlist}
             />
           </motion.div>
         </div>
+
+        {/* Download or Share Button */}
+        <div className="flex flex-col items-center gap-3 mt-6">
+          <Button
+            variant="outline"
+            onClick={() => setIsShareDialogOpen(true)}
+            className={`${TYPOGRAPHY.button.default} gap-2 min-w-[240px]`}
+          >
+            <Share2 className="h-4 w-4" />
+            Download or Share
+          </Button>
+
+          {/* Continue to Invite Button - only show in workflow mode */}
+          {isWorkflowMode && onComplete && (
+            <Button
+              onClick={onComplete}
+              className={`${TYPOGRAPHY.button.default} gap-2 min-w-[240px]`}
+            >
+              Continue to Invite
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+
+        {/* Share Dialog */}
+        <ShareDialog
+          isOpen={isShareDialogOpen}
+          onClose={() => setIsShareDialogOpen(false)}
+          criteria={workflowCriteria || standaloneCriteria.map(c => ({
+            id: c.id,
+            name: c.name,
+            explanation: c.description,
+            importance: c.importance,
+            type: c.type,
+            isArchived: false
+          }))}
+          projectId={projectId || 'comparison'}
+          title="Download or Share"
+          description="Download the comparison results or share via link"
+          downloadButtonText="Download Comparison Results"
+          downloadDescription="Download as Excel file (.xlsx)"
+        />
+
+        {/* Executive Summary Dialog */}
+        <ExecutiveSummaryDialog
+          isOpen={isExecutiveSummaryOpen}
+          onClose={() => setIsExecutiveSummaryOpen(false)}
+          onOpenChat={() => {
+            // TODO: Integrate slide-in chat panel
+            console.log('Open chat panel');
+          }}
+          criteria={workflowCriteria || standaloneCriteria.map(c => ({
+            id: c.id,
+            name: c.name,
+            explanation: c.description,
+            importance: c.importance,
+            type: c.type,
+            isArchived: false
+          }))}
+          projectId={projectId || 'comparison'}
+        />
       </div>
     </div>
   );

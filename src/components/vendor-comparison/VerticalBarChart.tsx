@@ -34,6 +34,9 @@ interface VerticalBarChartProps {
   isFirstScreen?: boolean;
   isLastScreen?: boolean;
   onScreenChange?: (direction: 'next' | 'previous') => void;
+  // Shortlist props
+  shortlistedVendorIds?: Set<string>;
+  onToggleShortlist?: (vendorId: string) => void;
 }
 
 /**
@@ -55,7 +58,7 @@ const renderCriterionState = (state: CriterionState, criterionIndex: number, ven
           transition={{ duration: 0.3, delay: baseDelay }}
           className="flex items-center justify-center h-full"
         >
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 md:bg-green-100/70 flex items-center justify-center">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 lg:bg-green-100/70 flex items-center justify-center">
             <Check className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
           </div>
         </motion.div>
@@ -69,7 +72,7 @@ const renderCriterionState = (state: CriterionState, criterionIndex: number, ven
           transition={{ duration: 0.3, delay: baseDelay }}
           className="flex items-center justify-center h-full"
         >
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 md:bg-gray-100/70 flex items-center justify-center">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 lg:bg-gray-100/70 flex items-center justify-center">
             <Minus className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
           </div>
         </motion.div>
@@ -83,7 +86,7 @@ const renderCriterionState = (state: CriterionState, criterionIndex: number, ven
           transition={{ duration: 0.3, delay: baseDelay }}
           className="flex items-center justify-center h-full"
         >
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 md:bg-gray-100/70 flex items-center justify-center">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 lg:bg-gray-100/70 flex items-center justify-center">
             <HelpCircle className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
           </div>
         </motion.div>
@@ -97,7 +100,7 @@ const renderCriterionState = (state: CriterionState, criterionIndex: number, ven
           transition={{ duration: 0.4, delay: baseDelay }}
           className="flex items-center justify-center h-full"
         >
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 md:bg-yellow-100/70 flex items-center justify-center">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 lg:bg-yellow-100/70 flex items-center justify-center">
             <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 fill-yellow-500" />
           </div>
         </motion.div>
@@ -173,6 +176,9 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
   isFirstScreen = true,
   isLastScreen = true,
   onScreenChange,
+  // Shortlist props
+  shortlistedVendorIds,
+  onToggleShortlist,
 }) => {
   // Check if desktop headers should be shown
   const showDesktopHeaders = columnCount === 5 && desktopVendors && desktopColumnIndices;
@@ -273,7 +279,7 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
 
           {/* Screen navigation - Previous (Desktop only) - right before vendor cards */}
           {showDesktopHeaders && (
-            <div className="hidden md:flex flex-shrink-0 w-8 items-center justify-center">
+            <div className="hidden lg:flex flex-shrink-0 w-8 items-center justify-center">
               {!isFirstScreen && onScreenChange && (
                 <Button
                   variant="outline"
@@ -289,7 +295,7 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
 
           {/* Desktop Column Headers (hidden on mobile) */}
           {showDesktopHeaders && (
-            <div className="hidden md:grid flex-1 grid-cols-5 gap-1 xs:gap-1.5 sm:gap-2">
+            <div className="hidden lg:grid flex-1 grid-cols-5 gap-1 xs:gap-1.5 sm:gap-2">
               {desktopVendors.map((vendor, idx) => (
                 <DesktopColumnHeader
                   key={`desktop-col-${idx}-${vendor?.id ?? 'placeholder'}`}
@@ -301,6 +307,8 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
                   isExpanded={expandedColumnIndex === idx}
                   onToggleExpand={() => onColumnToggleExpand?.(idx)}
                   columnPosition={idx}
+                  isShortlisted={vendor ? shortlistedVendorIds?.has(vendor.id) : false}
+                  onToggleShortlist={onToggleShortlist}
                 />
               ))}
             </div>
@@ -308,7 +316,7 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
 
           {/* Screen navigation - Next (Desktop only) */}
           {showDesktopHeaders && (
-            <div className="hidden md:flex flex-shrink-0 w-8 items-center justify-center">
+            <div className="hidden lg:flex flex-shrink-0 w-8 items-center justify-center">
               {!isLastScreen && onScreenChange && (
                 <Button
                   variant="outline"
@@ -385,7 +393,7 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
                         {/* Spacer matching criterion card width */}
                         <div className="flex-shrink-0 w-40 xs:w-44 sm:w-52 lg:w-60" />
                         {/* Left spacers matching criterion row layout - only on desktop when headers are shown */}
-                        {showDesktopHeaders && <div className="hidden md:block w-[52px] sm:w-[60px] flex-shrink-0" />}
+                        {showDesktopHeaders && <div className="hidden lg:block w-[52px] sm:w-[60px] flex-shrink-0" />}
                         {/* Vendor columns */}
                         <div className={`flex-1 grid ${gridColsClass} gap-1 xs:gap-1.5 sm:gap-2 h-full overflow-visible`}>
                           {activeVendors.map((vendor, idx) => (
@@ -403,7 +411,7 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
                           ))}
                         </div>
                         {/* Right spacer matching header layout - only on desktop when headers are shown */}
-                        {showDesktopHeaders && <div className="hidden md:block w-10 flex-shrink-0" />}
+                        {showDesktopHeaders && <div className="hidden lg:block w-10 flex-shrink-0" />}
                       </div>
                       {categoryCriteria.map((criterion, criterionIndex) => {
                         const importance = criterion.importance;
@@ -453,7 +461,7 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
 
                             {/* Left spacers matching header layout - only on desktop when headers are shown */}
                             {/* Gap div (w-2 sm:w-3) + flex gap (gap-2 sm:gap-3) + Navigation button spacer (w-8) + flex gap */}
-                            {showDesktopHeaders && <div className="hidden md:block w-[52px] sm:w-[60px] flex-shrink-0" />}
+                            {showDesktopHeaders && <div className="hidden lg:block w-[52px] sm:w-[60px] flex-shrink-0" />}
 
                             {/* Vendor Columns - Icon/Text Display */}
                             <div className={`flex-1 grid ${gridColsClass} gap-1 xs:gap-1.5 sm:gap-2 items-center min-h-[40px] xs:min-h-[50px] sm:min-h-[60px] relative z-10`}>
@@ -472,7 +480,7 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
                             </div>
 
                             {/* Right spacer matching header layout - only on desktop when headers are shown */}
-                            {showDesktopHeaders && <div className="hidden md:block w-10 flex-shrink-0" />}
+                            {showDesktopHeaders && <div className="hidden lg:block w-10 flex-shrink-0" />}
                           </div>
                         );
                       })}

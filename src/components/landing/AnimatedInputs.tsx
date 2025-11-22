@@ -118,7 +118,7 @@ export const AnimatedInputs = ({
           <div className="relative">
             <Textarea
               id="solution-input"
-              placeholder="e.g., CRM system with email integration and mobile app support"
+              placeholder="e.g., CRM system with email integration and mobile app support (currently looking at Pipedrive and Zoho)"
               value={solutionInput}
               onChange={(e) => handleSolutionChange(e.target.value)}
               className={`relative rounded-xl h-24 ${SPACING.landing.inputs.input} ${TYPOGRAPHY.form.input} resize-none bg-white shadow-soft border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-purple-500/20 transition-[border-color] duration-300 custom-pulse-border`}

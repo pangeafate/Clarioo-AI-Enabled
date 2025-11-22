@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowRight, CheckCircle, LogOut, User, ArrowLeft, Save } from "lucide-react";
+import { ArrowRight, CheckCircle, LogOut, User, ArrowLeft, Save, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import CriteriaBuilder from "./vendor-discovery/CriteriaBuilder";
 import VendorSelection from "./vendor-discovery/VendorSelection";
 import { VendorComparison } from "./VendorComparison";
-import VendorInvite from "./vendor-discovery/VendorInvite";
+import VendorInviteNew from "./vendor-discovery/VendorInviteNew";
 import { WorkflowNavigation, WORKFLOW_STEPS, type Step } from "./WorkflowNavigation";
 import mockAIdata from '@/data/mockAIdata.json';
 import { SPACING } from '@/styles/spacing-config';
@@ -28,6 +28,7 @@ interface WorkflowState {
   techRequest: TechRequest | null;
   criteria: Criteria[];
   selectedVendors: Vendor[];
+  shortlistedVendorIds: string[]; // Vendor IDs shortlisted for outreach in invite-pitch stage
 }
 
 export interface TechRequest {
@@ -101,6 +102,7 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
   const [techRequest, setTechRequest] = useState<TechRequest | null>(null);
   const [criteria, setCriteria] = useState<Criteria[]>([]);
   const [selectedVendors, setSelectedVendors] = useState<Vendor[]>([]);
+  const [shortlistedVendorIds, setShortlistedVendorIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
 
@@ -168,6 +170,7 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
           }
 
           setSelectedVendors(state.selectedVendors);
+          setShortlistedVendorIds(state.shortlistedVendorIds || []); // Default to empty array for legacy data
           setLastSaved(state.lastSaved);
 
           // Show success feedback
@@ -182,7 +185,8 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
             wasLegacyTechInput: state.currentStep === 'tech-input',
             hasRequest: !!state.techRequest,
             criteriaCount: state.criteria.length,
-            vendorCount: state.selectedVendors.length
+            vendorCount: state.selectedVendors.length,
+            shortlistedCount: (state.shortlistedVendorIds || []).length
           });
         } else {
           // GAP-5: No saved state - initialize techRequest from project data
@@ -241,7 +245,8 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
         lastSaved: new Date().toISOString(),
         techRequest,
         criteria,
-        selectedVendors
+        selectedVendors,
+        shortlistedVendorIds
       };
 
       try {
@@ -252,7 +257,7 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
         console.error('Failed to save workflow state:', error);
       }
     }
-  }, [currentStep, maxStepReached, techRequest, criteria, selectedVendors, isLoading, project.id, storageKey]);
+  }, [currentStep, maxStepReached, techRequest, criteria, selectedVendors, shortlistedVendorIds, isLoading, project.id, storageKey]);
 
   /**
    * GAP-1 FIX: Save project state to localStorage
@@ -274,7 +279,8 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
       lastSaved: new Date().toISOString(),
       techRequest: stepData.techRequest || techRequest,
       criteria: stepData.criteria || criteria,
-      selectedVendors: stepData.selectedVendors || selectedVendors
+      selectedVendors: stepData.selectedVendors || selectedVendors,
+      shortlistedVendorIds: stepData.shortlistedVendorIds || shortlistedVendorIds
     };
 
     try {
@@ -344,11 +350,16 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
 
   const handleVendorsGenerated = async (newVendors: Vendor[]) => {
     setSelectedVendors(newVendors);
-    await saveProjectState(currentStep, { 
-      techRequest, 
-      criteria, 
-      selectedVendors: newVendors 
+    await saveProjectState(currentStep, {
+      techRequest,
+      criteria,
+      selectedVendors: newVendors
     });
+  };
+
+  const handleShortlistChange = (newShortlistedIds: string[]) => {
+    setShortlistedVendorIds(newShortlistedIds);
+    // State will auto-save via useEffect dependency
   };
 
   const handleStepClick = async (stepId: Step) => {
@@ -378,13 +389,32 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
             {/* Step Content */}
             <Card className="shadow-large">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  {React.createElement(WORKFLOW_STEPS[currentStepIndex].icon, { className: "h-6 w-6" })}
-                  {WORKFLOW_STEPS[currentStepIndex].title}
-                </CardTitle>
-                <CardDescription>
-                  {WORKFLOW_STEPS[currentStepIndex].description}
-                </CardDescription>
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      {React.createElement(WORKFLOW_STEPS[currentStepIndex].icon, { className: "h-6 w-6" })}
+                      {WORKFLOW_STEPS[currentStepIndex].title}
+                    </CardTitle>
+                    <CardDescription>
+                      {currentStep === 'vendor-comparison'
+                        ? `${WORKFLOW_STEPS[currentStepIndex].description}: ${selectedVendors.length} vendors`
+                        : WORKFLOW_STEPS[currentStepIndex].description}
+                    </CardDescription>
+                  </div>
+                  {/* Executive Summary Button - Only show on vendor-comparison step */}
+                  {currentStep === 'vendor-comparison' && (
+                    <Button
+                      onClick={() => {
+                        // Dispatch custom event to open executive summary in VendorComparison
+                        window.dispatchEvent(new CustomEvent('openExecutiveSummary'));
+                      }}
+                      className="bg-primary hover:bg-primary/90 text-white gap-2 flex-shrink-0"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Executive Summary
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className={SPACING.vendorDiscovery.container}>
                 {currentStep === 'criteria' && techRequest && (
@@ -409,14 +439,17 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
                     techRequest={techRequest!}
                     onVendorsGenerated={handleVendorsGenerated}
                     onComplete={handleComparisonComplete}
+                    shortlistedVendorIds={shortlistedVendorIds}
+                    onShortlistChange={handleShortlistChange}
                   />
                 )}
                 {currentStep === 'invite-pitch' && selectedVendors.length > 0 && (
-                  <VendorInvite
+                  <VendorInviteNew
                     vendors={selectedVendors}
                     criteria={criteria}
                     techRequest={techRequest!}
                     projectName={project.name}
+                    shortlistedVendorIds={shortlistedVendorIds}
                   />
                 )}
               </CardContent>

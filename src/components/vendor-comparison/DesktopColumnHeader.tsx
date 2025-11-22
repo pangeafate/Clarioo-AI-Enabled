@@ -9,11 +9,12 @@
  * - Placeholder for adding vendors when slot is empty
  */
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Plus, Bot, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Bot, Trash2, Info, Star } from 'lucide-react';
 import { ComparisonVendor } from '../../types/comparison.types';
 import { Button } from '../ui/button';
+import { useToast } from '../../hooks/use-toast';
 
 interface DesktopColumnHeaderProps {
   vendor: ComparisonVendor | null;
@@ -25,6 +26,8 @@ interface DesktopColumnHeaderProps {
   onToggleExpand: () => void;
   className?: string;
   columnPosition?: number; // 0-4 for 5 columns, used for popover positioning
+  isShortlisted?: boolean;
+  onToggleShortlist?: (vendorId: string) => void;
 }
 
 export const DesktopColumnHeader: React.FC<DesktopColumnHeaderProps> = ({
@@ -37,11 +40,39 @@ export const DesktopColumnHeader: React.FC<DesktopColumnHeaderProps> = ({
   onToggleExpand,
   className = '',
   columnPosition = 0,
+  isShortlisted = false,
+  onToggleShortlist,
 }) => {
+  const { toast } = useToast();
   const hasPrevious = currentIndex > 0;
   const hasNext = currentIndex < totalVendors - 1;
   const popoverRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLButtonElement>(null);
+
+  // Star shine animation state
+  const [isShining, setIsShining] = useState(false);
+
+  const handleToggleShortlist = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (vendor && onToggleShortlist) {
+      onToggleShortlist(vendor.id);
+      if (!isShortlisted) {
+        // Adding to shortlist
+        setIsShining(true);
+        setTimeout(() => setIsShining(false), 600);
+        toast({
+          title: "Added to the shortlist for outreach",
+          description: `${vendor.name} has been shortlisted.`
+        });
+      } else {
+        // Removing from shortlist
+        toast({
+          title: "Removed from shortlist",
+          description: `${vendor.name} has been removed from the shortlist.`
+        });
+      }
+    }
+  };
 
   // Determine popover alignment based on column position
   // Left columns (0-1): align left, Center column (2): center, Right columns (3-4): align right
@@ -119,26 +150,43 @@ export const DesktopColumnHeader: React.FC<DesktopColumnHeaderProps> = ({
           ref={cardRef}
           onClick={onToggleExpand}
           style={{
-            backgroundColor: vendor.color ? `${vendor.color.hex}15` : '#f3f4f6',
             borderColor: vendor.color?.hex ?? '#d1d5db',
           }}
-          className={`w-full border-2 rounded-xl px-2 py-2 min-h-[60px] transition-all hover:shadow-md ${
+          className={`w-full border-2 rounded-xl px-2 py-2 min-h-[60px] transition-all hover:shadow-md bg-white ${
             isExpanded ? 'ring-2 ring-offset-1' : ''
-          }`}
+          } relative`}
           whileTap={{ scale: 0.98 }}
         >
-          <div className="text-center">
-            <div
-              style={{ color: vendor.color?.hex ?? '#111827' }}
-              className="font-semibold text-sm truncate"
-            >
-              {vendor.name}
-            </div>
-            <div
-              style={{ color: vendor.color?.hex ?? '#111827' }}
-              className="text-xs opacity-80 mt-0.5"
-            >
-              {vendor.matchPercentage}%
+          {/* Info Icon - Top Right */}
+          <div className="absolute top-1 right-1">
+            <Info className="h-3 w-3 text-gray-400" />
+          </div>
+
+          <div className="flex items-center gap-2 w-full">
+            {/* Company Logo */}
+            {vendor.website && (
+              <img
+                src={`https://img.logo.dev/${vendor.website.replace(/^https?:\/\//, '').split('/')[0]}?token=pk_Fvbs8Zl6SWiC5WEoP8Qzbg`}
+                alt={`${vendor.name} logo`}
+                className="w-8 h-8 rounded-md object-contain flex-shrink-0 bg-white"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            )}
+            <div className="text-left min-w-0 flex-1">
+              <div
+                style={{ color: vendor.color?.hex ?? '#111827' }}
+                className="font-semibold text-sm truncate hidden xl:block"
+              >
+                {vendor.name}
+              </div>
+              <div
+                style={{ color: vendor.color?.hex ?? '#111827' }}
+                className="text-xs opacity-80 xl:mt-0.5"
+              >
+                {vendor.matchPercentage}%
+              </div>
             </div>
           </div>
         </motion.button>
@@ -172,6 +220,32 @@ export const DesktopColumnHeader: React.FC<DesktopColumnHeaderProps> = ({
               }}
               className="border-2 rounded-xl p-5 sm:p-6 shadow-xl bg-white"
             >
+              {/* Star Icon Row - Add to Shortlist - Centered */}
+              <div className="flex flex-col items-center mb-4">
+                <button
+                  onClick={handleToggleShortlist}
+                  className="p-2 hover:bg-yellow-50 rounded-full transition-colors"
+                  title={isShortlisted ? "Remove from shortlist" : "Add to shortlist"}
+                >
+                  <motion.div
+                    animate={isShining ? {
+                      scale: [1, 1.3, 1],
+                      rotate: [0, 15, -15, 0],
+                    } : {}}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <Star
+                      className={`h-8 w-8 transition-colors ${
+                        isShortlisted
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-gray-400 hover:text-yellow-400'
+                      } ${isShining ? 'drop-shadow-[0_0_16px_rgba(250,204,21,0.8)]' : ''}`}
+                    />
+                  </motion.div>
+                </button>
+                <span className="text-xs text-gray-500 mt-2">Select for outreach</span>
+              </div>
+
               {/* Vendor Name Header */}
               <div className="mb-4 pb-3 border-b border-gray-200">
                 <div className="flex items-start justify-between">

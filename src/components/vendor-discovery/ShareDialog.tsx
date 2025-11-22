@@ -33,13 +33,22 @@ export interface ShareDialogProps {
   onClose: () => void;
   criteria: Criteria[];
   projectId: string;
+  // Custom text props for different contexts
+  title?: string;
+  description?: string;
+  downloadButtonText?: string;
+  downloadDescription?: string;
 }
 
 export const ShareDialog: React.FC<ShareDialogProps> = ({
   isOpen,
   onClose,
   criteria,
-  projectId
+  projectId,
+  title = 'Download or Share',
+  description = 'Download the criteria list or share via link',
+  downloadButtonText = 'Download Criteria List',
+  downloadDescription = 'Download as Excel file (.xlsx)'
 }) => {
   const { toast } = useToast();
   const [linkCopied, setLinkCopied] = useState(false);
@@ -142,10 +151,10 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className={TYPOGRAPHY.heading.h6}>
-            Share with your Team
+            {title}
           </DialogTitle>
           <DialogDescription className={TYPOGRAPHY.muted.default}>
-            Download the criteria list or share via link
+            {description}
           </DialogDescription>
         </DialogHeader>
 
@@ -159,10 +168,10 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({
               className="w-full justify-start gap-2"
             >
               <Download className="h-4 w-4" />
-              Download Criteria List
+              {downloadButtonText}
             </Button>
             <p className={`${TYPOGRAPHY.muted.small} text-gray-500`}>
-              Download as Excel file (.xlsx)
+              {downloadDescription}
             </p>
           </div>
 

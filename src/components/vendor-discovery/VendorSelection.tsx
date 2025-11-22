@@ -17,7 +17,7 @@ import {
   Plus,
   ExternalLink,
   Trash2,
-  Building2
+  MessageSquare
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { TechRequest, Criteria, Vendor } from "../VendorDiscovery";
@@ -190,8 +190,12 @@ const VendorSelection = ({ criteria, techRequest, onComplete }: VendorSelectionP
 
   return (
     <div className="space-y-6">
-      {/* Rediscover Button */}
-      <div className="flex justify-end">
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" size="sm" className="gap-2">
+          <MessageSquare className="h-4 w-4" />
+          Chat with AI
+        </Button>
         <Button onClick={handleDiscoverVendors} variant="default" size="sm" className="gap-2" disabled={isLoading}>
           <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           Rediscover
@@ -283,11 +287,7 @@ const VendorSelection = ({ criteria, techRequest, onComplete }: VendorSelectionP
                 selectedVendorIds.has(vendor.id) ? 'ring-2 ring-primary' : ''
               }`}>
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <Checkbox
-                      checked={selectedVendorIds.has(vendor.id)}
-                      onCheckedChange={() => toggleVendorSelection(vendor.id)}
-                    />
+                  <div className="flex items-start justify-end mb-3 gap-2">
                     {vendor.id.startsWith('custom-') && (
                       <Button
                         variant="ghost"
@@ -298,24 +298,25 @@ const VendorSelection = ({ criteria, techRequest, onComplete }: VendorSelectionP
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     )}
+                    <Checkbox
+                      checked={selectedVendorIds.has(vendor.id)}
+                      onCheckedChange={() => toggleVendorSelection(vendor.id)}
+                    />
                   </div>
 
                   <div className="space-y-2">
                     {/* Vendor logo and name - inline */}
                     <div className="flex items-center gap-2">
-                      {vendor.logo ? (
+                      {vendor.website && (
                         <img
-                          src={vendor.logo}
+                          src={`https://img.logo.dev/${vendor.website.replace(/^https?:\/\//, '').split('/')[0]}?token=pk_Fvbs8Zl6SWiC5WEoP8Qzbg`}
                           alt={`${vendor.name} logo`}
-                          className="h-5 w-5 object-contain rounded"
+                          className="w-10 h-10 rounded object-contain flex-shrink-0 bg-white"
                           onError={(e) => {
-                            // Fallback to placeholder icon if image fails to load
                             e.currentTarget.style.display = 'none';
-                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
                           }}
                         />
-                      ) : null}
-                      <Building2 className={`h-5 w-5 text-muted-foreground ${vendor.logo ? 'hidden' : ''}`} />
+                      )}
                       <h3 className={`${TYPOGRAPHY.body.small} font-bold`}>{vendor.name}</h3>
                     </div>
 

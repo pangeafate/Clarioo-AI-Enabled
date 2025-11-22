@@ -1012,7 +1012,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
         </Card>
         )}
 
-        {/* Share with your Team Button */}
+        {/* Download or Share Button */}
         <div className="flex justify-center mb-4">
           <Button
             variant="outline"
@@ -1020,7 +1020,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
             className={`${TYPOGRAPHY.button.default} gap-2 min-w-[240px]`}
           >
             <Share2 className="h-4 w-4" />
-            Share with your Team
+            Download or Share
           </Button>
         </div>
 
