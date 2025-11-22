@@ -226,7 +226,7 @@ export const CriterionCard: React.FC<CriterionCardProps> = ({
     >
       <Card
         className={cn(
-          'transition-shadow relative',
+          'transition-shadow relative overflow-hidden',
           !swipeState.isSwiping && 'hover:shadow-md',
           criterion.isArchived && 'opacity-60 grayscale cursor-pointer'
         )}
