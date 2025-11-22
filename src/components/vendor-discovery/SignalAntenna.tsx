@@ -13,7 +13,7 @@
  * - Click antenna → shows +/- popover
  * - + button: low → medium → high (stops at high)
  * - - button: high → medium → low → archived
- * - Popover auto-hides after 3 seconds
+ * - Popover auto-hides after 2 seconds
  *
  * IMPLEMENTATION:
  * - Bar heights: 8px, 12px, 16px (ascending)
@@ -68,7 +68,7 @@ export const SignalAntenna: React.FC<SignalAntennaProps> = ({
     }
     timeoutRef.current = setTimeout(() => {
       setShowPopover(false);
-    }, 3000);
+    }, 2000);
   };
 
   // Handle click on antenna
@@ -83,7 +83,6 @@ export const SignalAntenna: React.FC<SignalAntennaProps> = ({
         top: rect.bottom + 8, // 8px below the antenna
         left: rect.right - 70 // Align right edge (popover is ~70px wide)
       });
-      resetTimer();
     }
     setShowPopover(!showPopover);
   };
@@ -134,15 +133,23 @@ export const SignalAntenna: React.FC<SignalAntennaProps> = ({
 
     if (showPopover) {
       document.addEventListener('mousedown', handleClickOutside);
+      // Start auto-hide timer when popover opens
+      resetTimer();
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showPopover]);
+
+  // Cleanup timer on unmount only
+  useEffect(() => {
+    return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [showPopover]);
+  }, []);
 
   return (
     <div ref={containerRef} className="relative">

@@ -27,7 +27,7 @@
  * ```
  */
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 export interface SwipeGestureOptions {
   /** Callback when swipe left completes */
@@ -223,37 +223,75 @@ export const useSwipeGesture = ({
   }, [handleStart, handleMove, handleEnd]);
 
   /**
-   * Touch event handlers
+   * State to track element for re-running effect when ref is set
    */
-  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLElement>) => {
+  const [element, setElement] = useState<HTMLElement | null>(null);
+
+  /**
+   * Callback ref that triggers re-render when element is attached
+   */
+  const callbackRef = useCallback((node: HTMLElement | null) => {
+    setElement(node);
+  }, []);
+
+  /**
+   * Touch event handlers (using native events for passive: false)
+   */
+  const handleTouchStartNative = useCallback((e: TouchEvent) => {
     const touch = e.touches[0];
-    const containerWidth = e.currentTarget.offsetWidth;
+    const containerWidth = (e.currentTarget as HTMLElement).offsetWidth;
     handleStart(touch.clientX, touch.clientY, containerWidth);
   }, [handleStart]);
 
-  const handleTouchMove = useCallback((e: React.TouchEvent<HTMLElement>) => {
+  const handleTouchMoveNative = useCallback((e: TouchEvent) => {
     if (!isDraggingRef.current && !startPosRef.current) return;
 
     const touch = e.touches[0];
     handleMove(touch.clientX, touch.clientY);
 
-    // Prevent scroll if we're swiping
-    if (isDraggingRef.current) {
+    // Prevent scroll if we're swiping and event is cancelable
+    if (isDraggingRef.current && e.cancelable) {
       e.preventDefault();
     }
   }, [handleMove]);
 
-  const handleTouchEnd = useCallback(() => {
+  const handleTouchEndNative = useCallback(() => {
     handleEnd();
   }, [handleEnd]);
+
+  /**
+   * Attach native touch event listeners with { passive: false }
+   * This allows preventDefault() to work on touch events
+   * Also attach to window for touchend/touchcancel to catch releases outside element
+   */
+  useEffect(() => {
+    if (!element) return;
+
+    // Window-level handlers for touchend/touchcancel to ensure we always reset
+    const handleWindowTouchEnd = () => {
+      handleEnd();
+    };
+
+    element.addEventListener('touchstart', handleTouchStartNative, { passive: true });
+    element.addEventListener('touchmove', handleTouchMoveNative, { passive: false });
+
+    // Attach touchend and touchcancel to window to catch all end events
+    window.addEventListener('touchend', handleWindowTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', handleWindowTouchEnd, { passive: true });
+
+    return () => {
+      element.removeEventListener('touchstart', handleTouchStartNative);
+      element.removeEventListener('touchmove', handleTouchMoveNative);
+      window.removeEventListener('touchend', handleWindowTouchEnd);
+      window.removeEventListener('touchcancel', handleWindowTouchEnd);
+    };
+  }, [element, handleTouchStartNative, handleTouchMoveNative, handleEnd]);
 
   return {
     handlers: {
       onMouseDown: handleMouseDown,
-      onTouchStart: handleTouchStart,
-      onTouchMove: handleTouchMove,
-      onTouchEnd: handleTouchEnd
     },
-    swipeState
+    swipeState,
+    ref: callbackRef
   };
 };

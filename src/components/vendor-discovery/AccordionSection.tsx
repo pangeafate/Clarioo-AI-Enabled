@@ -173,7 +173,7 @@ export const AccordionSection: React.FC<AccordionSectionProps> = ({
   const colors = getCategoryColors(title);
 
   return (
-    <div className={`border rounded-lg overflow-hidden bg-white border-l-4 ${colors.border}`}>
+    <div className={`border rounded-lg bg-white border-l-4 ${colors.border}`}>
       {/* Header - Always Visible */}
       <button
         onClick={onToggle}
@@ -222,26 +222,33 @@ export const AccordionSection: React.FC<AccordionSectionProps> = ({
                       onDragStart={() => setDraggingId(criterion.id)}
                       onDragEnd={() => setDraggingId(null)}
                       className={cn(
-                        'relative',
+                        'relative rounded-lg',
                         draggingId === criterion.id && 'z-50'
                       )}
+                      style={{
+                        backgroundColor: '#ffffff',
+                        backfaceVisibility: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden',
+                        isolation: 'isolate'
+                      }}
                       whileDrag={{
                         scale: 1.02,
                         boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
                         cursor: 'grabbing'
                       }}
                     >
-                      <div className="flex items-stretch gap-2">
+                      <div className="flex items-stretch gap-2 bg-white rounded-lg p-1">
                         {/* Drag Handle */}
                         <div className="flex items-center justify-center px-1 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 transition-colors">
                           <GripVertical className="h-5 w-5" />
                         </div>
-                        {/* Criterion Card */}
+                        {/* Criterion Card - swipe disabled in drag-and-drop mode */}
                         <div className="flex-1">
                           <CriterionCard
                             criterion={criterion}
                             onEdit={onEditCriterion}
                             onImportanceChange={onImportanceChange}
+                            disableSwipe={true}
                           />
                         </div>
                       </div>
