@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowRight, Bot } from "lucide-react";
 import type { TechRequest } from "../VendorDiscovery";
 import { useToast } from "@/hooks/use-toast";
-import mockAIdata from '@/data/mockAIdata.json';
 import { TYPOGRAPHY } from '@/styles/typography-config';
+
+// Default summary text when no category selected
+const defaultSummaryText = "Select a technology category above to see AI-powered insights about evaluation criteria and vendor selection for your specific needs.";
 
 interface TechInputProps {
   onSubmit: (request: TechRequest) => void;
@@ -29,28 +31,20 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [additionalNotes, setAdditionalNotes] = useState<string>('');
-  const [headerText, setHeaderText] = useState<string>(mockAIdata.aiSummaries.default);
+  const [headerText, setHeaderText] = useState<string>(defaultSummaryText);
 
   /**
    * Load project data based on projectId
-   * - Finds the project in projects.json
-   * - Pre-fills category from project data
-   * - Triggers AI summary display via category useEffect
+   * Note: Project data now comes from n8n storage, not mock data
+   * Category is determined by n8n during project creation
    */
   useEffect(() => {
-    if (projectId) {
-      const project = mockAIdata.projects.find(p => p.id === projectId);
-      if (project && project.category) {
-        // Pre-fill category from project data
-        setFormData(prev => ({
-          ...prev,
-          category: project.category
-        }));
-
-        console.log(`✅ Category pre-filled from project: ${project.category}`);
-      }
+    // Project category is now set via initialData from n8n storage
+    // No need to look up from mock data
+    if (initialData?.category) {
+      console.log(`✅ Category loaded from project: ${initialData.category}`);
     }
-  }, [projectId]);
+  }, [projectId, initialData]);
 
   /**
    * Load landing page inputs
@@ -118,7 +112,7 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
       const summary = generateDetailedSummary(formData.category, additionalNotes);
       setHeaderText(summary);
     } else {
-      setHeaderText(mockAIdata.aiSummaries.default);
+      setHeaderText(defaultSummaryText);
     }
   }, [formData.category, additionalNotes]);
 
@@ -181,13 +175,26 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
   };
 
   /**
-   * Generate detailed summary based on category from JSON data
-   * Reads AI-generated summaries from centralized JSON file
+   * Generate detailed summary based on category
+   * Provides context-appropriate messaging for each technology category
    */
   const generateDetailedSummary = (category: string, userInput: string): string => {
-    // Try to get summary from JSON data
-    const summary = mockAIdata.aiSummaries.summaries[category as keyof typeof mockAIdata.aiSummaries.summaries];
+    // Generate category-specific summary
+    const categorySummaries: Record<string, string> = {
+      'CRM Software': 'Our AI will analyze CRM solutions based on your sales team size, pipeline management needs, email integration requirements, and reporting capabilities to find the best fit for your organization.',
+      'Project Management': 'We\'ll evaluate project management tools based on team collaboration features, task tracking capabilities, timeline visualization, and integration with your existing workflow.',
+      'Analytics & BI': 'Our analysis will cover data visualization, real-time dashboards, data source integrations, and self-service analytics capabilities tailored to your business intelligence needs.',
+      'Communication Tools': 'We\'ll assess communication platforms based on messaging features, video conferencing, file sharing, and integration capabilities with your productivity suite.',
+      'Security Solutions': 'Our evaluation includes threat detection, compliance management, access control, and incident response capabilities aligned with your security requirements.',
+      'DevOps & Infrastructure': 'We\'ll analyze CI/CD pipelines, container orchestration, monitoring, and cloud infrastructure management tools for your development workflow.',
+      'HR & Talent Management': 'Our assessment covers recruitment, onboarding, performance management, and employee engagement features for your HR processes.',
+      'Marketing Automation': 'We\'ll evaluate campaign management, lead scoring, email marketing, and analytics capabilities for your marketing operations.',
+      'E-commerce Platforms': 'Our analysis includes storefront customization, payment processing, inventory management, and multi-channel selling capabilities.',
+      'Data Management': 'We\'ll assess data governance, ETL pipelines, data quality, and master data management features for your data infrastructure.',
+      'AI & Machine Learning': 'Our evaluation covers model deployment, MLOps capabilities, AutoML features, and integration options for your AI initiatives.'
+    };
 
+    const summary = categorySummaries[category];
     if (summary) {
       return summary;
     }
@@ -197,7 +204,7 @@ const TechInput = ({ onSubmit, initialData, projectId }: TechInputProps) => {
       return `Based on your description: "${userInput}", we'll help you find the right technology solutions that match your specific requirements. Our AI will analyze your needs and suggest the most suitable vendors in the market.`;
     }
 
-    return mockAIdata.aiSummaries.default;
+    return defaultSummaryText;
   };
 
   /**

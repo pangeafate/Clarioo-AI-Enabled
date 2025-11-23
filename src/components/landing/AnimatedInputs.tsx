@@ -68,9 +68,9 @@ export const AnimatedInputs = ({
   // SP_011: Calculate if user has typed in any input field
   const hasInputValues = companyInput.trim().length > 0 || solutionInput.trim().length > 0;
 
-  // SP_016: Updated validation - both fields need at least 10 characters for n8n AI
+  // SP_016: Updated validation - at least one field needs 10+ characters for n8n AI
   const hasAnyInput = companyInput.length > 0 || solutionInput.length > 0;
-  const hasEnoughCharacters = companyInput.trim().length >= 10 && solutionInput.trim().length >= 10;
+  const hasEnoughCharacters = companyInput.trim().length >= 10 || solutionInput.trim().length >= 10;
 
   // Debug logging
   console.log('[AnimatedInputs] Validation:', {
@@ -164,12 +164,12 @@ export const AnimatedInputs = ({
               {isCreating ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Creating with AI...
+                  Creating with Clarioo...
                 </>
               ) : (
                 <>
                   <Plus className="h-4 w-4" />
-                  Create with AI
+                  Create with Clarioo
                 </>
               )}
             </Button>
@@ -177,7 +177,7 @@ export const AnimatedInputs = ({
           {/* Helper text for input requirements */}
           {!hasEnoughCharacters && hasAnyInput && (
             <p className="text-xs text-gray-500">
-              Both fields need at least 10 characters for AI processing
+              At least one field needs 10 characters for AI processing
             </p>
           )}
         </div>

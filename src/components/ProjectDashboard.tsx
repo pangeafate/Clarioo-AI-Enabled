@@ -7,10 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar, FolderOpen, Edit, Trash2, ChevronDown, ChevronUp } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import * as projectService from "@/services/mock/projectService";
-import { getProjectsFromStorage } from "@/services/n8nService";
+import { getProjectsFromStorage, deleteProjectFromStorage, updateProjectInStorage } from "@/services/n8nService";
 import { TYPOGRAPHY } from "@/styles/typography-config";
 import { LoadingState } from "@/components/shared/loading/LoadingState";
 
@@ -32,7 +30,6 @@ const ProjectDashboard = ({
   selectedProjectId,
   onProjectsLoaded
 }: ProjectDashboardProps) => {
-  const { user } = useAuth();
   const {
     toast
   } = useToast();
@@ -59,12 +56,12 @@ const ProjectDashboard = ({
   useEffect(() => {
     fetchProjects();
   }, []);
-  // Load projects from both n8n storage and mock service, then merge
+  // Load projects from n8n storage only
   const fetchProjects = async () => {
     try {
       // Load n8n-created projects from localStorage
       const n8nProjects = getProjectsFromStorage();
-      const mappedN8nProjects: Project[] = n8nProjects.map(p => ({
+      const mappedProjects: Project[] = n8nProjects.map(p => ({
         id: p.id,
         name: p.name,
         description: p.description,
@@ -72,40 +69,16 @@ const ProjectDashboard = ({
         created_at: p.created_at,
         updated_at: p.updated_at
       }));
-
-      // Load mock projects
-      const { data, error } = await projectService.getProjects(user?.id);
-      if (error) throw new Error(error.message);
-
-      const mockProjects: Project[] = (data || []).map(p => ({
-        id: p.id,
-        name: p.name,
-        description: p.description,
-        status: p.status,
-        created_at: p.created_at,
-        updated_at: p.updated_at
-      }));
-
-      // Merge projects, n8n projects take priority (by id)
-      const projectMap = new Map<string, Project>();
-
-      // Add mock projects first
-      mockProjects.forEach(p => projectMap.set(p.id, p));
-
-      // Override with n8n projects (they take priority)
-      mappedN8nProjects.forEach(p => projectMap.set(p.id, p));
-
-      const mergedProjects = Array.from(projectMap.values());
 
       // Sort by updated_at descending
-      mergedProjects.sort((a, b) =>
+      mappedProjects.sort((a, b) =>
         new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
       );
 
-      setProjects(mergedProjects);
+      setProjects(mappedProjects);
 
       // Notify parent about loaded projects for auto-selection
-      onProjectsLoaded?.(mergedProjects);
+      onProjectsLoaded?.(mappedProjects);
     } catch (error) {
       toast({
         title: "Error fetching projects",
@@ -125,30 +98,22 @@ const ProjectDashboard = ({
     });
     setShowEditDialog(true);
   };
-  // 🎨 PROTOTYPE MODE: Using mock project service
+  // Update project in n8n storage
   const updateProject = async () => {
     if (!editingProject || !editedProject.name.trim()) return;
     try {
-      const { data, error } = await projectService.updateProject(
-        editingProject.id,
-        {
-          name: editedProject.name,
-          description: editedProject.description || ''
-        }
-      );
+      // Update in n8n storage
+      updateProjectInStorage(editingProject.id, {
+        name: editedProject.name,
+        description: editedProject.description || ''
+      });
 
-      if (error) throw new Error(error.message);
-
-      if (!data) throw new Error('No data returned');
-
-      // Map to local Project interface
+      // Update local state
       const updatedProject: Project = {
-        id: data.id,
-        name: data.name,
-        description: data.description,
-        status: data.status,
-        created_at: data.created_at,
-        updated_at: data.updated_at
+        ...editingProject,
+        name: editedProject.name,
+        description: editedProject.description || '',
+        updated_at: new Date().toISOString()
       };
 
       setProjects(projects.map(p =>
@@ -170,16 +135,15 @@ const ProjectDashboard = ({
     }
   };
 
-  // 🎨 PROTOTYPE MODE: Using mock project service
+  // Delete project from n8n storage
   const deleteProject = async () => {
     if (!editingProject) return;
 
     setIsDeleting(true);
 
     try {
-      const { error } = await projectService.deleteProject(editingProject.id);
-
-      if (error) throw new Error(error.message);
+      // Delete from n8n storage
+      deleteProjectFromStorage(editingProject.id);
 
       // Remove project from list
       setProjects(projects.filter(p => p.id !== editingProject.id));

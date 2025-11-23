@@ -16,8 +16,33 @@ import { Card, CardContent } from '../ui/card';
 import { TYPOGRAPHY } from '../../styles/typography-config';
 import { useToast } from '../../hooks/use-toast';
 import { ShareDialog } from '../vendor-discovery/ShareDialog';
-import mockAIdata from '../../data/mockAIdata.json';
 import type { Criteria } from '../VendorDiscovery';
+
+// Default empty executive summary structure when no data from n8n
+const defaultExecutiveSummary = {
+  recommendation: {
+    title: 'Executive Summary',
+    topPick: 'Awaiting Analysis',
+    reason: 'Complete the vendor comparison to generate an executive summary with recommendations.',
+    considerations: ['Run vendor comparison to analyze criteria', 'Review vendor scores and evidence', 'Generate AI-powered recommendations']
+  },
+  keyCriteria: {
+    title: 'Key Evaluation Criteria',
+    criteria: [] as Array<{ name: string; description: string; importance: string }>
+  },
+  topVendors: {
+    title: 'Top Vendors',
+    vendors: [] as Array<{ name: string; score: number; strengths: string[]; weaknesses: string[] }>
+  },
+  differentiators: {
+    title: 'Key Differentiators',
+    items: [] as Array<{ category: string; winner: string; reason: string }>
+  },
+  callPrep: {
+    title: 'Call Preparation Questions',
+    questions: ['What are your pricing tiers and typical contract terms?', 'Can you provide customer references in our industry?', 'What is your implementation timeline and support process?']
+  }
+};
 
 interface ExecutiveSummaryDialogProps {
   isOpen: boolean;
@@ -41,7 +66,8 @@ export const ExecutiveSummaryDialog: React.FC<ExecutiveSummaryDialogProps> = ({
   const [chatMessage, setChatMessage] = useState('');
   const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
 
-  const summary = mockAIdata.executiveSummary;
+  // Use default summary - in production this would come from n8n analysis
+  const summary = defaultExecutiveSummary;
 
   const handleOpenChat = () => {
     setIsChatOpen(true);
@@ -358,14 +384,7 @@ export const ExecutiveSummaryDialog: React.FC<ExecutiveSummaryDialogProps> = ({
       <ShareDialog
         isOpen={isShareDialogOpen}
         onClose={() => setIsShareDialogOpen(false)}
-        criteria={criteria.length > 0 ? criteria : mockAIdata.criteria.map(c => ({
-          id: c.id,
-          name: c.name,
-          explanation: c.description,
-          importance: c.importance >= 4 ? 'high' : c.importance >= 3 ? 'medium' : 'low',
-          type: c.type || 'other',
-          isArchived: false
-        }))}
+        criteria={criteria}
         projectId={projectId}
         title="Download or Share"
         description="Download the executive summary or share via link"

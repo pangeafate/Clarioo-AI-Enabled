@@ -16,7 +16,7 @@
  * - localStorage persistence: Compared vendors persist per project
  */
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Share2, ArrowRight, X, ExternalLink } from 'lucide-react';
 import { ComparisonVendor, VENDOR_COLOR_PALETTE, CriterionScoreDetail } from '../types/comparison.types';
@@ -26,7 +26,6 @@ import { VerticalBarChart } from './vendor-comparison/VerticalBarChart';
 import { ShareDialog } from './vendor-discovery/ShareDialog';
 import { ExecutiveSummaryDialog } from './vendor-comparison/ExecutiveSummaryDialog';
 import { Button } from './ui/button';
-import mockAIdata from '../data/mockAIdata.json';
 import { TechRequest, Vendor as WorkflowVendor, Criteria as WorkflowCriteria } from './VendorDiscovery';
 import { TYPOGRAPHY } from '../styles/typography-config';
 import {
@@ -91,6 +90,12 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
 
   // Track if all comparisons are complete (for sorting)
   const [allComparisonsComplete, setAllComparisonsComplete] = useState(false);
+
+  // Track if generation is currently in progress (for Stop Generation button)
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // Ref to signal abortion of generation
+  const abortGenerationRef = useRef(false);
 
   // Score detail popup state
   const [selectedScoreDetail, setSelectedScoreDetail] = useState<{
@@ -226,9 +231,16 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
 
     setComparisonStarted(true);
     setAllComparisonsComplete(false);
+    setIsGenerating(true);
+    abortGenerationRef.current = false;
 
     // Compare vendors sequentially
     for (const vendor of workflowVendors) {
+      // Check if generation was stopped
+      if (abortGenerationRef.current) {
+        break;
+      }
+
       // Skip if already completed
       if (vendorComparisonStates[vendor.id]?.status === 'completed') {
         continue;
@@ -237,6 +249,7 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
       await compareOneVendor(vendor);
     }
 
+    setIsGenerating(false);
     setAllComparisonsComplete(true);
   }, [workflowVendors, comparisonStarted, vendorComparisonStates, compareOneVendor]);
 
@@ -291,39 +304,13 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
     }
   }, [isWorkflowMode, workflowVendors, comparisonStarted, vendorComparisonStates, startComparison]);
 
-  // Convert mock data to typed interfaces for standalone mode
+  // Standalone mode now returns empty - all data should come from n8n workflow
   const standaloneCriteria: Criterion[] = useMemo(() => {
-    return mockAIdata.criteria.map(c => {
-      // Map numeric importance (1-5) to ImportanceLevel
-      const getImportanceLevel = (importance: number): 'low' | 'medium' | 'high' => {
-        if (importance >= 4) return 'high';
-        if (importance >= 3) return 'medium';
-        return 'low';
-      };
-
-      return {
-        id: c.id,
-        name: c.name,
-        description: c.description,
-        importance: getImportanceLevel(c.importance),
-        type: c.type || 'other',
-      };
-    });
+    return [];
   }, []);
 
   const standaloneShortlist: ComparisonVendor[] = useMemo(() => {
-    return mockAIdata.vendors.map((v, index) => ({
-      id: v.id,
-      name: v.name,
-      logo: v.logo,
-      website: v.website,
-      killerFeature: v.killerFeature,
-      executiveSummary: v.executiveSummary,
-      keyFeatures: v.keyFeatures,
-      matchPercentage: v.matchPercentage,
-      scores: new Map(Object.entries(v.scores)),
-      color: VENDOR_COLOR_PALETTE[index % VENDOR_COLOR_PALETTE.length],
-    }));
+    return [];
   }, []);
 
   // Convert workflow vendors to ComparisonVendor format
@@ -435,18 +422,25 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
       setVendorComparisonStates({});
       setComparisonStarted(false);
       setAllComparisonsComplete(false);
+      abortGenerationRef.current = false;
 
       // Re-trigger comparison after a small delay to allow state to clear
       setTimeout(() => {
         if (workflowVendors && workflowVendors.length > 0) {
           setComparisonStarted(true);
           setAllComparisonsComplete(false);
+          setIsGenerating(true);
 
           // Compare vendors sequentially
           (async () => {
             for (const vendor of workflowVendors) {
+              // Check if generation was stopped
+              if (abortGenerationRef.current) {
+                break;
+              }
               await compareOneVendor(vendor);
             }
+            setIsGenerating(false);
             setAllComparisonsComplete(true);
           })();
         }
@@ -458,6 +452,28 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
       window.removeEventListener('regenerateComparison', handleRegenerateComparison);
     };
   }, [workflowVendors, compareOneVendor]);
+
+  // Listen for custom event to stop generation
+  useEffect(() => {
+    const handleStopGeneration = () => {
+      abortGenerationRef.current = true;
+      setIsGenerating(false);
+      // Mark all loading vendors as having their current state preserved
+      // The loop will break on next iteration
+    };
+
+    window.addEventListener('stopComparisonGeneration', handleStopGeneration);
+    return () => {
+      window.removeEventListener('stopComparisonGeneration', handleStopGeneration);
+    };
+  }, []);
+
+  // Broadcast generation status to parent
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('comparisonGenerationStatus', {
+      detail: { isGenerating }
+    }));
+  }, [isGenerating]);
 
   const toggleShortlist = (vendorId: string) => {
     const newSet = new Set(shortlistedVendorIds);

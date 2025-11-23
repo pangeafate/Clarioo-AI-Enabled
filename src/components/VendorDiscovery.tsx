@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowRight, CheckCircle, LogOut, User, ArrowLeft, Save, Sparkles, RefreshCw } from "lucide-react";
+import { ArrowRight, CheckCircle, LogOut, User, ArrowLeft, Save, Sparkles, RefreshCw, Square } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import CriteriaBuilder from "./vendor-discovery/CriteriaBuilder";
@@ -12,7 +12,6 @@ import VendorSelection from "./vendor-discovery/VendorSelection";
 import { VendorComparison } from "./VendorComparison";
 import VendorInviteNew from "./vendor-discovery/VendorInviteNew";
 import { WorkflowNavigation, WORKFLOW_STEPS, type Step } from "./WorkflowNavigation";
-import mockAIdata from '@/data/mockAIdata.json';
 import { SPACING } from '@/styles/spacing-config';
 import { TYPOGRAPHY } from '@/styles/typography-config';
 import { getCriteriaFromStorage, getProjectByIdFromStorage } from '@/services/n8nService';
@@ -76,23 +75,14 @@ export interface VendorDiscoveryProps {
 }
 
 /**
- * Helper function to backfill missing explanations from mockAIdata.json
- * Searches criteria in mockAIdata to find matching criterion by name
+ * Helper function to get explanation from criterion
+ * Now relies on n8n to provide explanations - no mock data fallback
  */
 const backfillExplanation = (criterion: Criteria): string => {
   if (criterion.explanation && criterion.explanation.trim() !== '') {
-    return criterion.explanation; // Already has explanation
+    return criterion.explanation;
   }
-
-  // Search mockAIdata.criteria for matching criterion by name
-  const match = mockAIdata.criteria.find((c: any) => c.name === criterion.name);
-  if (match && match.description) {
-    console.log(`✅ Found explanation for "${criterion.name}"`);
-    return match.description;
-  }
-
-  // No match found - return empty string
-  console.warn(`⚠️ No explanation found for "${criterion.name}"`);
+  // No explanation found - n8n should have provided it
   return '';
 };
 
@@ -107,8 +97,21 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
   const [shortlistedVendorIds, setShortlistedVendorIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [isComparisonGenerating, setIsComparisonGenerating] = useState(false);
 
   const storageKey = `workflow_${project.id}`;
+
+  // Listen for comparison generation status from VendorComparison
+  useEffect(() => {
+    const handleGenerationStatus = (event: CustomEvent<{ isGenerating: boolean }>) => {
+      setIsComparisonGenerating(event.detail.isGenerating);
+    };
+
+    window.addEventListener('comparisonGenerationStatus', handleGenerationStatus as EventListener);
+    return () => {
+      window.removeEventListener('comparisonGenerationStatus', handleGenerationStatus as EventListener);
+    };
+  }, []);
 
   /**
    * GAP-1 FIX: Load workflow state from localStorage on mount
@@ -490,27 +493,45 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
                         : WORKFLOW_STEPS[currentStepIndex].description}
                     </CardDescription>
                   </div>
-                  {/* Executive Summary and Regenerate Buttons - Only show on vendor-comparison step */}
+                  {/* Executive Summary and Regenerate/Stop Buttons - Only show on vendor-comparison step */}
                   {currentStep === 'vendor-comparison' && (
                     <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          // Clear compared vendors from localStorage and trigger regeneration
-                          const comparedVendorsKey = `compared_vendors_${project.id}`;
-                          localStorage.removeItem(comparedVendorsKey);
-                          // Dispatch custom event to trigger comparison restart
-                          window.dispatchEvent(new CustomEvent('regenerateComparison'));
-                          toast({
-                            title: "Regenerating comparison",
-                            description: "Re-analyzing all vendors against criteria...",
-                          });
-                        }}
-                        className="gap-2"
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                        Regenerate
-                      </Button>
+                      {isComparisonGenerating ? (
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            // Dispatch custom event to stop generation
+                            window.dispatchEvent(new CustomEvent('stopComparisonGeneration'));
+                            toast({
+                              title: "Generation stopped",
+                              description: "Partial results have been preserved.",
+                            });
+                          }}
+                          className="gap-2 border-orange-400 text-orange-600 hover:bg-orange-50 hover:text-orange-700 hover:border-orange-500"
+                        >
+                          <Square className="h-4 w-4" />
+                          Stop Generation
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            // Clear compared vendors from localStorage and trigger regeneration
+                            const comparedVendorsKey = `compared_vendors_${project.id}`;
+                            localStorage.removeItem(comparedVendorsKey);
+                            // Dispatch custom event to trigger comparison restart
+                            window.dispatchEvent(new CustomEvent('regenerateComparison'));
+                            toast({
+                              title: "Regenerating comparison",
+                              description: "Re-analyzing all vendors against criteria...",
+                            });
+                          }}
+                          className="gap-2"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                          Regenerate
+                        </Button>
+                      )}
                       <Button
                         onClick={() => {
                           // Dispatch custom event to open executive summary in VendorComparison

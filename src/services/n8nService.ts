@@ -25,8 +25,8 @@ import type { CriterionScoreDetail } from '@/types/comparison.types';
 const N8N_PROJECT_CREATION_URL = 'https://n8n.lakestrom.com/webhook/clarioo-project-creation';
 const N8N_CRITERIA_CHAT_URL = 'https://n8n.lakestrom.com/webhook/clarioo-criteria-chat';
 const N8N_FIND_VENDORS_URL = 'https://n8n.lakestrom.com/webhook/clarioo-find-vendors';
-const TIMEOUT_MS = 45000; // 45 seconds
-const VENDOR_SEARCH_TIMEOUT_MS = 120000; // 120 seconds for vendor search
+const TIMEOUT_MS = 120000; // 2 minutes for project creation and criteria chat
+const VENDOR_SEARCH_TIMEOUT_MS = 120000; // 2 minutes for vendor search
 
 // ===========================================
 // Criteria Chat Types
@@ -241,7 +241,7 @@ export const createProjectWithAI = async (
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
         console.error('[n8n] Request timeout after', TIMEOUT_MS, 'ms');
-        throw new Error('Request timeout - AI processing took too long (45s limit). Please try again.');
+        throw new Error('Request timeout - AI processing took too long (2 min limit). Please try again.');
       }
       console.error('[n8n] Error:', error.message);
       throw error;
@@ -494,7 +494,7 @@ export const findVendors = async (
 // ===========================================
 
 const N8N_COMPARE_VENDORS_URL = 'https://n8n.lakestrom.com/webhook/clarioo-compare-vendors';
-const COMPARE_VENDOR_TIMEOUT_MS = 60000; // 60 seconds per vendor
+const COMPARE_VENDOR_TIMEOUT_MS = 120000; // 2 minutes per vendor
 
 export interface VendorForComparison {
   id: string;

@@ -1,5 +1,5 @@
 1. When testing the service locally, first check if it is already running - do not run multiple instances of the same service.
-2. Never write code before writing failing test first - follow GL-TDD (Note: For visual prototype phase - Phase 0, visual verification replaces automated tests per GL-TDD.md. Automated tests required for production phases.)
+2. Never write code before writing failing test first - follow GL-TDD (Note: Phase 0 visual verification exception has ended. Project is now in Phase 1 - n8n AI Integration. Automated tests are REQUIRED for all n8n integration code including services, hooks, and API functions.)
 3. Follow GL-RDD for detailed guidelines on when to split files based on logical cohesion
 4. Follow GL-ERROR-LOGGING for comprehensive error handling and logging standards
 5. Maintain clear layer boundaries

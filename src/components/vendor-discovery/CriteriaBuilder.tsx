@@ -19,7 +19,6 @@ import { ArrowRight, MessageSquare, Plus, Trash2, Bot, User, Star, Upload, Setti
 import { Switch } from "@/components/ui/switch";
 import { AccordionSection } from "./AccordionSection";
 import { CriterionEditSidebar } from "./CriterionEditSidebar";
-import mockAIdata from '@/data/mockAIdata.json';
 import { ShareDialog } from "./ShareDialog";
 import * as XLSX from 'xlsx';
 import { useToast } from "@/hooks/use-toast";
@@ -260,17 +259,10 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
   };
 
   /**
-   * Generate detailed summary from AI summaries data
+   * Generate detailed summary - now uses project data from n8n
    */
   const generateDetailedSummary = (category: string): string => {
-    // Try to get summary from JSON data
-    const summary = mockAIdata.aiSummaries.summaries[category as keyof typeof mockAIdata.aiSummaries.summaries];
-
-    if (summary) {
-      return summary;
-    }
-
-    return mockAIdata.aiSummaries.default;
+    return `I've analyzed your requirements for ${category} solutions and generated evaluation criteria covering features, technical capabilities, business factors, and compliance considerations.`;
   };
 
   // Initialize criteria only (no automatic chat messages)
@@ -404,14 +396,9 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
       return;
     }
 
-    // 🎨 PROTOTYPE MODE: Assign ID from mockAIdata to match vendor score keys
-    // Find the first unused ID from mockAIdata.criteria
-    const usedIds = new Set(criteria.map(c => c.id));
-    const availableId = mockAIdata.criteria.find(c => !usedIds.has(c.id))?.id
-      || `custom-${Date.now()}`; // Fallback to timestamp if all mockAIdata IDs are used
-
+    // Generate unique ID for new criterion
     const criterion: Criteria = {
-      id: availableId,
+      id: `criterion-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       ...newCriterion
     };
 
@@ -458,8 +445,6 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
 
         // Parse criteria from Excel
         const uploadedCriteria: Criteria[] = [];
-        // Track used IDs to avoid duplicates
-        const usedIds = new Set(criteria.map(c => c.id));
 
         jsonData.forEach((row: any, index: number) => {
           const name = row['Criterion'] || row['Name'] || row['criterion'] || row['name'];
@@ -467,13 +452,9 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
           const type = (row['Type'] || row['type'] || 'feature').toLowerCase();
 
           if (name) {
-            // 🎨 PROTOTYPE MODE: Assign ID from mockAIdata to match vendor score keys
-            const availableId = mockAIdata.criteria.find(c => !usedIds.has(c.id))?.id
-              || `uploaded-${index}`; // Fallback if all mockAIdata IDs are used
-            usedIds.add(availableId);
-
+            // Generate unique ID for uploaded criterion
             uploadedCriteria.push({
-              id: availableId,
+              id: `uploaded-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
               name: String(name),
               importance: ['low', 'medium', 'high'].includes(importance) ? importance as 'low' | 'medium' | 'high' : 'medium',
               type: ['feature', 'technical', 'business', 'compliance'].includes(type) ? type as 'feature' | 'technical' | 'business' | 'compliance' : 'feature',

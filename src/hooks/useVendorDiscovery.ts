@@ -17,7 +17,6 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { findVendors as n8nFindVendors, type TransformedCriterion } from '@/services/n8nService';
-import mockAIdata from '@/data/mockAIdata.json';
 
 /**
  * Vendor structure returned from discovery
@@ -204,33 +203,16 @@ export const useVendorDiscovery = (): UseVendorDiscoveryReturn => {
   };
 
   /**
-   * Get fallback vendors from mock data
+   * Get fallback vendors
    *
-   * Purpose: Provides curated vendor list when n8n discovery fails.
-   * Uses vendors from mockAIdata.json.
+   * Purpose: Provides empty vendor list when n8n discovery fails.
+   * n8n is the source of all vendor data.
    *
-   * @returns Array of fallback vendors
-   *
-   * @remarks
-   * - Loads vendors from mockAIdata.json
-   * - In production, this would query database for real vendors
-   * - Returns vendors with basic info structure
+   * @returns Empty array - vendors should come from n8n
    */
   const getFallbackVendors = (): Vendor[] => {
-    // Load vendors from mockAIdata.json
-    const vendors: Vendor[] = mockAIdata.vendors.map(v => ({
-      id: v.id,
-      name: v.name,
-      description: v.executiveSummary || '',
-      website: v.website || `${v.name.toLowerCase().replace(/\s+/g, '')}.com`,
-      pricing: 'Contact for pricing',
-      rating: v.matchPercentage / 20, // Convert 0-100 to 0-5 scale
-      criteriaScores: {},
-      criteriaAnswers: {},
-      features: v.keyFeatures || []
-    }));
-
-    return vendors;
+    // n8n handles all vendor discovery - no local fallback
+    return [];
   };
 
   return {

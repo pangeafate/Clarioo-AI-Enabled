@@ -59,7 +59,6 @@ import { useToast } from '@/hooks/use-toast';
 import { TYPOGRAPHY } from '@/styles/typography-config';
 import { SPACING } from '@/styles/spacing-config';
 import type { Vendor, Criteria, TechRequest } from '../VendorDiscovery';
-import mockAIdata from '@/data/mockAIdata.json';
 
 interface VendorInviteNewProps {
   vendors: Vendor[];
@@ -88,18 +87,13 @@ const VendorInviteNew: React.FC<VendorInviteNewProps> = ({
 }) => {
   const { toast } = useToast();
 
-  // Get vendors with email from mockAIdata
+  // Map vendors to include email placeholder
+  // Note: n8n vendors don't include emails - would need to be added via n8n workflow
   const vendorsWithEmail: VendorWithEmail[] = useMemo(() => {
-    return vendors.map(vendor => {
-      // Find email from mockAIdata
-      const mockVendor = mockAIdata.vendors.find(
-        (mv: any) => mv.id === vendor.id || mv.name === vendor.name
-      );
-      return {
-        ...vendor,
-        email: mockVendor?.email || undefined,
-      };
-    });
+    return vendors.map(vendor => ({
+      ...vendor,
+      email: undefined, // Emails would come from n8n if needed
+    }));
   }, [vendors]);
 
   // Filter shortlisted vendors
