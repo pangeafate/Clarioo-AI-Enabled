@@ -171,12 +171,12 @@ export const createProjectWithAI = async (
   console.log('[n8n] Company context:', companyContext.substring(0, 50) + (companyContext.length > 50 ? '...' : ''));
   console.log('[n8n] Solution requirements:', solutionRequirements.substring(0, 50) + (solutionRequirements.length > 50 ? '...' : ''));
 
-  // Validate inputs
-  if (companyContext.trim().length < 10) {
-    throw new Error('Company context must be at least 10 characters');
-  }
-  if (solutionRequirements.trim().length < 10) {
-    throw new Error('Solution requirements must be at least 10 characters');
+  // Validate inputs - at least one field must have 10+ characters
+  const hasCompanyContext = companyContext.trim().length >= 10;
+  const hasSolutionRequirements = solutionRequirements.trim().length >= 10;
+
+  if (!hasCompanyContext && !hasSolutionRequirements) {
+    throw new Error('At least one field must have 10 or more characters');
   }
 
   const controller = new AbortController();
