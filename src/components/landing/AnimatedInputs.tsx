@@ -88,7 +88,7 @@ export const AnimatedInputs = ({
     <motion.section
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.4 }}
+      transition={{ duration: 0.3, delay: 0.05 }}
       className={`${SPACING.landing.inputs.section} max-w-5xl mx-auto`}
     >
       <div className={`grid grid-cols-1 md:grid-cols-2 ${SPACING.landing.inputs.grid}`}>

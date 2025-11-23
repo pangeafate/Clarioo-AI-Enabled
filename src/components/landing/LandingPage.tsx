@@ -41,7 +41,7 @@
  * @see 00_PLAN/GL-RDD.md - Prototype documentation standards
  */
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -75,6 +75,31 @@ export const LandingPage = () => {
 
   // State to track if inputs are expanded in project view
   const [inputsExpanded, setInputsExpanded] = useState(false);
+
+  // Ref for click-outside detection on expanded inputs
+  const inputsContainerRef = useRef<HTMLDivElement>(null);
+
+  // Click-outside handler to collapse inputs in project view
+  // Uses both mousedown and touchstart for desktop and mobile support
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (
+        currentView === 'project' &&
+        inputsExpanded &&
+        inputsContainerRef.current &&
+        !inputsContainerRef.current.contains(event.target as Node)
+      ) {
+        setInputsExpanded(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [currentView, inputsExpanded]);
 
   // SP_010: Project workflow state management (pattern from Index.tsx)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -358,23 +383,25 @@ export const LandingPage = () => {
       )}
 
       {(currentView === 'landing' || inputsExpanded) && (
-        <AnimatedInputs
-          isAuthenticated={!!user}
-          companyInput={companyInput}
-          solutionInput={solutionInput}
-          onCompanyChange={setCompanyInput}
-          onSolutionChange={setSolutionInput}
-          onCreateProject={() => {
-            handleCreateProject();
-            // Collapse inputs after project creation in project view
-            if (currentView === 'project') {
-              setInputsExpanded(false);
-              setCompanyInput('');
-              setSolutionInput('');
-            }
-          }}
-          onCreateCategoryProject={handleCreateCategoryProject}
-        />
+        <div ref={currentView === 'project' ? inputsContainerRef : undefined}>
+          <AnimatedInputs
+            isAuthenticated={!!user}
+            companyInput={companyInput}
+            solutionInput={solutionInput}
+            onCompanyChange={setCompanyInput}
+            onSolutionChange={setSolutionInput}
+            onCreateProject={() => {
+              handleCreateProject();
+              // Collapse inputs after project creation in project view
+              if (currentView === 'project') {
+                setInputsExpanded(false);
+                setCompanyInput('');
+                setSolutionInput('');
+              }
+            }}
+            onCreateCategoryProject={handleCreateCategoryProject}
+          />
+        </div>
       )}
 
       {/* SP_011: LANDING VIEW - Marketing Content */}
