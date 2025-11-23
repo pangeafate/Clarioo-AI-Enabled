@@ -257,14 +257,14 @@ export const LandingPage = () => {
    * 5. On animation complete, show project in dashboard
    */
   const handleCreateProject = async () => {
-    // Validate inputs - both must have at least 10 characters for n8n
+    // Validate inputs - at least one field must have 10+ characters for n8n
     const hasEnoughCompany = companyInput.trim().length >= 10;
     const hasEnoughSolution = solutionInput.trim().length >= 10;
 
-    if (!hasEnoughCompany || !hasEnoughSolution) {
+    if (!hasEnoughCompany && !hasEnoughSolution) {
       toast({
         title: "More details needed",
-        description: "Please provide at least 10 characters in both fields for AI processing.",
+        description: "Please provide at least 10 characters in one of the fields for AI processing.",
         variant: "destructive",
       });
       return;
