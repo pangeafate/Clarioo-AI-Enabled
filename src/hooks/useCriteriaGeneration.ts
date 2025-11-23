@@ -151,9 +151,9 @@ export const useCriteriaGeneration = (): UseCriteriaGenerationReturn => {
         type: c.type
       }));
 
-      // Create success message
+      // Create success message with unique timestamp-based ID
       const successMessage: ChatMessage = {
-        id: '2',
+        id: `gen-${Date.now()}`,
         role: 'assistant',
         content: `I've generated 20 evaluation criteria for ${request.category} solutions based on your requirements. These criteria cover essential product features, technical capabilities, business factors, and compliance considerations. You can refine these criteria using the chat or manually add/remove items as needed.`,
         timestamp: new Date()
@@ -169,9 +169,9 @@ export const useCriteriaGeneration = (): UseCriteriaGenerationReturn => {
       // Use fallback criteria
       const fallbackCriteria = createFallbackCriteria(request);
 
-      // Create fallback message
+      // Create fallback message with unique timestamp-based ID
       const fallbackMessage: ChatMessage = {
-        id: '2',
+        id: `fallback-${Date.now()}`,
         role: 'assistant',
         content: `I couldn't generate AI-powered criteria. I've provided 20 standard criteria for ${request.category} solutions instead. You can still use the chat to refine these criteria or ask for suggestions.`,
         timestamp: new Date()

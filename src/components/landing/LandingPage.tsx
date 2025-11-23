@@ -43,10 +43,11 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useProjectCreation } from '@/hooks/useProjectCreation';
 import { HeroSection } from './HeroSection';
 import { RegistrationToggle } from './RegistrationToggle';
 import { AnimatedInputs } from './AnimatedInputs';
@@ -56,6 +57,7 @@ import { ProjectCreationAnimation } from './ProjectCreationAnimation';
 import ProjectDashboard from '../ProjectDashboard';
 import VendorDiscovery, { Project } from '../VendorDiscovery';
 import * as projectService from '@/services/mock/projectService';
+import { saveCriteriaToStorage } from '@/services/n8nService';
 
 // SP_011: View mode type definition
 type ViewMode = 'landing' | 'project';
@@ -63,6 +65,7 @@ type ViewMode = 'landing' | 'project';
 export const LandingPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { createProject: createProjectWithAI, isCreating: isCreatingWithAI, error: aiError } = useProjectCreation();
 
   // SP_011: View state management - controls landing vs project view
   const [currentView, setCurrentView] = useState<ViewMode>('landing');
@@ -107,6 +110,7 @@ export const LandingPage = () => {
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [showCreationAnimation, setShowCreationAnimation] = useState(false);
   const [pendingProject, setPendingProject] = useState<Project | null>(null);
+  const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0); // Force dashboard re-mount
 
   // SP_011: View toggle handler
   const handleViewToggle = () => {
@@ -165,6 +169,7 @@ export const LandingPage = () => {
       setSelectedProject(pendingProject);
       setCurrentView('project');
       setProjectsLoaded(false); // Reset to allow re-loading
+      setDashboardRefreshKey(prev => prev + 1); // Force ProjectDashboard to re-mount and reload
       setPendingProject(null);
 
       // Scroll to workflow section
@@ -241,16 +246,25 @@ export const LandingPage = () => {
   };
 
   /**
-   * Create new project from landing page inputs
-   * Uses company info and solution inputs to pre-fill project data
+   * Create new project from landing page inputs using n8n AI workflow
+   * SP_016: Uses n8n to generate project name, description, category, and criteria
+   *
+   * Flow:
+   * 1. Show animation IMMEDIATELY when button clicked
+   * 2. Call n8n API in background
+   * 3. When n8n returns, store project and criteria
+   * 4. Animation continues until complete
+   * 5. On animation complete, show project in dashboard
    */
   const handleCreateProject = async () => {
-    // Allow project creation if either input has more than 10 characters
-    const hasEnoughCharacters = companyInput.length > 10 || solutionInput.length > 10;
-    if (!hasEnoughCharacters) {
+    // Validate inputs - both must have at least 10 characters for n8n
+    const hasEnoughCompany = companyInput.trim().length >= 10;
+    const hasEnoughSolution = solutionInput.trim().length >= 10;
+
+    if (!hasEnoughCompany || !hasEnoughSolution) {
       toast({
-        title: "Missing information",
-        description: "Please enter at least 10 characters in one of the input fields.",
+        title: "More details needed",
+        description: "Please provide at least 10 characters in both fields for AI processing.",
         variant: "destructive",
       });
       return;
@@ -258,67 +272,63 @@ export const LandingPage = () => {
 
     setIsCreatingProject(true);
 
-    // Immediately scroll to projects section and show animation
+    // IMMEDIATELY show animation and switch to project view
     setCurrentView('project');
+    setShowCreationAnimation(true);
+
     setTimeout(() => {
       const projectsSection = document.getElementById('projects-section');
       if (projectsSection) {
         projectsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-      // Show animation after scroll starts
-      setShowCreationAnimation(true);
     }, 100);
 
-    // Build project name and description based on available inputs
-    const projectName = solutionInput.trim()
-      ? `${solutionInput.substring(0, 50)}${solutionInput.length > 50 ? '...' : ''}`
-      : `${companyInput.substring(0, 50)}${companyInput.length > 50 ? '...' : ''}`;
-
-    const descriptionParts = [];
-    if (companyInput.trim()) descriptionParts.push(`Company: ${companyInput}`);
-    if (solutionInput.trim()) descriptionParts.push(`Looking for: ${solutionInput}`);
-    const projectDescription = descriptionParts.join('\n\n');
-
     try {
-      const { data, error } = await projectService.createProject({
-        user_id: user?.id || 'user_demo_12345',
-        name: projectName,
-        description: projectDescription,
-        category: 'General',
-        status: 'draft',
-        workflow_state: {
-          current_step: 1,
-          completed_steps: []
-        }
-      });
+      console.log('[LandingPage] Calling n8n AI to create project...');
 
-      if (error) throw new Error(error.message);
-      if (!data) throw new Error('No data returned');
+      // Call n8n AI to generate project and criteria
+      const result = await createProjectWithAI(companyInput.trim(), solutionInput.trim());
 
-      // Map to Project interface
+      console.log('[LandingPage] n8n API result:', result);
+
+      if (!result) {
+        throw new Error(aiError || 'Failed to create project with AI');
+      }
+
+      // Map transformed project to Project interface for VendorDiscovery
       const newProject: Project = {
-        id: data.id,
-        name: data.name,
-        description: data.description,
-        status: data.status,
-        created_at: data.created_at,
-        updated_at: data.updated_at
+        id: result.project.id,
+        name: result.project.name,
+        description: result.project.description,
+        status: result.project.status,
+        created_at: result.project.created_at,
+        updated_at: result.project.updated_at,
+        category: result.project.category,
       };
 
       // Store pending project for animation completion handler
       setPendingProject(newProject);
 
+      // Clear localStorage landing inputs since they've been used
+      localStorage.removeItem('landing_company_info');
+      localStorage.removeItem('landing_tech_needs');
+
       toast({
-        title: "Project created",
-        description: "Your project has been created successfully.",
+        title: "Project created with AI",
+        description: `Generated ${result.criteria.length} evaluation criteria for "${result.project.name}"`,
       });
     } catch (error) {
+      console.error('[LandingPage] Project creation failed:', error);
+      // Hide animation on error
       setShowCreationAnimation(false);
+      const errorMessage = error instanceof Error ? error.message : 'Could not create the project';
       toast({
-        title: "Error creating project",
-        description: "Could not create the project. Please try again.",
+        title: "AI Project Creation Failed",
+        description: errorMessage,
         variant: "destructive",
       });
+      // Go back to landing view on error
+      setCurrentView('landing');
     } finally {
       setIsCreatingProject(false);
     }
@@ -400,6 +410,7 @@ export const LandingPage = () => {
               }
             }}
             onCreateCategoryProject={handleCreateCategoryProject}
+            isCreating={isCreatingWithAI || isCreatingProject}
           />
         </div>
       )}
@@ -432,6 +443,7 @@ export const LandingPage = () => {
           >
             {/* Always show ProjectDashboard at the top */}
             <ProjectDashboard
+              key={dashboardRefreshKey}
               onSelectProject={handleSelectProject}
               selectedProjectId={selectedProject?.id}
               onProjectsLoaded={handleProjectsLoaded}
@@ -466,6 +478,7 @@ export const LandingPage = () => {
       <ProjectCreationAnimation
         isOpen={showCreationAnimation}
         onComplete={handleAnimationComplete}
+        isApiComplete={pendingProject !== null}
       />
     </motion.div>
   );

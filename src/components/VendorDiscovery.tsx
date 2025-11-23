@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowRight, CheckCircle, LogOut, User, ArrowLeft, Save, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle, LogOut, User, ArrowLeft, Save, Sparkles, RefreshCw } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import CriteriaBuilder from "./vendor-discovery/CriteriaBuilder";
@@ -15,6 +15,7 @@ import { WorkflowNavigation, WORKFLOW_STEPS, type Step } from "./WorkflowNavigat
 import mockAIdata from '@/data/mockAIdata.json';
 import { SPACING } from '@/styles/spacing-config';
 import { TYPOGRAPHY } from '@/styles/typography-config';
+import { getCriteriaFromStorage, getProjectByIdFromStorage } from '@/services/n8nService';
 
 /**
  * GAP-1: Workflow State Persistence Structure
@@ -65,6 +66,7 @@ export interface Project {
   status: 'draft' | 'in-progress' | 'completed' | 'archived';
   created_at: string;
   updated_at: string;
+  category?: string; // SP_016: AI-determined category from n8n
 }
 
 export interface VendorDiscoveryProps {
@@ -120,6 +122,9 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
    */
   useEffect(() => {
     const loadWorkflowState = () => {
+      // Set loading to true when project changes to prevent showing stale state
+      setIsLoading(true);
+
       try {
         const savedState = localStorage.getItem(storageKey);
         if (savedState) {
@@ -190,23 +195,81 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
           });
         } else {
           // GAP-5: No saved state - initialize techRequest from project data
-          // Parse project description to extract category and companyInfo
-          const initialRequest: TechRequest = {
-            category: 'General', // Default category
-            description: project.name || '',
-            companyInfo: project.description || ''
-          };
+          // SP_016: Check for n8n-generated criteria first
+          const n8nCriteria = getCriteriaFromStorage(project.id);
+          const n8nProject = getProjectByIdFromStorage(project.id);
 
-          setTechRequest(initialRequest);
+          // CRITICAL: Reset workflow state to initial values for new projects
+          // This ensures new projects start fresh at step 1
+          setCurrentStep('criteria');
+          setMaxStepReached(0);
+          setSelectedVendors([]);
+          setShortlistedVendorIds([]);
+          setLastSaved(null);
 
-          console.log('✅ Initialized techRequest from project data (GAP-5)', {
-            projectId: project.id,
-            projectName: project.name,
-            hasDescription: !!project.description
-          });
+          if (n8nCriteria.length > 0) {
+            // SP_016: We have n8n-generated criteria - use them
+            console.log('✅ Loading n8n-generated criteria', {
+              projectId: project.id,
+              criteriaCount: n8nCriteria.length
+            });
+
+            // Map n8n criteria to app format
+            const mappedCriteria: Criteria[] = n8nCriteria.map(c => ({
+              id: c.id,
+              name: c.name,
+              explanation: c.explanation,
+              importance: c.importance,
+              type: c.type,
+              isArchived: c.isArchived || false
+            }));
+
+            setCriteria(mappedCriteria);
+
+            // Initialize techRequest from n8n project data
+            const initialRequest: TechRequest = {
+              category: n8nProject?.category || 'General',
+              description: n8nProject?.techRequest?.solutionRequirements || project.name || '',
+              companyInfo: n8nProject?.techRequest?.companyContext || project.description || ''
+            };
+
+            setTechRequest(initialRequest);
+
+            toast({
+              title: "AI-generated criteria loaded",
+              description: `${mappedCriteria.length} evaluation criteria ready for review`,
+              duration: 3000,
+            });
+          } else {
+            // No n8n criteria - reset criteria as well
+            setCriteria([]);
+
+            // Parse project description to extract category and companyInfo
+            const initialRequest: TechRequest = {
+              category: 'General', // Default category
+              description: project.name || '',
+              companyInfo: project.description || ''
+            };
+
+            setTechRequest(initialRequest);
+
+            console.log('✅ Initialized techRequest from project data (GAP-5)', {
+              projectId: project.id,
+              projectName: project.name,
+              hasDescription: !!project.description
+            });
+          }
         }
       } catch (error) {
         console.error('Failed to load workflow state:', error);
+
+        // Reset all state to initial values on error
+        setCurrentStep('criteria');
+        setMaxStepReached(0);
+        setSelectedVendors([]);
+        setShortlistedVendorIds([]);
+        setCriteria([]);
+        setLastSaved(null);
 
         // GAP-5: On error, still initialize techRequest from project data
         const initialRequest: TechRequest = {
@@ -427,18 +490,38 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
                         : WORKFLOW_STEPS[currentStepIndex].description}
                     </CardDescription>
                   </div>
-                  {/* Executive Summary Button - Only show on vendor-comparison step */}
+                  {/* Executive Summary and Regenerate Buttons - Only show on vendor-comparison step */}
                   {currentStep === 'vendor-comparison' && (
-                    <Button
-                      onClick={() => {
-                        // Dispatch custom event to open executive summary in VendorComparison
-                        window.dispatchEvent(new CustomEvent('openExecutiveSummary'));
-                      }}
-                      className="bg-primary hover:bg-primary/90 text-white gap-2 flex-shrink-0"
-                    >
-                      <Sparkles className="h-4 w-4" />
-                      Executive Summary
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          // Clear compared vendors from localStorage and trigger regeneration
+                          const comparedVendorsKey = `compared_vendors_${project.id}`;
+                          localStorage.removeItem(comparedVendorsKey);
+                          // Dispatch custom event to trigger comparison restart
+                          window.dispatchEvent(new CustomEvent('regenerateComparison'));
+                          toast({
+                            title: "Regenerating comparison",
+                            description: "Re-analyzing all vendors against criteria...",
+                          });
+                        }}
+                        className="gap-2"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                        Regenerate
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          // Dispatch custom event to open executive summary in VendorComparison
+                          window.dispatchEvent(new CustomEvent('openExecutiveSummary'));
+                        }}
+                        className="bg-primary hover:bg-primary/90 text-white gap-2"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        Executive Summary
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardHeader>
@@ -449,6 +532,8 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
                     onComplete={handleCriteriaComplete}
                     initialCriteria={criteria}
                     projectId={project.id}
+                    projectName={project.name}
+                    projectDescription={project.description || ''}
                   />
                 )}
                 {currentStep === 'vendor-selection' && criteria.length > 0 && (
@@ -456,10 +541,14 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
                     criteria={criteria}
                     techRequest={techRequest!}
                     onComplete={handleVendorSelectionComplete}
+                    projectId={project.id}
+                    projectName={project.name}
+                    projectDescription={project.description || ''}
                   />
                 )}
                 {currentStep === 'vendor-comparison' && selectedVendors.length > 0 && (
                   <VendorComparison
+                    projectId={project.id}
                     vendors={selectedVendors}
                     criteria={criteria}
                     techRequest={techRequest!}

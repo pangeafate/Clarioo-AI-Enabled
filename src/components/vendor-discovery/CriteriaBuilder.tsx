@@ -3,7 +3,7 @@
  * Uses mock AI service instead of OpenAI
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +25,8 @@ import * as XLSX from 'xlsx';
 import { useToast } from "@/hooks/use-toast";
 import type { TechRequest, Criteria } from "../VendorDiscovery";
 import { useCriteriaGeneration } from "@/hooks/useCriteriaGeneration";
-import { useCriteriaChat } from "@/hooks/useCriteriaChat";
+import { useCriteriaChat, type OnCriteriaAction } from "@/hooks/useCriteriaChat";
+import { type CriteriaAction, saveCriteriaToStorage } from "@/services/n8nService";
 import { storageService } from "@/services/storageService";
 import { SPACING } from '@/styles/spacing-config';
 import { TYPOGRAPHY } from '@/styles/typography-config';
@@ -35,10 +36,12 @@ interface CriteriaBuilderProps {
   techRequest: TechRequest;
   onComplete: (criteria: Criteria[]) => void;
   initialCriteria?: Criteria[];
-  projectId: string; // NEW: Project ID for chat isolation
+  projectId: string; // Project ID for chat isolation
+  projectName: string; // Project name for n8n chat context
+  projectDescription: string; // Project description for n8n chat context
 }
 
-const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }: CriteriaBuilderProps) => {
+const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, projectName, projectDescription }: CriteriaBuilderProps) => {
   const [criteria, setCriteria] = useState<Criteria[]>(initialCriteria || []);
   const [newCriterion, setNewCriterion] = useState({
     name: '',
@@ -88,6 +91,65 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
     generateFallbackCriteria
   } = useCriteriaGeneration();
 
+  /**
+   * Handle criteria actions from n8n chat response
+   * Applies create/update/delete operations to criteria state
+   */
+  const handleCriteriaAction: OnCriteriaAction = useCallback((actions: CriteriaAction[]) => {
+    setCriteria(prevCriteria => {
+      let updated = [...prevCriteria];
+
+      for (const action of actions) {
+        switch (action.type) {
+          case 'create':
+            if (action.criterion) {
+              // Map n8n criterion format to app format
+              // n8n uses "description", app uses "explanation"
+              const criterion = action.criterion as any;
+              const newCriterion: Criteria = {
+                id: criterion.id,
+                name: criterion.name,
+                explanation: criterion.description || criterion.explanation || '',
+                importance: criterion.importance,
+                type: criterion.type,
+                isArchived: criterion.isArchived || false
+              };
+              updated.push(newCriterion);
+              console.log('[CriteriaBuilder] Created criterion:', newCriterion.name, 'with explanation:', newCriterion.explanation);
+            }
+            break;
+          case 'update':
+            if (action.criterion) {
+              // n8n uses "description", app uses "explanation"
+              const criterion = action.criterion as any;
+              updated = updated.map(c =>
+                c.id === criterion.id
+                  ? {
+                      id: criterion.id,
+                      name: criterion.name,
+                      explanation: criterion.description || criterion.explanation || '',
+                      importance: criterion.importance,
+                      type: criterion.type,
+                      isArchived: criterion.isArchived || false
+                    }
+                  : c
+              );
+              console.log('[CriteriaBuilder] Updated criterion:', criterion.name);
+            }
+            break;
+          case 'delete':
+            if (action.criterion_id) {
+              updated = updated.filter(c => c.id !== action.criterion_id);
+              console.log('[CriteriaBuilder] Deleted criterion:', action.criterion_id);
+            }
+            break;
+        }
+      }
+
+      return updated;
+    });
+  }, []);
+
   const {
     chatMessages,
     isGenerating: isGeneratingChat,
@@ -96,8 +158,9 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
     addMessage,
     sendMessage,
     initializeChat,
+    clearChat,
     hasChatHistory
-  } = useCriteriaChat(projectId); // Pass projectId for chat isolation
+  } = useCriteriaChat(projectId, handleCriteriaAction);
 
   // Combined loading state for UI
   const isGenerating = isGeneratingCriteria || isGeneratingChat;
@@ -210,13 +273,10 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
     return mockAIdata.aiSummaries.default;
   };
 
-  // Initialize with AI summary message from Technology Exploration step
+  // Initialize criteria only (no automatic chat messages)
   /**
-   * Initialize chat and criteria only if no chat history exists
-   * If chat history exists, the synthesis is automatically loaded by useCriteriaChat
-   *
-   * Fixed: Uses useRef to prevent re-initialization on hasChatHistory changes
-   * Fixed: Stable dependencies to prevent duplicate messages
+   * Initialize criteria if none provided
+   * Chat messages only come from actual n8n interactions initiated by user
    */
   useEffect(() => {
     // Reset initialization flag when project changes
@@ -225,48 +285,22 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
       previousProjectId.current = projectId;
     }
 
-    // Only initialize once per project, when there's no chat history
-    if (!hasChatHistory && !hasInitialized.current) {
+    // Only initialize once per project
+    if (!hasInitialized.current) {
       hasInitialized.current = true;
 
       // Only generate initial criteria if no initial criteria were provided
       if (!initialCriteria || initialCriteria.length === 0) {
-        // Get the detailed summary for this category (AI understanding text)
-        const projectSummary = generateDetailedSummary(techRequest.category);
-
-        generateInitialCriteria(techRequest).then(({ criteria: generatedCriteria, message }) => {
+        generateInitialCriteria(techRequest).then(({ criteria: generatedCriteria }) => {
           setCriteria(generatedCriteria);
-
-          // Combine AI understanding text with criteria generation message
-          const combinedMessage = {
-            ...message,
-            content: `${projectSummary}\n\n${message.content}`
-          };
-
-          initializeChat(combinedMessage);
         });
-      } else {
-        // If initial criteria provided, just show the AI understanding text
-        const projectSummary = generateDetailedSummary(techRequest.category);
-        const initialMessage = {
-          id: '1',
-          role: 'assistant' as const,
-          content: projectSummary,
-          timestamp: new Date()
-        };
-        initializeChat(initialMessage);
       }
 
-      console.log('✅ Initialized new chat for project', { projectId });
-    } else if (hasChatHistory) {
-      console.log('✅ Loaded existing chat synthesis for project', { projectId });
+      console.log('✅ Initialized criteria for project', { projectId });
     }
   }, [
     projectId,
-    techRequest.category,  // Use stable primitive instead of whole object
-    hasChatHistory,
-    initializeChat,
-    addMessage,
+    techRequest,
     generateInitialCriteria,
     initialCriteria
   ]);
@@ -282,9 +316,32 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
     }
   }, [initialCriteria]);
 
+  /**
+   * Persist criteria to localStorage whenever they change
+   * This ensures chat-based modifications are saved immediately
+   */
+  useEffect(() => {
+    if (criteria.length > 0 && projectId) {
+      // Map Criteria to TransformedCriterion format for storage
+      const transformedCriteria = criteria.map(c => ({
+        id: c.id,
+        name: c.name,
+        explanation: c.explanation || '',
+        importance: c.importance,
+        type: c.type,
+        isArchived: c.isArchived || false
+      }));
+      saveCriteriaToStorage(projectId, transformedCriteria);
+      console.log('[CriteriaBuilder] Criteria persisted to storage:', criteria.length);
+    }
+  }, [criteria, projectId]);
+
   // Handle chat message send
   const handleSendMessage = async () => {
     await sendMessage(userMessage, {
+      projectId,
+      projectName,
+      projectDescription,
       category: techRequest.category,
       criteria
     });
@@ -666,14 +723,25 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId }
                       }
                     }}
                   />
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={isGenerating || !userMessage.trim()}
-                    size="icon"
-                    className="self-end mb-0.5"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
+                  <div className="flex flex-col gap-1 self-end mb-0.5">
+                    <Button
+                      onClick={clearChat}
+                      disabled={isGenerating || chatMessages.length === 0}
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      title="Clear chat history"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      onClick={handleSendMessage}
+                      disabled={isGenerating || !userMessage.trim()}
+                      size="icon"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardContent>

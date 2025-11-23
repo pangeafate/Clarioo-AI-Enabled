@@ -9,7 +9,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, ChevronDown, ChevronRight, ChevronLeft, Star, HelpCircle, Check, Minus } from 'lucide-react';
+import { Bot, ChevronDown, ChevronRight, ChevronLeft, Star, HelpCircle, Check, Minus, Loader2 } from 'lucide-react';
 import { ComparisonVendor, CriterionState } from '../../types/comparison.types';
 import { Criterion } from '../../types';
 import { SignalAntenna } from '../vendor-discovery/SignalAntenna';
@@ -37,6 +37,9 @@ interface VerticalBarChartProps {
   // Shortlist props
   shortlistedVendorIds?: Set<string>;
   onToggleShortlist?: (vendorId: string) => void;
+  // Progressive loading props
+  onScoreClick?: (vendorId: string, criterionId: string, vendorName: string, criterionName: string) => void;
+  onRetryVendor?: (vendorId: string) => void;
 }
 
 /**
@@ -45,9 +48,42 @@ interface VerticalBarChartProps {
  * - no: Gray minus with gray circle background
  * - unknown: Gray ? icon with gray circle background
  * - star: Gold star with yellow circle background
+ * - loading: Rotating loader icon (when vendor is being researched)
+ * - pending: Empty/dim state (when vendor hasn't started yet)
  */
-const renderCriterionState = (state: CriterionState, criterionIndex: number, vendorIndex: number) => {
+const renderCriterionState = (
+  state: CriterionState,
+  criterionIndex: number,
+  vendorIndex: number,
+  comparisonStatus?: 'pending' | 'loading' | 'completed' | 'failed'
+) => {
   const baseDelay = criterionIndex * 0.05 + vendorIndex * 0.1;
+
+  // Show loading spinner for vendors being researched
+  if (comparisonStatus === 'loading') {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex items-center justify-center h-full"
+      >
+        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 lg:bg-blue-50/70 flex items-center justify-center">
+          <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 animate-spin" />
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Show empty/pending state for vendors not yet started
+  if (comparisonStatus === 'pending') {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-100/50 flex items-center justify-center">
+          <div className="w-2 h-2 rounded-full bg-gray-300" />
+        </div>
+      </div>
+    );
+  }
 
   switch (state) {
     case 'yes':
@@ -179,6 +215,9 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
   // Shortlist props
   shortlistedVendorIds,
   onToggleShortlist,
+  // Progressive loading props
+  onScoreClick,
+  onRetryVendor,
 }) => {
   // Check if desktop headers should be shown
   const showDesktopHeaders = columnCount === 5 && desktopVendors && desktopColumnIndices;
@@ -419,9 +458,17 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
                         return (
                           <div key={criterion.id} className="flex items-stretch gap-2 sm:gap-3">
                             {/* Criterion Card (Left Side) */}
-                            <button
+                            <div
                               onClick={() => onCriterionClick?.(criterion.id)}
-                              className="flex-shrink-0 w-40 xs:w-44 sm:w-52 lg:w-60 bg-white hover:bg-gray-50 border-2 border-gray-200 hover:border-gray-300 rounded-xl px-2 xs:px-3 sm:px-4 py-2 sm:py-3 transition-all hover:shadow-md group"
+                              className="flex-shrink-0 w-40 xs:w-44 sm:w-52 lg:w-60 bg-white hover:bg-gray-50 border-2 border-gray-200 hover:border-gray-300 rounded-xl px-2 xs:px-3 sm:px-4 py-2 sm:py-3 transition-all hover:shadow-md group cursor-pointer"
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  onCriterionClick?.(criterion.id);
+                                }
+                              }}
                             >
                               <div className="flex flex-col gap-1.5 sm:gap-2">
                                 {/* Header: Name + Icons */}
@@ -457,7 +504,7 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
                                   </p>
                                 )}
                               </div>
-                            </button>
+                            </div>
 
                             {/* Left spacers matching header layout - only on desktop when headers are shown */}
                             {/* Gap div (w-2 sm:w-3) + flex gap (gap-2 sm:gap-3) + Navigation button spacer (w-8) + flex gap */}
@@ -467,12 +514,22 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
                             <div className={`flex-1 grid ${gridColsClass} gap-1 xs:gap-1.5 sm:gap-2 items-center min-h-[40px] xs:min-h-[50px] sm:min-h-[60px] relative z-10`}>
                               {activeVendors.map((vendor, vendorIndex) => {
                                 const state = vendor.scores.get(criterion.id) ?? 'unknown';
+                                const hasScoreDetails = vendor.scoreDetails && vendor.scoreDetails[criterion.id];
+                                const comparisonStatus = vendor.comparisonStatus;
 
                                 return (
                                   <div key={`vendor-${vendorIndex}`} className="min-w-0">
-                                    {/* Icon Cell - no background */}
-                                    <div className="w-full h-8 xs:h-9 sm:h-10 flex items-center justify-center">
-                                      {renderCriterionState(state, criterionIndex, vendorIndex)}
+                                    {/* Icon Cell - clickable when score details exist */}
+                                    <div
+                                      className={`w-full h-8 xs:h-9 sm:h-10 flex items-center justify-center ${hasScoreDetails ? 'cursor-pointer hover:bg-gray-100/50 rounded-md transition-colors' : ''}`}
+                                      onClick={() => {
+                                        if (hasScoreDetails && onScoreClick) {
+                                          onScoreClick(vendor.id, criterion.id, vendor.name, criterion.name);
+                                        }
+                                      }}
+                                      title={hasScoreDetails ? 'Click to view evidence' : undefined}
+                                    >
+                                      {renderCriterionState(state, criterionIndex, vendorIndex, comparisonStatus)}
                                     </div>
                                   </div>
                                 );

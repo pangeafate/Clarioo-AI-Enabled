@@ -8,12 +8,18 @@
  * Can be used in two modes:
  * 1. Standalone mode: Load from mockAIdata.json (for /comparison route)
  * 2. Workflow mode: Accept vendors/criteria from workflow (vendor-comparison step)
+ *
+ * Features:
+ * - Progressive loading: Researches each vendor sequentially via n8n
+ * - Score popup: Shows evidence URL and AI comment for each score
+ * - Retry functionality: Failed vendors can be retried individually
+ * - localStorage persistence: Compared vendors persist per project
  */
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Share2, ArrowRight } from 'lucide-react';
-import { ComparisonVendor, VENDOR_COLOR_PALETTE } from '../types/comparison.types';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Share2, ArrowRight, X, ExternalLink } from 'lucide-react';
+import { ComparisonVendor, VENDOR_COLOR_PALETTE, CriterionScoreDetail } from '../types/comparison.types';
 import { Criterion } from '../types';
 import { VendorCard } from './vendor-comparison/VendorCard';
 import { VerticalBarChart } from './vendor-comparison/VerticalBarChart';
@@ -23,6 +29,26 @@ import { Button } from './ui/button';
 import mockAIdata from '../data/mockAIdata.json';
 import { TechRequest, Vendor as WorkflowVendor, Criteria as WorkflowCriteria } from './VendorDiscovery';
 import { TYPOGRAPHY } from '../styles/typography-config';
+import {
+  compareVendor,
+  ComparedVendor,
+  VendorForComparison
+} from '../services/n8nService';
+
+// ===========================================
+// Types for Progressive Loading
+// ===========================================
+
+type VendorComparisonStatus = 'pending' | 'loading' | 'completed' | 'failed';
+
+interface VendorComparisonState {
+  status: VendorComparisonStatus;
+  comparedData?: ComparedVendor;
+  error?: string;
+}
+
+// localStorage key prefix for compared vendors
+const COMPARED_VENDORS_STORAGE_PREFIX = 'compared_vendors_';
 
 interface VendorComparisonProps {
   // Standalone mode props
@@ -52,6 +78,218 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
 }) => {
   // Determine if we're in workflow mode or standalone mode
   const isWorkflowMode = !!workflowVendors && !!workflowCriteria;
+
+  // ===========================================
+  // Progressive Loading State
+  // ===========================================
+
+  // Track comparison state for each vendor
+  const [vendorComparisonStates, setVendorComparisonStates] = useState<Record<string, VendorComparisonState>>({});
+
+  // Track if comparison has started
+  const [comparisonStarted, setComparisonStarted] = useState(false);
+
+  // Track if all comparisons are complete (for sorting)
+  const [allComparisonsComplete, setAllComparisonsComplete] = useState(false);
+
+  // Score detail popup state
+  const [selectedScoreDetail, setSelectedScoreDetail] = useState<{
+    vendorName: string;
+    criterionName: string;
+    detail: CriterionScoreDetail;
+  } | null>(null);
+
+  // localStorage key for this project's compared vendors
+  const comparedVendorsStorageKey = projectId ? `${COMPARED_VENDORS_STORAGE_PREFIX}${projectId}` : null;
+
+  // ===========================================
+  // Load persisted comparison data
+  // ===========================================
+
+  useEffect(() => {
+    if (!comparedVendorsStorageKey || !isWorkflowMode) return;
+
+    const stored = localStorage.getItem(comparedVendorsStorageKey);
+    if (stored) {
+      try {
+        const parsedStates: Record<string, VendorComparisonState> = JSON.parse(stored);
+        setVendorComparisonStates(parsedStates);
+
+        // Check if all vendors have been compared
+        if (workflowVendors) {
+          const allComplete = workflowVendors.every(v =>
+            parsedStates[v.id]?.status === 'completed' ||
+            parsedStates[v.id]?.status === 'failed'
+          );
+          if (allComplete) {
+            setComparisonStarted(true);
+            setAllComparisonsComplete(true);
+          }
+        }
+      } catch {
+        console.error('[VendorComparison] Failed to parse stored comparison data');
+      }
+    }
+  }, [comparedVendorsStorageKey, isWorkflowMode, workflowVendors]);
+
+  // ===========================================
+  // Save comparison data to localStorage
+  // ===========================================
+
+  useEffect(() => {
+    if (!comparedVendorsStorageKey || !isWorkflowMode) return;
+    if (Object.keys(vendorComparisonStates).length === 0) return;
+
+    localStorage.setItem(comparedVendorsStorageKey, JSON.stringify(vendorComparisonStates));
+  }, [vendorComparisonStates, comparedVendorsStorageKey, isWorkflowMode]);
+
+  // ===========================================
+  // Compare a single vendor via n8n
+  // ===========================================
+
+  const compareOneVendor = useCallback(async (vendor: WorkflowVendor) => {
+    if (!techRequest || !workflowCriteria || !projectId) return;
+
+    // Set vendor to loading state
+    setVendorComparisonStates(prev => ({
+      ...prev,
+      [vendor.id]: { status: 'loading' }
+    }));
+
+    try {
+      // Prepare vendor for comparison
+      const vendorForComparison: VendorForComparison = {
+        id: vendor.id,
+        name: vendor.name,
+        website: vendor.website,
+        description: vendor.description || '',
+        features: vendor.features || []
+      };
+
+      // Get project details from techRequest
+      // Note: TechRequest has: category, description, companyInfo
+      const projectName = techRequest.companyInfo?.substring(0, 50) || 'Vendor Evaluation';
+      const projectDescription = techRequest.description || '';
+      const projectCategory = techRequest.category || 'Software';
+
+      // Call n8n workflow
+      const response = await compareVendor(
+        projectId,
+        projectName,
+        projectDescription,
+        projectCategory,
+        vendorForComparison,
+        workflowCriteria.filter(c => !c.isArchived).map(c => ({
+          id: c.id,
+          name: c.name,
+          explanation: c.explanation || '',
+          importance: c.importance,
+          type: c.type || 'other',
+          isArchived: false
+        }))
+      );
+
+      if (response.success && response.vendor) {
+        setVendorComparisonStates(prev => ({
+          ...prev,
+          [vendor.id]: {
+            status: 'completed',
+            comparedData: response.vendor
+          }
+        }));
+      } else {
+        setVendorComparisonStates(prev => ({
+          ...prev,
+          [vendor.id]: {
+            status: 'failed',
+            error: response.error?.message || 'Comparison failed'
+          }
+        }));
+      }
+    } catch (error) {
+      setVendorComparisonStates(prev => ({
+        ...prev,
+        [vendor.id]: {
+          status: 'failed',
+          error: error instanceof Error ? error.message : 'Comparison failed'
+        }
+      }));
+    }
+  }, [techRequest, workflowCriteria, projectId]);
+
+  // ===========================================
+  // Start progressive comparison
+  // ===========================================
+
+  const startComparison = useCallback(async () => {
+    if (!workflowVendors || comparisonStarted) return;
+
+    setComparisonStarted(true);
+    setAllComparisonsComplete(false);
+
+    // Compare vendors sequentially
+    for (const vendor of workflowVendors) {
+      // Skip if already completed
+      if (vendorComparisonStates[vendor.id]?.status === 'completed') {
+        continue;
+      }
+
+      await compareOneVendor(vendor);
+    }
+
+    setAllComparisonsComplete(true);
+  }, [workflowVendors, comparisonStarted, vendorComparisonStates, compareOneVendor]);
+
+  // ===========================================
+  // Retry failed vendor
+  // ===========================================
+
+  const retryVendor = useCallback(async (vendorId: string) => {
+    const vendor = workflowVendors?.find(v => v.id === vendorId);
+    if (!vendor) return;
+
+    await compareOneVendor(vendor);
+
+    // Check if all are now complete
+    if (workflowVendors) {
+      const allComplete = workflowVendors.every(v => {
+        const state = v.id === vendorId
+          ? vendorComparisonStates[v.id]
+          : vendorComparisonStates[v.id];
+        return state?.status === 'completed' || state?.status === 'failed';
+      });
+      if (allComplete) {
+        setAllComparisonsComplete(true);
+      }
+    }
+  }, [workflowVendors, compareOneVendor, vendorComparisonStates]);
+
+  // ===========================================
+  // Auto-start comparison in workflow mode
+  // ===========================================
+
+  useEffect(() => {
+    if (isWorkflowMode && workflowVendors && workflowVendors.length > 0 && !comparisonStarted) {
+      // Check if we have any uncompleted vendors
+      const hasUncompleted = workflowVendors.some(v =>
+        !vendorComparisonStates[v.id] ||
+        vendorComparisonStates[v.id]?.status === 'pending' ||
+        vendorComparisonStates[v.id]?.status === 'failed'
+      );
+
+      if (hasUncompleted) {
+        // Small delay to allow component to render
+        const timer = setTimeout(() => {
+          startComparison();
+        }, 500);
+        return () => clearTimeout(timer);
+      } else {
+        // All vendors already compared
+        setComparisonStarted(true);
+        setAllComparisonsComplete(true);
+      }
+    }
+  }, [isWorkflowMode, workflowVendors, comparisonStarted, vendorComparisonStates, startComparison]);
 
   // Convert mock data to typed interfaces for standalone mode
   const standaloneCriteria: Criterion[] = useMemo(() => {
@@ -89,18 +327,39 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
   }, []);
 
   // Convert workflow vendors to ComparisonVendor format
+  // Uses compared data when available, falls back to basic vendor info
   const workflowShortlist: ComparisonVendor[] = useMemo(() => {
     if (!workflowVendors) return [];
 
-    return workflowVendors.map((v, index) => {
-      // Use criteriaScores that's already on the workflow vendor
-      // (populated by useVendorDiscovery from mockAIdata.json)
-      const scores = v.criteriaScores || {};
+    let vendors = workflowVendors.map((v, index) => {
+      const comparisonState = vendorComparisonStates[v.id];
+      const comparedData = comparisonState?.comparedData;
 
+      // If we have compared data, use it
+      if (comparedData) {
+        return {
+          id: v.id,
+          name: comparedData.name,
+          logo: `https://logo.clearbit.com/${comparedData.website.replace(/^https?:\/\//, '')}`,
+          website: comparedData.website,
+          killerFeature: comparedData.killerFeature,
+          executiveSummary: comparedData.executiveSummary,
+          keyFeatures: comparedData.keyFeatures,
+          matchPercentage: comparedData.matchPercentage,
+          scores: new Map(Object.entries(comparedData.scores)),
+          scoreDetails: comparedData.scoreDetails,
+          color: VENDOR_COLOR_PALETTE[index % VENDOR_COLOR_PALETTE.length],
+          // Additional state info for UI
+          comparisonStatus: comparisonState.status,
+        };
+      }
+
+      // Use basic vendor info (pending/loading/failed state)
+      const scores = v.criteriaScores || {};
       return {
         id: v.id,
         name: v.name,
-        logo: `https://logo.clearbit.com/${v.website.replace(/^https?:\/\//,  '')}`,
+        logo: `https://logo.clearbit.com/${v.website.replace(/^https?:\/\//, '')}`,
         website: v.website,
         killerFeature: v.description || '',
         executiveSummary: v.description || '',
@@ -108,9 +367,19 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
         matchPercentage: Math.round((v.rating / 5) * 100),
         scores: new Map(Object.entries(scores)),
         color: VENDOR_COLOR_PALETTE[index % VENDOR_COLOR_PALETTE.length],
+        // Additional state info for UI
+        comparisonStatus: comparisonState?.status || 'pending',
+        comparisonError: comparisonState?.error,
       };
     });
-  }, [workflowVendors]);
+
+    // Sort by matchPercentage after all comparisons complete
+    if (allComparisonsComplete) {
+      vendors = [...vendors].sort((a, b) => b.matchPercentage - a.matchPercentage);
+    }
+
+    return vendors;
+  }, [workflowVendors, vendorComparisonStates, allComparisonsComplete]);
 
   // Convert workflow criteria to Criterion format
   const workflowCriteriaFormatted: Criterion[] = useMemo(() => {
@@ -159,6 +428,37 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
     };
   }, []);
 
+  // Listen for custom event from parent VendorDiscovery to regenerate comparison
+  useEffect(() => {
+    const handleRegenerateComparison = () => {
+      // Clear all comparison states
+      setVendorComparisonStates({});
+      setComparisonStarted(false);
+      setAllComparisonsComplete(false);
+
+      // Re-trigger comparison after a small delay to allow state to clear
+      setTimeout(() => {
+        if (workflowVendors && workflowVendors.length > 0) {
+          setComparisonStarted(true);
+          setAllComparisonsComplete(false);
+
+          // Compare vendors sequentially
+          (async () => {
+            for (const vendor of workflowVendors) {
+              await compareOneVendor(vendor);
+            }
+            setAllComparisonsComplete(true);
+          })();
+        }
+      }, 100);
+    };
+
+    window.addEventListener('regenerateComparison', handleRegenerateComparison);
+    return () => {
+      window.removeEventListener('regenerateComparison', handleRegenerateComparison);
+    };
+  }, [workflowVendors, compareOneVendor]);
+
   const toggleShortlist = (vendorId: string) => {
     const newSet = new Set(shortlistedVendorIds);
     if (newSet.has(vendorId)) {
@@ -173,6 +473,22 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
     } else {
       setLocalShortlistedIds(newSet);
     }
+  };
+
+  // Handle score click to show evidence popup
+  const handleScoreClick = (vendorId: string, criterionId: string, vendorName: string, criterionName: string) => {
+    // Find the vendor and its score details
+    const vendor = shortlist.find(v => v.id === vendorId);
+    if (!vendor || !vendor.scoreDetails) return;
+
+    const detail = vendor.scoreDetails[criterionId];
+    if (!detail) return;
+
+    setSelectedScoreDetail({
+      vendorName,
+      criterionName,
+      detail
+    });
   };
 
   // === MOBILE STATE (3 vendor carousels) ===
@@ -362,6 +678,8 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
             <VerticalBarChart
               vendors={[vendor1, vendor2, vendor3].filter(Boolean)}
               criteria={criteria}
+              onScoreClick={handleScoreClick}
+              onRetryVendor={retryVendor}
             />
           </motion.div>
         </div>
@@ -390,6 +708,8 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
               onScreenChange={handleDesktopScreenChange}
               shortlistedVendorIds={shortlistedVendorIds}
               onToggleShortlist={toggleShortlist}
+              onScoreClick={handleScoreClick}
+              onRetryVendor={retryVendor}
             />
           </motion.div>
         </div>
@@ -454,6 +774,80 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
           }))}
           projectId={projectId || 'comparison'}
         />
+
+        {/* Score Detail Popup */}
+        <AnimatePresence>
+          {selectedScoreDetail && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+              onClick={() => setSelectedScoreDetail(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="font-semibold text-gray-900">
+                      {selectedScoreDetail.vendorName}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {selectedScoreDetail.criterionName}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedScoreDetail(null)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                {/* Score state badge */}
+                <div className="mb-4">
+                  <span className={`
+                    inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                    ${selectedScoreDetail.detail.state === 'star' ? 'bg-yellow-100 text-yellow-800' :
+                      selectedScoreDetail.detail.state === 'yes' ? 'bg-green-100 text-green-800' :
+                      selectedScoreDetail.detail.state === 'no' ? 'bg-red-100 text-red-800' :
+                      'bg-gray-100 text-gray-800'}
+                  `}>
+                    {selectedScoreDetail.detail.state === 'star' ? 'Exceptional' :
+                     selectedScoreDetail.detail.state === 'yes' ? 'Meets Criteria' :
+                     selectedScoreDetail.detail.state === 'no' ? 'Does Not Meet' :
+                     'Unknown'}
+                  </span>
+                </div>
+
+                {/* AI Comment */}
+                <div className="mb-4">
+                  <p className="text-sm text-gray-700">
+                    {selectedScoreDetail.detail.comment || 'No additional information available.'}
+                  </p>
+                </div>
+
+                {/* Evidence Link */}
+                {selectedScoreDetail.detail.evidence && (
+                  <a
+                    href={selectedScoreDetail.detail.evidence}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    View Evidence
+                  </a>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

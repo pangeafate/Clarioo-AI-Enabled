@@ -3,14 +3,98 @@
 ## Executive Summary
 
 **Project**: Clarioo Vendor Analyst - Visual Prototype
-**Status**: ✅ Sprint 14 Complete - Swipe Gestures & Team Sharing
-**Overall Completion**: 100% of core features + landing page + critical UX fixes + enhanced navigation + mobile-optimized criteria UI + swipe gestures + team collaboration
-**Current Sprint**: Sprint 14 (SP_014) - ✅ Complete
-**Last Updated**: November 15, 2024 (SP_014 Complete)
+**Phase**: Phase 0 - Visual Prototype → Phase 1 - n8n AI Integration
+**Status**: SP_016 Complete - n8n Project Creation Integration
+**Next Sprint**: SP_017 - n8n Vendor Selection Integration
+**Last Updated**: November 23, 2024
 
 ---
 
 ## 🔧 Current Sprint Status
+
+### Sprint 16: n8n AI Project Creation Integration (SP_016)
+**Duration**: November 23, 2024 (1 day)
+**Status**: ✅ Complete
+**Sprint Goal**: Replace mock AI service with real n8n workflow for AI-powered project creation and criteria generation
+
+#### Sprint Objectives
+1. ✅ Create n8n API service with proper typing and error handling
+2. ✅ Implement user_id (localStorage) and session_id (sessionStorage) generation
+3. ✅ Create useProjectCreation hook for React integration
+4. ✅ Update AnimatedInputs with loading states and validation
+5. ✅ Update LandingPage to use n8n for project creation
+6. ✅ Update VendorDiscovery to load n8n-generated criteria
+7. ✅ Map n8n response fields to app's existing data structures
+8. ✅ Handle timeouts (45s), errors, and loading states gracefully
+
+#### Key Deliverables
+- **n8n Types** (`src/types/n8n.types.ts`):
+  - N8nProjectCreationRequest/Response interfaces
+  - TransformedProject and TransformedCriterion types
+  - Field mapping: n8n `description` → app `explanation`
+
+- **n8n Service** (`src/services/n8nService.ts`):
+  - getUserId() / getSessionId() utilities
+  - createProjectWithAI() API function with 45s timeout
+  - Data transformation functions
+  - localStorage persistence functions
+
+- **useProjectCreation Hook** (`src/hooks/useProjectCreation.ts`):
+  - Wraps n8n API call with loading/error states
+  - Auto-saves to localStorage on success
+  - Returns { createProject, isCreating, error, clearError }
+
+- **Updated AnimatedInputs** (`src/components/landing/AnimatedInputs.tsx`):
+  - "Create with AI" button with loading spinner
+  - Updated validation: both fields require 10+ characters
+  - Helper text for input requirements
+  - Loading state disables button during API call
+
+- **Updated LandingPage** (`src/components/landing/LandingPage.tsx`):
+  - Integrated useProjectCreation hook
+  - Calls n8n webhook instead of mock projectService
+  - Shows success toast with criteria count
+  - Clears landing inputs after successful creation
+
+- **Updated VendorDiscovery** (`src/components/VendorDiscovery.tsx`):
+  - Imports getCriteriaFromStorage from n8nService
+  - Loads n8n-generated criteria on mount
+  - Maps n8n criteria to app format
+  - Shows toast when AI criteria loaded
+
+#### Technical Details
+- **n8n Endpoint**: POST https://n8n.lakestrom.com/webhook/clarioo-project-creation
+- **AI Model**: GPT-4o-mini (temperature: 0.3, max tokens: 6000)
+- **Timeout**: 45 seconds with AbortController
+- **Storage**: All data in localStorage (ephemeral)
+- **Criteria Count**: 10-15 per project with importance/type distribution
+
+#### Expected Outcomes
+- ✅ Real AI-generated project names and descriptions
+- ✅ Intelligent criteria based on user requirements
+- ✅ Proper importance assignment (high/medium/low)
+- ✅ Criteria type distribution (feature/technical/business/compliance)
+- ✅ Seamless integration with existing workflow
+- ✅ User-friendly loading states and error handling
+
+#### Brief Description
+Sprint 16 successfully integrated the n8n AI workflow for project creation, replacing the mock AI service with real GPT-4o-mini processing. Users now enter company context and solution requirements, and the n8n workflow generates an AI-powered project name, description, category, and 10-15 evaluation criteria with appropriate importance levels and types. The integration includes proper error handling for timeouts and failures, loading states during the 45-second max processing time, and localStorage persistence for all project data. Field mapping transforms n8n's `description` field to the app's `explanation` field for criteria.
+
+**Sprint Plan**: [SP_016_N8N_Project_Creation_Integration.md](./SPRINTS/SP_016_N8N_Project_Creation_Integration.md)
+
+---
+
+## 📋 Planned Sprints
+
+### Sprint 17: n8n Vendor Selection Integration (SP_017)
+**Duration**: TBD
+**Status**: 📋 Planned
+**Sprint Goal**: Replace mock vendor selection with n8n AI workflow to generate vendor recommendations based on criteria
+
+### Sprint 18: n8n Vendor Comparison Integration (SP_018)
+**Duration**: TBD
+**Status**: 📋 Planned
+**Sprint Goal**: Replace mock vendor comparison with n8n AI workflow to generate match scores and executive summary
 
 ### Sprint 15: Vendor Comparison Matrix with Wave Charts (SP_015)
 **Duration**: November 16, 2024 - TBD (32-40 hours estimated)
@@ -94,7 +178,110 @@ Sprint 14 successfully implemented a mobile-first swipe gesture system for intui
 
 ---
 
+### Sprint 12: Criteria Builder Accordion Redesign (SP_012)
+**Duration**: November 14, 2024 (1 day)
+**Status**: ✅ Complete
+**Sprint Goal**: Transform horizontal tab-based table layout into mobile-first vertical accordion with AI editing sidebar
+
+#### Sprint Objectives
+1. ✅ Add `explanation` field to Criteria data structure across all interfaces
+2. ✅ Create SignalAntenna component (1-3 bars) for visual priority indication
+3. ✅ Create CriterionCard component for card-based criterion display
+4. ✅ Create AccordionSection component for collapsible category sections
+5. ✅ Create CriterionEditSidebar for AI-powered criterion editing
+6. ✅ Integrate all components into CriteriaBuilder with accordion view
+7. ✅ Pre-populate mockup data with detailed explanations
+
+**Sprint Plan**: [SP_012_Criteria_Builder_Accordion.md](./SPRINTS/SP_012_Criteria_Builder_Accordion.md)
+
+---
+
+### Sprint 11: Registration-Free Landing Experience (SP_011)
+**Duration**: November 13, 2024 (4 days)
+**Status**: ✅ Complete
+**Sprint Goal**: Create an intuitive, registration-free landing experience with intelligent input handling and enhanced navigation
+
+#### Sprint Objectives
+1. ✅ Remove authentication UI from landing page (AuthModal trigger buttons)
+2. ✅ Implement Home/Project navigation toggle for seamless workflow
+3. ✅ Add Category dropdown for guided vendor discovery
+4. ✅ Implement Examples tooltip for input field guidance
+5. ✅ Add input field intelligence for better user guidance
+
+**Sprint Plan**: [SP_011_Registration_Free_Landing_Experience.md](./SPRINTS/SP_011_Registration_Free_Landing_Experience.md)
+
+---
+
+### Sprint 10: Unified Landing & Workflow Integration (SP_010)
+**Duration**: November 12, 2024 (1 day)
+**Status**: ✅ Complete
+**Sprint Goal**: Create unified single-page experience eliminating navigation between marketing and workflow
+
+**Sprint Plan**: [SP_010_Unified_Landing_Workflow.md](./SPRINTS/SP_010_Unified_Landing_Workflow.md)
+
+---
+
+### Sprint 9: Critical UX Gaps & Foundation Fixes (SP_009)
+**Duration**: November 12, 2024 (14 hours)
+**Status**: ✅ Complete
+**Sprint Goal**: Fix authentication navigation, connect landing inputs to workflow, add state persistence
+
+**Sprint Plan**: [SP_009_Critical_UX_Gaps_Foundation_Fixes.md](./SPRINTS/SP_009_Critical_UX_Gaps_Foundation_Fixes.md)
+
+---
+
+### Sprint 8: Service Layer and Type System Refactoring (SP_008)
+**Duration**: November 12-15, 2024
+**Status**: ✅ Complete
+**Sprint Goal**: Consolidate types, extract business logic, establish test framework
+
+**Key Achievements**:
+- 81 tests passing (100% pass rate)
+- Custom hooks created (useVendorComparison, useVendorDiscovery, useExecutiveSummary)
+- Centralized type definitions in `/src/types/`
+- Export utilities (exportHelpers.ts)
+
+**Sprint Plan**: [SP_008_Service_Layer_and_Type_System_Refactoring.md](./SPRINTS/SP_008_Service_Layer_and_Type_System_Refactoring.md)
+
+---
+
+### Sprint 7: Visual Design Enhancement & Mobile-First UI/UX (SP_007)
+**Duration**: November 12, 2024 - December 3, 2024 (2-3 weeks)
+**Status**: 🔄 In Progress (Phase 1 Complete, Phases 2-5 Partial)
+**Sprint Goal**: Transform prototype into design-led, mobile-first experience
+
+**Progress**:
+- Phase 1: Foundation & Architecture - 100% Complete
+- Phase 2: Visual Design System - 100% Complete
+- Phase 3: Interactive Elements - 85% Complete
+- Phase 4: Mobile Optimization - 80% Complete
+- Phase 5: Polish & Documentation - 50% Complete
+
+**Pending Elements**: iPodNavigation.tsx, VisualStepIndicator.tsx
+
+**Sprint Plan**: [SP_007_Visual_Design_Enhancement_Mobile_First_UI_UX.md](./SPRINTS/SP_007_Visual_Design_Enhancement_Mobile_First_UI_UX.md)
+
+---
+
+### Sprint 6: MVP to Visual Prototype Conversion (SP_006)
+**Duration**: November 12, 2024
+**Status**: ✅ Complete
+**Sprint Goal**: Convert functional MVP to visual prototype with mock services
+
+**Sprint Plan**: [SP_006_MVP_to_Visual_Prototype_Conversion.md](./SPRINTS/SP_006_MVP_to_Visual_Prototype_Conversion.md)
+
+---
+
 ## 📋 Planned Sprints
+
+### Sprint 15: Vendor Comparison Matrix with Wave Charts (SP_015)
+**Duration**: TBD (32-40 hours estimated)
+**Status**: 📋 Planning Complete
+**Sprint Goal**: Implement mobile-first vendor comparison screen with wave chart visualizations
+
+**Sprint Plan**: [SP_015_Vendor_Comparison_Matrix.md](./SPRINTS/SP_015_Vendor_Comparison_Matrix.md)
+
+---
 
 ### Sprint 13: Component Reusability & Code Deduplication (SP_013)
 **Duration**: 5-7 days (Planned)
@@ -210,388 +397,9 @@ Sprint 14 successfully implemented a mobile-first swipe gesture system for intui
 
 ---
 
-### Sprint 12: Criteria Builder Accordion Redesign (SP_012)
-**Duration**: November 14, 2024 (1 day)
-**Status**: ✅ Complete
-**Sprint Goal**: Transform horizontal tab-based table layout into mobile-first vertical accordion with AI editing sidebar
+## Sprint History (Detailed)
 
-#### Sprint Objectives
-1. ✅ Add `explanation` field to Criteria data structure across all interfaces
-2. ✅ Create SignalAntenna component (1-3 bars) for visual priority indication
-3. ✅ Create CriterionCard component for card-based criterion display
-4. ✅ Create AccordionSection component for collapsible category sections
-5. ✅ Create CriterionEditSidebar for AI-powered criterion editing
-6. ✅ Integrate all components into CriteriaBuilder with accordion view
-7. ✅ Pre-populate mockup data with detailed explanations
-
-#### Key Deliverables
-- **Data Structure**: Added `explanation` field to Criteria interface in VendorDiscovery.tsx, useCriteriaGeneration.ts, criteria.types.ts
-- **SignalAntenna Component**: Visual priority indicator (1-3 bars) with color coding (gray/yellow/red)
-- **CriterionCard Component**: Card-based display with name, explanation, signal antenna, and AI edit button
-- **AccordionSection Component**: Collapsible sections for Feature, Technical, Business, Compliance, and Other categories
-- **CriterionEditSidebar Component**: Slide-in sidebar (400px desktop, full-width mobile) with Edit and Chat tabs
-- **Mockup Data**: All 20 fallback criteria and JSON data updated with explanations
-- **Mobile-First Design**: Card-based layouts optimized for mobile responsiveness
-
-#### Technical Details
-**Files Modified**:
-1. `src/components/VendorDiscovery.tsx` - Added explanation to Criteria interface
-2. `src/hooks/useCriteriaGeneration.ts` - Added explanations to all criteria
-3. `src/types/criteria.types.ts` - Added optional explanation field
-4. `src/data/api/criteria.json` - Added explanations to CRM Software section
-5. `src/components/vendor-discovery/CriteriaBuilder.tsx` - Major refactor with accordion view
-
-**New Files Created**:
-1. `src/components/vendor-discovery/SignalAntenna.tsx` - Priority visual indicator
-2. `src/components/vendor-discovery/CriterionCard.tsx` - Individual criterion card
-3. `src/components/vendor-discovery/AccordionSection.tsx` - Collapsible category section
-4. `src/components/vendor-discovery/CriterionEditSidebar.tsx` - AI editing sidebar
-
-**Build Status**: ✅ Build succeeded with no TypeScript errors
-
-**Brief Description**: Sprint 12 transformed the Criteria Builder from a horizontal tab-based table layout into a mobile-first vertical accordion design. This sprint added detailed explanations to all criteria, created visual priority indicators using a 1-3 bar signal antenna, implemented collapsible category sections sorted by priority, and built an AI-powered editing sidebar that slides in from the right. The new design is fully mobile-optimized with card-based layouts and provides a superior user experience for managing evaluation criteria.
-
-**Sprint Plan**: [SP_012_Criteria_Builder_Accordion_Redesign.md](./SPRINTS/SP_012_Criteria_Builder_Accordion_Redesign.md)
-
----
-
-### Sprint 11: Registration-Free Landing Experience
-**Duration**: In Progress
-**Status**: 🟡 In Progress
-**Sprint Goal**: Create an intuitive, registration-free landing experience with intelligent input handling and enhanced navigation
-
-#### Sprint Objectives
-1. Remove authentication UI from landing page (AuthModal trigger buttons)
-2. Implement Home/Project navigation toggle for seamless workflow
-3. Add Category dropdown for guided vendor discovery
-4. Implement Examples tooltip for input field guidance
-5. Add input field intelligence for better user guidance
-
-#### Key Deliverables
-- **Registration-Free Interface**: Removed authentication barriers from landing flow
-- **Smart Navigation**: Toggle between Home view and active projects
-- **Guided Discovery**: Category dropdown with intelligent filtering
-- **User Guidance**: Examples tooltip for input field assistance
-- **Enhanced UX**: Input field intelligence for smoother discovery workflow
-
-**Brief Description**: Sprint 11 removes authentication friction from the landing experience by eliminating the sign-in/sign-up flow, allowing users to explore vendor discovery immediately. This sprint enhances navigation with a Home/Project toggle, provides guided discovery through category selection, and implements intelligent input assistance through examples tooltips and field-level guidance. These changes create a frictionless entry point for product exploration while maintaining professional functionality.
-
-**Sprint Plan**: [SP_011_Registration_Free_Landing_Experience.md](./SPRINTS/SP_011_Registration_Free_Landing_Experience.md)
-
----
-
-### Sprint 7: Visual Design Enhancement & Mobile-First UI/UX
-**Duration**: November 12, 2024 - December 3, 2024 (2-3 weeks)
-**Status**: 🟢 Active - Phase 1 Complete, Phase 2/3 Partially Complete
-**Sprint Goal**: Transform prototype into design-led, mobile-first experience with Clearbit-inspired visual design system
-
-#### Sprint Objectives
-1. ✅ Implement 8-element landing page structure (6/8 elements complete: Hero, Toggle, Inputs, Viz, Carousel integrated)
-2. ✅ Establish single-page scrollable architecture (LandingPage.tsx created)
-3. ✅ Implement Clearbit-inspired visual design system (Tailwind config complete: gradients, shadows, animations)
-4. ✅ Create interactive card carousel (HubSpot-style, 5 workflow cards with auto-play + keyboard nav)
-5. 🔄 Optimize for mobile-first experience (Mobile-responsive layouts implemented, testing pending)
-
-#### Sprint Progress
-| Phase | Status | Progress | Notes |
-|-------|--------|----------|-------|
-| Phase 1: Foundation & Architecture | ✅ Complete | 100% | LandingPage.tsx, routing updated |
-| Phase 2: Visual Design System | ✅ Complete | 100% | Tailwind config with gradients, shadows, animations |
-| Phase 3: Interactive Elements | 🟢 Mostly Complete | 85% | Carousel ✅, Animations ✅, iPod nav 📅, Step indicator 📅 |
-| Phase 4: Mobile Optimization | 🔄 In Progress | 80% | Responsive classes applied, manual testing needed |
-| Phase 5: Polish & Documentation | 🔄 In Progress | 50% | Docs updating, visual testing partially complete |
-
-**Key Deliverables Completed**:
-- ✅ **LandingPage.tsx**: Main integration component with 6/8 elements
-- ✅ **HeroSection.tsx**: Gradient headline + value proposition badges (Elements 1 & 2)
-- ✅ **RegistrationToggle.tsx**: Sign In/Sign Up toggle with gradient buttons (Element 3)
-- ✅ **AnimatedInputs.tsx**: Registration-gated inputs with hypnotic animations (Element 5)
-- ✅ **ArtifactVisualization.tsx**: Workflow visualization with auto-rotation (Element 6)
-- ✅ **CardCarousel.tsx**: Interactive carousel with 5 workflow cards (Element 8)
-- ✅ **Tailwind Configuration**: Clearbit-inspired gradients, shadows, animations
-- ✅ **Routing Structure**: Public landing page (/) + protected dashboard (/dashboard)
-- ✅ **Dependencies**: Framer Motion 11.11.17 + Embla Carousel React 8.3.1
-- 🔄 **Documentation**: In progress (FEATURE_LIST, USER_STORIES updates pending)
-
-**Pending Elements**:
-- 📅 iPodNavigation.tsx (Element 4) - Quick-jump navigation to sections
-- 📅 VisualStepIndicator.tsx (Element 7) - Progress tracking for authenticated users
-
-**Sprint Plan**: [SP_007_Visual_Design_Enhancement_Mobile_First_UI_UX.md](./SPRINTS/SP_007_Visual_Design_Enhancement_Mobile_First_UI_UX.md)
-
-**Recent Analysis Work**:
-- ✅ **Gap Analysis Complete** (November 12, 2024)
-  - Comprehensive mapping of user stories to implementation
-  - Identified 8 gaps across 3 priority levels (4 high, 4 medium, 3 low)
-  - Documented 12 implemented, 10 planned, 10 future user stories
-  - Created formal documentation: [GAP_ANALYSIS.md](./GAP_ANALYSIS.md)
-- ✅ **Authentication Toggle Fix** (November 12, 2024)
-  - Toggle now shows blue when authenticated (previously hidden)
-  - Added disabled state with proper aria-label
-  - Helper text updated to reflect authenticated state
-  - File: `src/components/landing/RegistrationToggle.tsx:42-126`
-- ✅ **Logo Enhancement** (November 12, 2024)
-  - Logo size increased 4x (from h-16/h-20/h-24 to h-64/h-80/h-96)
-  - File: `src/components/landing/HeroSection.tsx:41`
-
-**Technical Achievements**:
-- **Animation System**: Pulse-glow (2s), Float (3s), Shimmer (4s) keyframes implemented
-- **Design Tokens**: Brand purple (#6366F1 → #8B5CF6), neutral warmBlack/warmGray
-- **Shadow System**: Multi-layer elevated-combined (10px + 4px) + button-glow (4px with purple tint)
-- **Auto-Play Carousel**: 4-second intervals with pause/play controls + keyboard navigation (arrow keys)
-- **Mobile-First**: Responsive breakpoints (md:768px) with stacked mobile layouts
-
----
-
-## Sprint History
-
-### Sprint 9: Critical UX Gaps & Foundation Fixes (Completed)
-**Period**: November 12, 2024 (14 hours / 1-2 days)
-**Status**: ✅ Complete
-**Type**: Critical UX Improvements & Foundation Fixes
-
-#### Sprint Goals
-- Fix authentication navigation that was breaking SPA experience (GAP-2)
-- Connect landing page inputs to workflow Step 1 (GAP-4)
-- Add workflow state persistence with localStorage (GAP-1)
-- Remove budget/timeline fields from scope (GAP-3 out-of-scope)
-
-#### Sprint Objectives
-1. ✅ Update GAP_ANALYSIS.md to mark GAP-3 as out of scope
-2. ✅ Create comprehensive Sprint SP_009 plan document
-3. ✅ Implement GAP-2: Fix authentication navigation (AuthModal.tsx)
-4. ✅ Implement GAP-4: Landing input connection (AnimatedInputs.tsx, TechInput.tsx)
-5. ✅ Implement GAP-1: Workflow persistence (VendorDiscovery.tsx)
-6. ✅ Update documentation (PROGRESS.md, PROJECT_ROADMAP.md)
-
-#### Sprint Tasks
-| Task | Status | Priority | Est. Time | Actual Time | Notes |
-|------|--------|----------|-----------|-------------|-------|
-| Update GAP_ANALYSIS.md | ✅ Complete | P0 | 30min | 30min | Marked GAP-3 out of scope |
-| Create SP_009 sprint plan | ✅ Complete | P0 | 2h | 2h | 950+ line comprehensive plan |
-| Implement GAP-2 (Auth Nav) | ✅ Complete | P0 | 2h | 2h | AuthModal.tsx updated |
-| Implement GAP-4 (Input Connection) | ✅ Complete | P0 | 3h | 3h | AnimatedInputs + TechInput updated |
-| Implement GAP-1 (Persistence) | ✅ Complete | P0 | 4h | 4h | VendorDiscovery.tsx updated |
-| Update documentation | ✅ Complete | P0 | 2h | 2h | PROGRESS + ROADMAP updated |
-
-#### Key Deliverables Completed
-- ✅ **GAP_ANALYSIS.md**: Updated with GAP-3 out-of-scope status and rationale
-- ✅ **SP_009 Sprint Plan**: Comprehensive 950+ line plan with technical approach
-- ✅ **GAP-2 Fix (AuthModal.tsx)**: Replaced `window.location.reload()` with `navigate('/dashboard', { replace: true })`
-  - Maintains SPA experience
-  - Preserves auth state through navigation
-  - Smooth transition to dashboard
-- ✅ **GAP-4 Fix (AnimatedInputs.tsx + TechInput.tsx)**: Landing page inputs flow to Step 1
-  - AnimatedInputs saves to localStorage on change
-  - TechInput loads from localStorage on mount
-  - Toast notification on pre-fill
-  - One-time use (localStorage cleared after load)
-- ✅ **GAP-1 Fix (VendorDiscovery.tsx)**: Workflow state persistence
-  - Added WorkflowState interface
-  - Load workflow state from localStorage on mount
-  - Auto-save on state changes
-  - "Last saved" timestamp display in UI
-  - Toast notifications on restore/save
-  - Storage key pattern: `workflow_${projectId}`
-
-#### Sprint Metrics
-- **Velocity**: 14 hours estimated, 13 hours actual
-- **Commitment**: 6 tasks committed, 6 tasks delivered
-- **Delivered**: 6/6 objectives complete ✅
-- **Blockers**: None
-- **Sprint Goal Achievement**: 100% ✅
-
-#### Files Modified
-1. `00_IMPLEMENTATION/GAP_ANALYSIS.md` - Marked GAP-3 out of scope
-2. `00_IMPLEMENTATION/SPRINTS/SP_009_Critical_UX_Gaps_Foundation_Fixes.md` - Created sprint plan
-3. `src/components/landing/AuthModal.tsx` - Fixed navigation (GAP-2)
-4. `src/components/landing/AnimatedInputs.tsx` - Added localStorage save (GAP-4)
-5. `src/components/vendor-discovery/TechInput.tsx` - Added localStorage load (GAP-4)
-6. `src/components/VendorDiscovery.tsx` - Added workflow persistence (GAP-1)
-7. `00_IMPLEMENTATION/PROGRESS.md` - Updated sprint history
-8. `00_IMPLEMENTATION/PROJECT_ROADMAP.md` - Updated roadmap
-
-#### Technical Achievements
-- **localStorage Architecture**: Implemented robust persistence layer
-- **Data Flow**: Landing → localStorage → Workflow (seamless user journey)
-- **Auto-Save**: Workflow state automatically saved on changes
-- **State Restoration**: Previous workflow progress restored on mount
-- **User Feedback**: Toast notifications for pre-fill and restore events
-- **SPA Integrity**: Navigation fixed to maintain single-page app experience
-
-#### Impact
-- **User Experience**: Significantly improved workflow continuity
-- **Data Loss Prevention**: Workflow progress saved automatically
-- **Landing Page Connection**: Inputs from landing page pre-fill Step 1
-- **Navigation**: SPA experience maintained through authentication flow
-- **Foundation Quality**: Critical UX gaps addressed before visual enhancements
-
----
-
-### Sprint 7: Visual Design Enhancement & Mobile-First UI/UX (Current)
-**Period**: November 12, 2024 - December 3, 2024
-**Status**: 🚀 Active
-**Type**: UI/UX Enhancement
-
-#### Sprint Goals
-- Transform Auth.tsx into comprehensive 8-element landing page
-- Implement single-page scrollable architecture (no page navigation)
-- Create Clearbit-inspired visual design system (gradient-heavy, multi-layer shadows)
-- Build interactive card carousel showcasing 5 workflow steps
-- Optimize all layouts for mobile-first experience
-
-#### Rationale
-- Design-first philosophy from VISION.md
-- Mobile-first for 80-90% expected mobile traffic
-- Differentiate from "vanilla" enterprise software
-- Create delightful, shareable user experience
-
----
-
-### Sprint 8: Service Layer and Type System Refactoring
-**Period**: November 12, 2024 (1 day)
-**Status**: ✅ Complete
-**Sprint Goal**: Eliminate duplicate code, consolidate types, extract business logic, and improve code quality following GL-RDD guidelines
-
-#### Sprint Objectives
-1. ✅ Create custom hooks for business logic (useVendorComparison, useVendorDiscovery, useExecutiveSummary)
-2. ✅ Create export utilities (exportHelpers.ts)
-3. ✅ Consolidate type definitions in `/src/types/` directory
-4. ✅ Extract business logic from components to hooks
-5. ✅ Establish Vitest testing framework with comprehensive test suite
-6. ✅ Refactor components to use new architecture (VendorTable, VendorSelection, ExecutiveSummary)
-
-#### Sprint Tasks
-| Task | Status | Priority | Est. Time | Notes |
-|------|--------|----------|-----------|-------|
-| Create SP_008 sprint plan | ✅ Complete | P0 | 2h | Detailed plan created |
-| Create mockHelpers.ts | 🔄 In Progress | P0 | 1h | Delay utilities |
-| Create dataTransformers.ts | 📅 Planned | P0 | 1h | Mapping/sorting |
-| Create storageService.ts | 📅 Planned | P0 | 1h | localStorage wrapper |
-| Create /src/types/ structure | 📅 Planned | P0 | 30min | Directory setup |
-| Consolidate Project types | 📅 Planned | P0 | 45min | Merge 3 duplicates |
-| Consolidate Vendor types | 📅 Planned | P0 | 45min | Merge 2 duplicates |
-| Consolidate Criteria types | 📅 Planned | P0 | 30min | Fix naming |
-| Refactor authService | 📅 Planned | P0 | 1h | Remove dupes, add docs |
-| Refactor projectService | 📅 Planned | P0 | 1.5h | Remove dupes, add docs |
-| Refactor aiService | 📅 Planned | P0 | 1h | Remove dupes, add docs |
-| Refactor dataService | 📅 Planned | P0 | 30min | Add documentation |
-| Update ProjectDashboard | 📅 Planned | P0 | 1h | Extract business logic |
-| Update CriteriaBuilder | 📅 Planned | P0 | 1h | Use storage service |
-| Update VendorDiscovery | 📅 Planned | P0 | 30min | Use centralized types |
-| Create utility tests | 📅 Planned | P0 | 2h | TDD approach |
-| Update service tests | 📅 Planned | P1 | 1h | Update mocks |
-| Update ARCHITECTURE.md | 📅 Planned | P1 | 30min | Add utility layer |
-| Update PROGRESS.md | ✅ Complete | P0 | 15min | Current sprint |
-| Update PROJECT_ROADMAP.md | 📅 Planned | P1 | 30min | Add SP_008 |
-
-#### Sprint Metrics
-- **Velocity**: ~8 hours actual (faster than estimated)
-- **Commitment**: Code quality improvements & test foundation
-- **Delivered**: 6/6 objectives complete ✅
-- **Test Coverage**: 81 tests, 100% passing
-- **Blockers**: None
-- **Actual Total Time**: ~8 hours
-
----
-
-## Sprint History
-
-### Sprint 8: Service Layer and Type System Refactoring (Current)
-**Period**: November 12-15, 2024
-**Status**: 🟢 In Progress
-**Type**: Code Quality & Architecture Improvement
-
-#### Sprint Goals
-- Eliminate duplicate code across services (3 instances of delay simulation)
-- Consolidate scattered type definitions (82 types → centralized structure)
-- Extract business logic from components to services
-- Create centralized utility layer (`/src/utils/`)
-- Create storage service for localStorage operations
-- Add comprehensive JSDoc documentation to mock services
-- Establish test foundation following TDD principles
-
-#### Key Deliverables
-- `/src/utils/mockHelpers.ts` - Centralized delay and ID utilities
-- `/src/utils/dataTransformers.ts` - Data mapping and sorting logic
-- `/src/services/storageService.ts` - localStorage abstraction
-- `/src/types/` - Centralized type definitions (Project, Vendor, Criteria, Auth, Common)
-- Refactored services with removed duplicates
-- Updated components using centralized utilities and types
-- Test suite for all new utilities
-- Updated documentation (ARCHITECTURE.md, PROJECT_ROADMAP.md)
-
-#### Rationale
-- **GL-RDD Compliance**: Address documentation and code quality issues
-- **Maintainability**: Single source of truth for utilities and types
-- **Testability**: Centralized utilities are easier to test
-- **Handoff Readiness**: Clear mock service documentation for backend integration
-- **Reduced Technical Debt**: Fix issues before they compound
-
----
-
-### Sprint 7: Visual Design Enhancement (Planned)
-**Period**: Pending (After SP_008)
-**Status**: 📋 Planned
-**Type**: UI/UX Enhancement
-
-#### Deferred Rationale
-- Component refactoring (originally SP_007) deferred in favor of service layer cleanup
-- Design enhancements will benefit from clean architecture foundation
-- Code quality improvements should precede visual polish
-
----
-
-### Sprint 6: MVP to Visual Prototype Conversion (Completed)
-**Period**: November 12, 2024
-**Status**: ✅ Complete
-**Type**: Major Architecture Refactoring
-
-#### Rationale for Pivot
-- **Team Alignment**: Need visual demonstration for stakeholders
-- **Design Validation**: Confirm UX/UI before backend investment
-- **Reduced Complexity**: Lightweight prototype vs. full functional MVP
-- **Backend Handoff**: Clean separation makes integration easier later
-
-#### What Changed
-- **Removed**: Supabase, OpenAI, real authentication
-- **Added**: Mock services, JSON dummy data, archived folder
-- **Preserved**: All 21 visual features, component structure, UI/UX
-
----
-
-### Pre-Sprint 6 Development (Baseline - Functional MVP)
-**Period**: Prior to November 12, 2024
-**Status**: ✅ Complete (Now Archived)
-**Note**: This was a cloned codebase with functional implementation
-
-#### Completed Functional Features (Now Mock-Only)
-1. **Authentication System** (Now Visual Demo)
-   - Email/password authentication → Mock (always succeeds)
-   - Session management → Simulated
-   - Protected routes → Visual only
-
-2. **Project Management** (Now Dummy Data)
-   - Project creation → Simulated
-   - Project dashboard → Shows JSON data
-   - State persistence → Ephemeral (resets on refresh)
-
-3. **5-Step Vendor Discovery Workflow** (Now Pre-Generated)
-   - Tech Input validation → UI only
-   - AI Criteria Builder → Returns JSON criteria
-   - AI Vendor Selection → Returns JSON vendors
-   - AI Vendor Comparison → Returns JSON comparison
-   - Vendor Invite system → Template-based
-
-4. **AI Integration** (Now Mock Responses)
-   - OpenAI GPT integration → Removed
-   - Intelligent matching → Pre-generated data
-   - Automated scoring → Pre-calculated scores
-
-5. **Data Management** (Now Simulated)
-   - Excel import/export → Import simulated, export functional
-   - Database integration → Removed
-   - JSONB storage → JSON files
+For detailed sprint information including objectives, deliverables, and technical details, see individual sprint plan files in the [SPRINTS](./SPRINTS/) folder.
 
 ---
 
@@ -895,221 +703,14 @@ Sprint 14 successfully implemented a mobile-first swipe gesture system for intui
 |---------|------|--------|---------|
 | 1.0.0 | 2024-10-26 | System | Initial progress tracking |
 | 2.0.0 | 2024-11-12 | System | Updated for prototype conversion (Sprint 6) |
+| 3.0.0 | 2024-11-15 | System | SP_014 Complete, reorganized structure |
+| 3.1.0 | 2024-11-23 | System | Documentation alignment, removed duplicates |
 
 ---
 
 *This document tracks progress for the **visual prototype** phase. Functional implementation tracking will resume when backend integration begins.*
 
-**Current Sprint**: Sprint 6 (SP_006) - Prototype Conversion
-**Status**: 🟡 In Progress (Planning)
-**Next Update**: End of Week 1 (November 19, 2024)
-**Last Updated**: November 12, 2024
-
----
-
-## Sprint 7: Component Refactoring and Architecture Improvement
-
-**Period**: TBD (After SP_006 completion, estimated 3 weeks)  
-**Status**: 📋 Planning (Ready for execution)  
-**Type**: Major Architecture Refactoring & Code Quality Improvement  
-
-### Sprint Context
-Following component analysis completed November 12, 2024, Sprint 7 addresses architectural improvements identified in the codebase. This sprint follows GL-TDD and GL-RDD guidelines and positions the codebase for enhanced testability and maintainability.
-
-### Sprint Overview
-
-| Metric | Value | Notes |
-|--------|-------|-------|
-| **Sprint Duration** | 3 weeks | Estimated 25-32 hours dev time |
-| **Components to Refactor** | 8 | Exceeding 300 lines each |
-| **Lines of Code to Extract** | 4,138 | Across 8 components |
-| **Expected Reduction** | 30-40% | Through DRY principle |
-| **New Files to Create** | 23-28 | Services, hooks, components |
-| **Test Coverage Target** | 80%+ | Phase 1: 90%, Phase 2: 80%, Phase 3: 70% |
-| **Risk Level** | Medium | Refactoring existing features |
-
-### Identified Components for Refactoring
-
-| Component | Current Lines | Target Lines | Status |
-|-----------|--------------|-------------|--------|
-| CriteriaBuilder.tsx | 872 | ~100 (orchestrator) | 📋 Planned |
-| VendorTable.tsx | 785 | ~100 (orchestrator) | 📋 Planned |
-| sidebar.tsx | 761 | <300 (lower priority) | 📅 Deferred |
-| VendorSelection.tsx | 412 | <200 (split into 2-3) | 📋 Planned |
-| VendorInvite.tsx | 359 | <200 (split into 2-3) | 📋 Planned |
-| VendorDiscovery.tsx | 356 | <300 (monitoring) | 📅 Review |
-| ProjectDashboard.tsx | 341 | ~150 (orchestrator) | 📋 Planned |
-| chart.tsx | 363 | <300 (UI library, lower priority) | 📅 Review |
-
-### Refactoring Phases
-
-#### Phase 1: Service Layer Extraction (Days 1-2, 6-7 hours)
-**Goal**: Extract business logic into reusable, testable services  
-**Status**: 📋 Planning
-
-**Services to Create**:
-1. `vendorScorer.ts` - Eliminates duplicate scoring logic
-2. `criteriaImporter.ts` - Extract Excel file processing
-3. `vendorExporter.ts` - Extract export functionality
-4. `criteriaCalculator.ts` - Calculation utilities
-5. `criteriaExporter.ts` - Criteria export utilities
-6. `criteriaUtils.ts` - Color functions, type mappings
-7. `vendorUtils.ts` - Vendor transformations
-
-**Benefits**:
-- Duplicate code eliminated (90%+)
-- Logic testable without React
-- No browser API dependencies in components
-- Can be reused across components
-
-#### Phase 2: UI Component Extraction (Days 3-7, 12-15 hours)
-**Goal**: Split large components into focused, single-responsibility components  
-**Status**: 📋 Planning
-
-**CriteriaBuilder Extraction** (872 → 5 components):
-- ChatAssistant.tsx (150 lines)
-- CriteriaTable.tsx (200 lines)
-- ExcelImporter.tsx (120 lines)
-- CustomTypeManager.tsx (100 lines)
-- CriteriaBuilder.tsx orchestrator (100 lines)
-
-**VendorTable Extraction** (785 → 5 components):
-- VendorComparisonMatrix.tsx (250 lines)
-- VendorScoreCard.tsx (100 lines)
-- VendorFilterBar.tsx (100 lines)
-- VendorTable.tsx orchestrator (100 lines)
-- ExecutiveSummary.tsx (80 lines, already separate)
-
-**ProjectDashboard Extraction** (341 → 4 components):
-- ProjectList.tsx (100 lines)
-- CreateProjectDialog.tsx (80 lines)
-- EditProjectDialog.tsx (80 lines)
-- ProjectDashboard.tsx orchestrator (150 lines)
-
-#### Phase 3: State Management Extraction (Days 8-10, 5-7 hours)
-**Goal**: Create custom hooks to organize related state  
-**Status**: 📋 Planning
-
-**Hooks to Create**:
-1. `useCriteriaState.ts` - Combines 9 useState calls
-2. `useVendorState.ts` - Combines vendor state
-3. `useProjectManager.ts` - CRUD operations
-4. `useVendorFiltering.ts` - Filter/sort logic
-5. `useVendorDiscovery.ts` - Discovery workflow
-
-**Benefits**:
-- Related state grouped together
-- Logic testable independently
-- Easier to share across components
-- Cleaner component code
-
-### Phase 1 Detailed Planning
-
-#### vendorScorer.ts (1.5 hours)
-**What to Extract**:
-- calculateOverallScore() - Currently in VendorTable AND VendorInvite (DUPLICATE)
-- generateFallbackScores() - Fallback score generation
-- applyWeights() - Criteria weight application
-
-**Test Strategy**:
-- Create failing tests first (GL-TDD)
-- Test score calculation accuracy
-- Test weight application
-- Test edge cases (no criteria, etc.)
-
-**Expected Tests**: 10-15 test cases, 90%+ coverage
-
-#### criteriaImporter.ts (1.5 hours)
-**What to Extract**:
-- importCriteriaFromExcel() - Excel parsing with XLSX
-- validateCriteriaData() - Data validation
-- transformExcelData() - Data transformation
-
-**Test Strategy**:
-- Mock file uploads
-- Test validation logic
-- Test error handling
-- Test data transformation
-
-**Expected Tests**: 10-12 test cases, 90%+ coverage
-
-#### vendorExporter.ts (1.5 hours)
-**What to Extract**:
-- exportVendorsToExcel() - Excel generation
-- exportVendorsToCSV() - CSV generation
-- formatExportData() - Data formatting
-
-**Test Strategy**:
-- Test export format correctness
-- Test data inclusion/exclusion
-- Test error handling
-- Test empty data sets
-
-**Expected Tests**: 8-10 test cases, 90%+ coverage
-
-#### Supporting Services (1.5 hours)
-- criteriaUtils.ts - Color functions, type mappings
-- vendorUtils.ts - Vendor transformations
-- criteriaCalculator.ts - Calculation utilities
-- criteriaExporter.ts - Criteria export utilities
-
-### Definition of Done (SP_007)
-
-#### Phase 1 Complete
-- [ ] All 7 services created with >90% test coverage
-- [ ] All existing components updated to use services
-- [ ] VendorInvite updated to use vendorScorer service (eliminates duplication)
-- [ ] No duplicate code remains in services
-- [ ] Build passes with 0 errors
-- [ ] All service tests passing
-
-#### Phase 2 Complete
-- [ ] CriteriaBuilder reduced to <100 lines (orchestrator only)
-- [ ] VendorTable reduced to <100 lines (orchestrator only)
-- [ ] ProjectDashboard reduced to <150 lines (orchestrator only)
-- [ ] All extracted components created with >70% test coverage
-- [ ] All 20+ new components tested
-- [ ] All features working (no regressions)
-- [ ] Build passes with 0 errors
-- [ ] All component tests passing
-
-#### Phase 3 Complete
-- [ ] All 5 custom hooks created with >80% test coverage
-- [ ] All hooks tested independently
-- [ ] Components updated to use hooks
-- [ ] Component state cleaner and more organized
-- [ ] Build passes with 0 errors
-- [ ] Overall test coverage >80%
-
-#### Sprint Complete
-- [ ] All 3 phases delivered
-- [ ] Code reviewed and approved
-- [ ] Merged to main branch
-- [ ] Documentation updated
-- [ ] Architecture documentation reflects new structure
-- [ ] No regressions in functionality
-- [ ] Performance benchmarks verified (no regression)
-- [ ] Ready for Phase 1 backend integration
-
-### Next Steps After SP_007
-
-1. **Stakeholder Feedback** (December 2024)
-   - Demonstrate refactored codebase
-   - Show improved architecture
-   - Gather feedback on design and UX
-
-2. **Phase 1 Planning** (January 2025)
-   - Prepare backend infrastructure
-   - Plan mock service replacement strategy
-   - Allocate resources
-
-3. **Phase 1 Execution** (January - March 2025)
-   - Replace mock services with real APIs
-   - Implement authentication
-   - Integrate AI services
-   - Build comprehensive test suite
-
----
-
-*Sprint 7 is positioned to significantly improve code quality, testability, and maintainability while maintaining all existing functionality.*
+**Phase**: Phase 0 - Visual Prototype
+**Next Sprint**: SP_015 - Vendor Comparison Matrix with Wave Charts
+**Last Updated**: November 23, 2024
 

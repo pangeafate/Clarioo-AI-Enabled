@@ -29,9 +29,14 @@ interface VendorSelectionProps {
   criteria: Criteria[];
   techRequest: TechRequest;
   onComplete: (selectedVendors: Vendor[]) => void;
+  projectId: string;
+  projectName: string;
+  projectDescription: string;
 }
 
-const VendorSelection = ({ criteria, techRequest, onComplete }: VendorSelectionProps) => {
+const MAX_VENDORS = 15;
+
+const VendorSelection = ({ criteria, techRequest, onComplete, projectId, projectName, projectDescription }: VendorSelectionProps) => {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [selectedVendorIds, setSelectedVendorIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
@@ -45,28 +50,90 @@ const VendorSelection = ({ criteria, techRequest, onComplete }: VendorSelectionP
   });
   const { toast } = useToast();
 
+  // Storage key for vendor persistence
+  const vendorStorageKey = `vendors_${projectId}`;
+  const selectionStorageKey = `vendor_selection_${projectId}`;
+
   // Use vendor discovery hook for business logic
   const {
     isDiscovering,
     discoverVendors: discoverVendorsFromHook
   } = useVendorDiscovery();
 
+  // Load vendors from localStorage on mount
   useEffect(() => {
-    handleDiscoverVendors();
-  }, [criteria, techRequest]);
+    const loadSavedVendors = () => {
+      try {
+        const savedVendors = localStorage.getItem(vendorStorageKey);
+        const savedSelection = localStorage.getItem(selectionStorageKey);
+
+        if (savedVendors) {
+          const parsed = JSON.parse(savedVendors);
+          setVendors(parsed);
+
+          // Load saved selection or select all
+          if (savedSelection) {
+            setSelectedVendorIds(new Set(JSON.parse(savedSelection)));
+          } else {
+            setSelectedVendorIds(new Set(parsed.map((v: Vendor) => v.id)));
+          }
+
+          setIsLoading(false);
+          console.log('[VendorSelection] Loaded saved vendors:', parsed.length);
+        } else {
+          // No saved vendors, trigger initial discovery
+          handleInitialDiscovery();
+        }
+      } catch (error) {
+        console.error('[VendorSelection] Failed to load saved vendors:', error);
+        handleInitialDiscovery();
+      }
+    };
+
+    loadSavedVendors();
+  }, [projectId]);
+
+  // Save vendors to localStorage when they change
+  useEffect(() => {
+    if (vendors.length > 0) {
+      localStorage.setItem(vendorStorageKey, JSON.stringify(vendors));
+      console.log('[VendorSelection] Saved vendors to storage:', vendors.length);
+    }
+  }, [vendors, vendorStorageKey]);
+
+  // Save selection to localStorage when it changes
+  useEffect(() => {
+    if (selectedVendorIds.size > 0) {
+      localStorage.setItem(selectionStorageKey, JSON.stringify([...selectedVendorIds]));
+    }
+  }, [selectedVendorIds, selectionStorageKey]);
 
   /**
-   * Handle vendor discovery
-   * Wrapper around hook method to update local state
+   * Handle initial vendor discovery (when no saved vendors exist)
    */
-  const handleDiscoverVendors = async () => {
+  const handleInitialDiscovery = async () => {
     setIsLoading(true);
 
     try {
+      // Map criteria to hook format (with explanation)
+      const criteriaForHook = criteria.map(c => ({
+        id: c.id,
+        name: c.name,
+        explanation: c.explanation || '',
+        importance: c.importance,
+        type: c.type,
+        isArchived: c.isArchived || false
+      }));
+
       const discoveredVendors = await discoverVendorsFromHook(
-        techRequest,
-        criteria,
-        10 // maxVendors - aligned with CRM mock data (10 vendors)
+        {
+          id: projectId,
+          name: projectName,
+          description: projectDescription,
+          category: techRequest.category
+        },
+        criteriaForHook,
+        10 // maxVendors for initial discovery
       );
 
       setVendors(discoveredVendors);
@@ -85,6 +152,95 @@ const VendorSelection = ({ criteria, techRequest, onComplete }: VendorSelectionP
     } finally {
       setIsLoading(false);
     }
+  };
+
+  /**
+   * Handle "Discover More" - adds new vendors to existing list
+   */
+  const handleDiscoverMore = async () => {
+    if (vendors.length >= MAX_VENDORS) {
+      toast({
+        title: "Maximum vendors reached",
+        description: `You already have ${MAX_VENDORS} vendors. Remove some to discover more.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Map criteria to hook format (with explanation)
+      const criteriaForHook = criteria.map(c => ({
+        id: c.id,
+        name: c.name,
+        explanation: c.explanation || '',
+        importance: c.importance,
+        type: c.type,
+        isArchived: c.isArchived || false
+      }));
+
+      // Calculate how many more vendors we can add
+      const remainingSlots = MAX_VENDORS - vendors.length;
+      const requestCount = Math.min(5, remainingSlots); // Request up to 5 at a time
+
+      const discoveredVendors = await discoverVendorsFromHook(
+        {
+          id: projectId,
+          name: projectName,
+          description: projectDescription,
+          category: techRequest.category
+        },
+        criteriaForHook,
+        requestCount
+      );
+
+      // Filter out duplicates by name (case-insensitive)
+      const existingNames = new Set(vendors.map(v => v.name.toLowerCase()));
+      const newVendors = discoveredVendors.filter(v => !existingNames.has(v.name.toLowerCase()));
+
+      if (newVendors.length === 0) {
+        toast({
+          title: "No new vendors found",
+          description: "Try adjusting your criteria or clear existing vendors to discover fresh options.",
+          duration: 3000
+        });
+      } else {
+        // Add new vendors to existing list
+        const updatedVendors = [...vendors, ...newVendors].slice(0, MAX_VENDORS);
+        setVendors(updatedVendors);
+
+        // Auto-select new vendors
+        const newIds = new Set([...selectedVendorIds, ...newVendors.map(v => v.id)]);
+        setSelectedVendorIds(newIds);
+
+        toast({
+          title: "New vendors discovered!",
+          description: `Added ${newVendors.length} new vendors (${updatedVendors.length}/${MAX_VENDORS} total).`,
+          duration: 2000
+        });
+      }
+    } catch (error) {
+      console.error('Vendor discovery failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Clear all vendors and reset storage
+   */
+  const handleClearAllVendors = () => {
+    setVendors([]);
+    setSelectedVendorIds(new Set());
+    localStorage.removeItem(vendorStorageKey);
+    localStorage.removeItem(selectionStorageKey);
+
+    toast({
+      title: "Vendors cleared",
+      description: "All vendors have been removed. Click 'Discover More' to find new vendors.",
+      duration: 2000
+    });
   };
 
 
@@ -192,14 +348,26 @@ const VendorSelection = ({ criteria, techRequest, onComplete }: VendorSelectionP
   return (
     <div className="space-y-6">
       {/* Action Buttons */}
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" size="sm" className="gap-2">
-          <MessageSquare className="h-4 w-4" />
-          Chat with AI
-        </Button>
-        <Button onClick={handleDiscoverVendors} variant="default" size="sm" className="gap-2" disabled={isLoading}>
+      <div className="flex flex-col sm:flex-row justify-end gap-2">
+        <div className="flex gap-2 justify-end">
+          <Button variant="outline" size="sm" className="gap-2 flex-1 sm:flex-none">
+            <MessageSquare className="h-4 w-4" />
+            Chat with AI
+          </Button>
+          <Button
+            onClick={handleClearAllVendors}
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:text-destructive"
+            disabled={isLoading || vendors.length === 0}
+            title="Clear all vendors"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+        <Button onClick={handleDiscoverMore} variant="default" size="sm" className="gap-2" disabled={isLoading || vendors.length >= MAX_VENDORS}>
           <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          Rediscover
+          Discover More
         </Button>
       </div>
 
@@ -327,7 +495,7 @@ const VendorSelection = ({ criteria, techRequest, onComplete }: VendorSelectionP
 
                     <div className={`flex items-center justify-end ${TYPOGRAPHY.body.xs}`}>
                       <a
-                        href={`https://${vendor.website}`}
+                        href={vendor.website.startsWith('http') ? vendor.website : `https://${vendor.website}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-primary hover:text-primary/80"

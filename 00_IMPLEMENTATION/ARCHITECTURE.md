@@ -336,10 +336,15 @@ graph LR
 **Available Mock Services:**
 - `authService.ts` - Authentication (login, signup, session)
 - `projectService.ts` - Project CRUD operations
-- `criteriaService.ts` - Criteria generation and management
-- `vendorService.ts` - Vendor discovery and scoring
-- `chatService.ts` - AI chat simulation
-- `exportService.ts` - Excel/PDF export simulation
+- `aiService.ts` - AI responses for criteria and vendor discovery
+- `dataService.ts` - Data loading from JSON files
+
+**Custom Hooks:**
+- `useVendorDiscovery.ts` - Vendor discovery workflow state
+- `useCriteriaGeneration.ts` - Criteria generation logic
+- `useCriteriaChat.ts` - Criterion editing chat
+- `useExecutiveSummary.ts` - Summary generation
+- `useAuth.tsx` - Authentication state
 
 ---
 

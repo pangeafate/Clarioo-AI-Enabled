@@ -25,26 +25,36 @@ import { TYPOGRAPHY } from '@/styles/typography-config';
 interface ProjectCreationAnimationProps {
   isOpen: boolean;
   onComplete: () => void;
+  isApiComplete?: boolean; // When true, animation can proceed to success state
 }
 
 type AnimationState = 'creating' | 'success' | 'completed';
 
-export const ProjectCreationAnimation = ({ isOpen, onComplete }: ProjectCreationAnimationProps) => {
+export const ProjectCreationAnimation = ({ isOpen, onComplete, isApiComplete = false }: ProjectCreationAnimationProps) => {
   const [state, setState] = useState<AnimationState>('creating');
+  const [minTimePassed, setMinTimePassed] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
       setState('creating');
+      setMinTimePassed(false);
       return;
     }
 
-    // State 1: Creating (magic wand) - 4-5 seconds
-    const creatingTimer = setTimeout(() => {
-      setState('success');
+    // Minimum animation time (4.5 seconds) before allowing success state
+    const minTimeTimer = setTimeout(() => {
+      setMinTimePassed(true);
     }, 4500);
 
-    return () => clearTimeout(creatingTimer);
+    return () => clearTimeout(minTimeTimer);
   }, [isOpen]);
+
+  // Transition to success when BOTH minimum time passed AND API is complete
+  useEffect(() => {
+    if (minTimePassed && isApiComplete && state === 'creating') {
+      setState('success');
+    }
+  }, [minTimePassed, isApiComplete, state]);
 
   useEffect(() => {
     if (state === 'success') {

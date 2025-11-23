@@ -34,6 +34,20 @@ export type VendorColor = typeof VENDOR_COLOR_PALETTE[number];
 export type CriterionState = 'yes' | 'no' | 'unknown' | 'star';
 
 /**
+ * Score detail with evidence and AI comment
+ */
+export interface CriterionScoreDetail {
+  state: CriterionState;
+  evidence: string; // URL to evidence (required for yes/star)
+  comment: string; // AI explanation of the score
+}
+
+/**
+ * Vendor comparison status for progressive loading
+ */
+export type VendorComparisonStatus = 'pending' | 'loading' | 'completed' | 'failed';
+
+/**
  * Vendor information for comparison
  */
 export interface ComparisonVendor {
@@ -48,6 +62,10 @@ export interface ComparisonVendor {
   matchPercentage: number; // Overall match score (0-100)
   scores: Map<string, CriterionState>; // Map of criterion ID to 4-state evaluation
   color: VendorColor; // Assigned color from palette
+  // Progressive loading fields
+  scoreDetails?: Record<string, CriterionScoreDetail>; // Detailed scores with evidence
+  comparisonStatus?: VendorComparisonStatus; // Status of comparison research
+  comparisonError?: string; // Error message if comparison failed
 }
 
 /**

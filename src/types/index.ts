@@ -142,3 +142,17 @@ export type {
   PriceRange,
   Statistics
 } from './common.types';
+
+// ===========================================
+// n8n Integration Types
+// ===========================================
+export type {
+  N8nProjectCreationRequest,
+  N8nProject,
+  N8nCriterion,
+  N8nError,
+  N8nProjectCreationResponse,
+  TransformedProject,
+  TransformedCriterion,
+  ProjectCreationResult
+} from './n8n.types';

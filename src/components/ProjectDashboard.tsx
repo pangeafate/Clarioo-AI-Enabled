@@ -10,6 +10,7 @@ import { Calendar, FolderOpen, Edit, Trash2, ChevronDown, ChevronUp } from "luci
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import * as projectService from "@/services/mock/projectService";
+import { getProjectsFromStorage } from "@/services/n8nService";
 import { TYPOGRAPHY } from "@/styles/typography-config";
 import { LoadingState } from "@/components/shared/loading/LoadingState";
 
@@ -58,15 +59,12 @@ const ProjectDashboard = ({
   useEffect(() => {
     fetchProjects();
   }, []);
-  // 🎨 PROTOTYPE MODE: Using mock project service
+  // Load projects from both n8n storage and mock service, then merge
   const fetchProjects = async () => {
     try {
-      const { data, error } = await projectService.getProjects(user?.id);
-
-      if (error) throw new Error(error.message);
-
-      // Map projectService.Project to local Project interface
-      const mappedProjects: Project[] = (data || []).map(p => ({
+      // Load n8n-created projects from localStorage
+      const n8nProjects = getProjectsFromStorage();
+      const mappedN8nProjects: Project[] = n8nProjects.map(p => ({
         id: p.id,
         name: p.name,
         description: p.description,
@@ -75,15 +73,39 @@ const ProjectDashboard = ({
         updated_at: p.updated_at
       }));
 
+      // Load mock projects
+      const { data, error } = await projectService.getProjects(user?.id);
+      if (error) throw new Error(error.message);
+
+      const mockProjects: Project[] = (data || []).map(p => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        status: p.status,
+        created_at: p.created_at,
+        updated_at: p.updated_at
+      }));
+
+      // Merge projects, n8n projects take priority (by id)
+      const projectMap = new Map<string, Project>();
+
+      // Add mock projects first
+      mockProjects.forEach(p => projectMap.set(p.id, p));
+
+      // Override with n8n projects (they take priority)
+      mappedN8nProjects.forEach(p => projectMap.set(p.id, p));
+
+      const mergedProjects = Array.from(projectMap.values());
+
       // Sort by updated_at descending
-      mappedProjects.sort((a, b) =>
+      mergedProjects.sort((a, b) =>
         new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
       );
 
-      setProjects(mappedProjects);
+      setProjects(mergedProjects);
 
       // Notify parent about loaded projects for auto-selection
-      onProjectsLoaded?.(mappedProjects);
+      onProjectsLoaded?.(mergedProjects);
     } catch (error) {
       toast({
         title: "Error fetching projects",

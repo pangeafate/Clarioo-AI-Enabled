@@ -15,8 +15,8 @@
  */
 
 import { useState } from 'react';
-import * as aiService from '@/services/mock/aiService';
 import { useToast } from '@/hooks/use-toast';
+import { findVendors as n8nFindVendors, type TransformedCriterion } from '@/services/n8nService';
 import mockAIdata from '@/data/mockAIdata.json';
 
 /**
@@ -43,17 +43,20 @@ export interface Vendor {
 export interface Criteria {
   id: string;
   name: string;
+  explanation?: string;
   importance: 'low' | 'medium' | 'high';
   type: string;
+  isArchived?: boolean;
 }
 
 /**
- * Tech request context for discovery
+ * Project context for vendor discovery
  */
-export interface TechRequest {
+export interface ProjectContext {
+  id: string;
+  name: string;
+  description: string;
   category: string;
-  description?: string;
-  requirements?: string[];
 }
 
 /**
@@ -62,7 +65,7 @@ export interface TechRequest {
 export interface UseVendorDiscoveryReturn {
   isDiscovering: boolean;
   discoverVendors: (
-    techRequest: TechRequest,
+    project: ProjectContext,
     criteria: Criteria[],
     maxVendors?: number
   ) => Promise<Vendor[]>;
@@ -103,12 +106,12 @@ export const useVendorDiscovery = (): UseVendorDiscoveryReturn => {
   const { toast } = useToast();
 
   /**
-   * Discover vendors using AI service
+   * Discover vendors using n8n AI service
    *
-   * Purpose: Uses AI to discover relevant vendors based on category,
-   * requirements, and evaluation criteria. Falls back to mock data on error.
+   * Purpose: Uses n8n workflow with Perplexity search to discover relevant vendors
+   * based on project info and evaluation criteria. Falls back to mock data on error.
    *
-   * @param techRequest - Tech request with category and requirements
+   * @param project - Project context with id, name, description, and category
    * @param criteria - Evaluation criteria for context
    * @param maxVendors - Maximum number of vendors to discover (default: 10)
    * @returns Promise resolving to array of discovered vendors
@@ -116,57 +119,85 @@ export const useVendorDiscovery = (): UseVendorDiscoveryReturn => {
    * @example
    * ```typescript
    * const vendors = await discoverVendors(
-   *   { category: 'CRM Software', requirements: ['mobile app'] },
+   *   { id: 'proj-1', name: 'My Project', description: 'CRM needs', category: 'CRM Software' },
    *   criteria,
-   *   15
+   *   10
    * );
    * console.log(`Discovered ${vendors.length} vendors`);
    * ```
    *
    * @remarks
-   * - Maps criteria to AI service format for better discovery
-   * - Extracts requirements from description if not provided
-   * - Falls back to mock data silently on error (with toast)
-   * - Returns vendors with basic info (detailed scores added later)
+   * - Calls n8n workflow which uses Perplexity for web search
+   * - Falls back to mock data on error (with toast notification)
+   * - Returns vendors with basic info (criteriaScores populated in deep research stage)
    * - Limits results to maxVendors parameter
    */
   const discoverVendors = async (
-    techRequest: TechRequest,
+    project: ProjectContext,
     criteria: Criteria[],
     maxVendors: number = 10
   ): Promise<Vendor[]> => {
     setIsDiscovering(true);
 
     try {
-      // 🎨 PROTOTYPE MODE: Load vendors directly from mockAIdata.json
-      // In production, this would call AI service or database
-
-      // Load vendors from mockAIdata.json
-      const vendors: Vendor[] = mockAIdata.vendors.map(v => ({
-        id: v.id,
-        name: v.name,
-        description: v.executiveSummary || '',
-        website: v.website || `${v.name.toLowerCase().replace(/\s+/g, '')}.com`,
-        pricing: 'Contact for pricing', // mockAIdata.json doesn't have pricing field
-        rating: v.matchPercentage / 20, // Convert 0-100 to 0-5 scale
-        criteriaScores: v.scores || {},
-        criteriaAnswers: {},
-        features: v.keyFeatures || []
+      // Map criteria to n8n format
+      const n8nCriteria: TransformedCriterion[] = criteria.map(c => ({
+        id: c.id,
+        name: c.name,
+        explanation: c.explanation || '',
+        importance: c.importance,
+        type: c.type,
+        isArchived: c.isArchived || false
       }));
 
-      // Return limited number of vendors
-      return vendors.slice(0, maxVendors);
+      // Call n8n vendor discovery service
+      const response = await n8nFindVendors(
+        project.id,
+        project.name,
+        project.description,
+        project.category,
+        n8nCriteria,
+        maxVendors
+      );
+
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Vendor discovery failed');
+      }
+
+      // Map n8n response to Vendor format
+      const vendors: Vendor[] = response.vendors.map(v => ({
+        id: v.id,
+        name: v.name,
+        description: v.description,
+        website: v.website,
+        pricing: v.pricing,
+        rating: v.rating,
+        criteriaScores: {}, // Will be populated in deep research stage
+        criteriaAnswers: {},
+        features: v.features
+      }));
+
+      // Show success toast with search summary
+      if (response.search_summary) {
+        toast({
+          title: "Vendors Discovered",
+          description: response.search_summary,
+          duration: 5000
+        });
+      }
+
+      return vendors;
     } catch (error) {
       console.error('Vendor discovery failed:', error);
 
-      // Fallback to empty array
+      // Fallback to mock data
       toast({
         title: "Discovery Failed",
-        description: `Could not load vendors. Please try again.`,
+        description: `Using sample data. ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive"
       });
 
-      return [];
+      return getFallbackVendors();
     } finally {
       setIsDiscovering(false);
     }
@@ -175,27 +206,26 @@ export const useVendorDiscovery = (): UseVendorDiscoveryReturn => {
   /**
    * Get fallback vendors from mock data
    *
-   * Purpose: Provides curated vendor list when AI discovery fails.
+   * Purpose: Provides curated vendor list when n8n discovery fails.
    * Uses vendors from mockAIdata.json.
    *
-   * @param category - Software category
-   * @returns Promise resolving to array of fallback vendors
+   * @returns Array of fallback vendors
    *
    * @remarks
    * - Loads vendors from mockAIdata.json
    * - In production, this would query database for real vendors
    * - Returns vendors with basic info structure
    */
-  const getFallbackVendors = async (category: string): Promise<Vendor[]> => {
+  const getFallbackVendors = (): Vendor[] => {
     // Load vendors from mockAIdata.json
     const vendors: Vendor[] = mockAIdata.vendors.map(v => ({
       id: v.id,
       name: v.name,
       description: v.executiveSummary || '',
       website: v.website || `${v.name.toLowerCase().replace(/\s+/g, '')}.com`,
-      pricing: 'Contact for pricing', // mockAIdata.json doesn't have pricing field
+      pricing: 'Contact for pricing',
       rating: v.matchPercentage / 20, // Convert 0-100 to 0-5 scale
-      criteriaScores: v.scores || {},
+      criteriaScores: {},
       criteriaAnswers: {},
       features: v.keyFeatures || []
     }));

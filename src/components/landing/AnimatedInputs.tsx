@@ -36,7 +36,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { CategorySelector } from './CategorySelector';
 import { ExamplesBulletPopover } from './ExamplesBulletPopover';
 import { SPACING } from '@/styles/spacing-config';
@@ -51,6 +51,8 @@ interface AnimatedInputsProps {
   onCreateProject?: () => void;
   // SP_011: New prop for category/example project creation
   onCreateCategoryProject?: (title: string, description: string) => Promise<void>;
+  // SP_016: Loading state for AI project creation
+  isCreating?: boolean;
 }
 
 export const AnimatedInputs = ({
@@ -60,14 +62,24 @@ export const AnimatedInputs = ({
   onCompanyChange,
   onSolutionChange,
   onCreateProject,
-  onCreateCategoryProject
+  onCreateCategoryProject,
+  isCreating = false
 }: AnimatedInputsProps) => {
   // SP_011: Calculate if user has typed in any input field
   const hasInputValues = companyInput.trim().length > 0 || solutionInput.trim().length > 0;
 
-  // New logic for button visibility and state
+  // SP_016: Updated validation - both fields need at least 10 characters for n8n AI
   const hasAnyInput = companyInput.length > 0 || solutionInput.length > 0;
-  const hasEnoughCharacters = companyInput.length > 10 || solutionInput.length > 10;
+  const hasEnoughCharacters = companyInput.trim().length >= 10 && solutionInput.trim().length >= 10;
+
+  // Debug logging
+  console.log('[AnimatedInputs] Validation:', {
+    companyLength: companyInput.trim().length,
+    solutionLength: solutionInput.trim().length,
+    hasEnoughCharacters,
+    isCreating,
+    buttonDisabled: !hasEnoughCharacters || isCreating
+  });
   /**
    * GAP-4 FIX: Save to localStorage on input change
    * Data will be loaded in TechInput.tsx when user starts workflow
@@ -129,25 +141,45 @@ export const AnimatedInputs = ({
 
       {/* New Project Button - Always visible */}
       {onCreateProject && (
-        <div className="flex justify-center mt-6">
+        <div className="flex flex-col items-center mt-6 gap-2">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
             <Button
-              onClick={onCreateProject}
-              disabled={!hasEnoughCharacters}
+              onClick={() => {
+                console.log('[AnimatedInputs] Button clicked!');
+                if (onCreateProject) {
+                  onCreateProject();
+                }
+              }}
+              disabled={!hasEnoughCharacters || isCreating}
               className={`${TYPOGRAPHY.button.default} flex items-center gap-2 transition-all duration-300 ${
-                !hasEnoughCharacters
+                !hasEnoughCharacters || isCreating
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-300'
                   : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white'
               }`}
             >
-              <Plus className="h-4 w-4" />
-              New Project
+              {isCreating ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Creating with AI...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4" />
+                  Create with AI
+                </>
+              )}
             </Button>
           </motion.div>
+          {/* Helper text for input requirements */}
+          {!hasEnoughCharacters && hasAnyInput && (
+            <p className="text-xs text-gray-500">
+              Both fields need at least 10 characters for AI processing
+            </p>
+          )}
         </div>
       )}
 

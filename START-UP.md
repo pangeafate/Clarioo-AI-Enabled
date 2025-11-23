@@ -27,8 +27,6 @@ Read these documents to understand HOW it's built:
 
 **Goal**: Understand the technical architecture and codebase organization.
 
-**Missing Files?** If ARCHITECTURE.md or CODEBASE_STRUCTURE.md don't exist, use appropriate agents to create them based on the actual codebase structure. Include charts and visual elements.
-
 ---
 
 ### Step 3: Understand Development Principles (5 minutes)
@@ -50,10 +48,6 @@ Read these documents to understand WHERE we are:
 3. **SPRINTS folder** (`/00_IMPLEMENTATION/SPRINTS/`) - Individual sprint plan files
 
 **Goal**: Understand completed work, current sprint, and what's planned next.
-
-**Missing Files?**
-- If PROJECT_ROADMAP.md doesn't exist, create it based on FEATURE_LIST.md and codebase analysis
-- If PROGRESS.md doesn't exist, create it with empty sprint history
 
 ---
 
