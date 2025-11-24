@@ -61,6 +61,7 @@ interface ExecutiveSummaryDialogProps {
   isLoading?: boolean;
   error?: string | null;
   onGenerate?: () => void;
+  cacheChecked?: boolean; // Whether cache has been checked
 }
 
 export const ExecutiveSummaryDialog: React.FC<ExecutiveSummaryDialogProps> = ({
@@ -73,7 +74,8 @@ export const ExecutiveSummaryDialog: React.FC<ExecutiveSummaryDialogProps> = ({
   summaryData,
   isLoading = false,
   error,
-  onGenerate
+  onGenerate,
+  cacheChecked = false
 }) => {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
@@ -119,11 +121,12 @@ export const ExecutiveSummaryDialog: React.FC<ExecutiveSummaryDialogProps> = ({
   } : defaultExecutiveSummary;
 
   // Auto-generate on open if no data and not loading
+  // Wait for cache to be checked first before auto-generating
   React.useEffect(() => {
-    if (isOpen && !summaryData && !isLoading && !error && onGenerate) {
+    if (isOpen && cacheChecked && !summaryData && !isLoading && !error && onGenerate) {
       onGenerate();
     }
-  }, [isOpen, summaryData, isLoading, error, onGenerate]);
+  }, [isOpen, cacheChecked, summaryData, isLoading, error, onGenerate]);
 
   const handleOpenChat = () => {
     setIsChatOpen(true);

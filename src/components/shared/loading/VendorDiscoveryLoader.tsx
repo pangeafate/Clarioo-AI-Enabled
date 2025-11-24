@@ -99,21 +99,50 @@ export const VendorDiscoveryLoader: React.FC<VendorDiscoveryLoaderProps> = ({
     <div className={`flex flex-col items-center justify-center py-8 ${className}`}>
       {/* Orbiting Container */}
       <div className="relative w-[300px] h-[300px] mb-6">
-        {/* Central Search Icon */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+        {/* Central Search Icon with Ripples */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex items-center justify-center">
+          {/* Ripple effects */}
           <motion.div
             animate={{
-              scale: [1, 1.1, 1],
+              scale: [1, 3],
+              opacity: [0.5, 0],
             }}
             transition={{
               duration: 2,
               repeat: Infinity,
-              ease: 'easeInOut',
+              ease: 'easeOut',
             }}
-            className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center"
-          >
-            <Search className="h-8 w-8 text-primary" />
-          </motion.div>
+            className="absolute w-10 h-10 rounded-full border border-primary/50"
+          />
+          <motion.div
+            animate={{
+              scale: [1, 3],
+              opacity: [0.5, 0],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'easeOut',
+              delay: 0.7,
+            }}
+            className="absolute w-10 h-10 rounded-full border border-primary/50"
+          />
+          <motion.div
+            animate={{
+              scale: [1, 3],
+              opacity: [0.5, 0],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'easeOut',
+              delay: 1.4,
+            }}
+            className="absolute w-10 h-10 rounded-full border border-primary/50"
+          />
+
+          {/* Icon */}
+          <Search className="h-10 w-10 text-primary relative" />
         </div>
 
         {/* Orbit Path - Visual Guide */}

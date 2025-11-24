@@ -39,6 +39,97 @@ import {
 } from '../services/n8nService';
 
 // ===========================================
+// Match Percentage Calculation
+// ===========================================
+
+/**
+ * Calculate match percentage from vendor scores and criteria
+ *
+ * Algorithm:
+ * - Base scores: yes=80, star=80 (same base, stars add bonus)
+ * - Unknown=40, No=10
+ * - Importance weights: high=1.5, medium=1.0, low=0.7
+ * - Feature category: 1.3x weight multiplier
+ * - Star bonus: Each star adds weighted bonus points on top
+ * - Result: 80% for all yes, stars add incrementally above that
+ * - Cap at 98%
+ */
+const calculateMatchPercentage = (
+  scores: Record<string, 'no' | 'unknown' | 'yes' | 'star'>,
+  criteria: { id: string; importance: string; type?: string }[]
+): number => {
+  if (!scores || Object.keys(scores).length === 0 || criteria.length === 0) {
+    return -1; // No data
+  }
+
+  // Importance multipliers
+  const importanceMultipliers: Record<string, number> = {
+    high: 1.5,
+    medium: 1.0,
+    low: 0.7
+  };
+
+  // Base score values (scaled so all "yes" = 80)
+  const baseScores: Record<string, number> = {
+    star: 80,   // Same base as yes
+    yes: 80,
+    unknown: 40,
+    no: 10
+  };
+
+  // Star bonus per weighted point (to add on top of base)
+  // This allows differentiation between vendors with different star counts
+  const starBonusBase = 6; // Each star adds this bonus to weighted average
+
+  let totalWeight = 0;
+  let weightedScore = 0;
+  let starBonusAccumulator = 0;
+
+  for (const criterion of criteria) {
+    const score = scores[criterion.id];
+    if (!score) continue;
+
+    // Get importance multiplier
+    const importanceWeight = importanceMultipliers[criterion.importance] || 1.0;
+
+    // Apply feature category uplift (1.3x)
+    const typeMultiplier = criterion.type === 'feature' ? 1.3 : 1.0;
+
+    // Final weight for this criterion
+    const weight = importanceWeight * typeMultiplier;
+
+    // Add to totals
+    const baseScore = baseScores[score] || 40;
+    weightedScore += baseScore * weight;
+    totalWeight += weight;
+
+    // Calculate star bonus separately (additive, not in base)
+    if (score === 'star') {
+      // Star bonus is proportional to the criterion's importance
+      // Higher importance stars contribute more bonus
+      const starBonus = starBonusBase * weight;
+      starBonusAccumulator += starBonus;
+    }
+  }
+
+  if (totalWeight === 0) return -1;
+
+  // Calculate base percentage (this will be 80 for all "yes")
+  let percentage = weightedScore / totalWeight;
+
+  // Add star bonuses (distributed across total weight to prevent extreme spikes)
+  // Normalize by dividing by total weight to get per-point bonus
+  const normalizedStarBonus = starBonusAccumulator / totalWeight;
+  percentage += normalizedStarBonus;
+
+  // Cap at 98%
+  percentage = Math.min(percentage, 98);
+
+  // Round to integer
+  return Math.round(percentage);
+};
+
+// ===========================================
 // Types for Progressive Loading
 // ===========================================
 
@@ -322,12 +413,27 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
   const workflowShortlist: ComparisonVendor[] = useMemo(() => {
     if (!workflowVendors) return [];
 
+    // Get criteria for match percentage calculation
+    const criteriaForCalc = workflowCriteria
+      ? workflowCriteria.filter(c => !c.isArchived).map(c => ({
+          id: c.id,
+          importance: c.importance,
+          type: c.type || 'other'
+        }))
+      : [];
+
     let vendors = workflowVendors.map((v, index) => {
       const comparisonState = vendorComparisonStates[v.id];
       const comparedData = comparisonState?.comparedData;
 
       // If we have compared data, use it
       if (comparedData) {
+        // Calculate match percentage client-side from scores
+        const calculatedMatchPercentage = calculateMatchPercentage(
+          comparedData.scores,
+          criteriaForCalc
+        );
+
         return {
           id: v.id,
           name: comparedData.name,
@@ -336,7 +442,7 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
           killerFeature: comparedData.killerFeature,
           executiveSummary: comparedData.executiveSummary,
           keyFeatures: comparedData.keyFeatures,
-          matchPercentage: comparedData.matchPercentage,
+          matchPercentage: calculatedMatchPercentage,
           scores: new Map(Object.entries(comparedData.scores)),
           scoreDetails: comparedData.scoreDetails,
           color: VENDOR_COLOR_PALETTE[index % VENDOR_COLOR_PALETTE.length],
@@ -370,7 +476,7 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
     }
 
     return vendors;
-  }, [workflowVendors, vendorComparisonStates, allComparisonsComplete]);
+  }, [workflowVendors, vendorComparisonStates, allComparisonsComplete, workflowCriteria]);
 
   // Convert workflow criteria to Criterion format
   const workflowCriteriaFormatted: Criterion[] = useMemo(() => {
@@ -410,15 +516,43 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
 
+  // Track if we've checked cache for this project
+  const [cacheChecked, setCacheChecked] = useState(false);
+
   // Load cached executive summary when dialog opens
   useEffect(() => {
-    if (isExecutiveSummaryOpen && projectId) {
+    if (isExecutiveSummaryOpen && projectId && !cacheChecked) {
       const cached = getExecutiveSummaryFromStorage(projectId);
       if (cached) {
         setExecutiveSummaryData(cached);
       }
+      setCacheChecked(true);
     }
-  }, [isExecutiveSummaryOpen, projectId]);
+  }, [isExecutiveSummaryOpen, projectId, cacheChecked]);
+
+  // Reset cache check when project changes
+  useEffect(() => {
+    setCacheChecked(false);
+  }, [projectId]);
+
+  // Clear executive summary cache when workflow vendors change
+  // This ensures the summary reflects the current vendor list
+  const vendorIdsRef = useRef<string[]>([]);
+  useEffect(() => {
+    if (!workflowVendors || !projectId) return;
+
+    const currentVendorIds = workflowVendors.map(v => v.id).sort().join(',');
+    const previousVendorIds = vendorIdsRef.current.sort().join(',');
+
+    if (previousVendorIds && currentVendorIds !== previousVendorIds) {
+      // Vendor list changed - clear cached executive summary
+      clearExecutiveSummaryFromStorage(projectId);
+      setExecutiveSummaryData(null);
+      setCacheChecked(false);
+    }
+
+    vendorIdsRef.current = workflowVendors.map(v => v.id);
+  }, [workflowVendors, projectId]);
 
   // Generate executive summary handler
   const handleGenerateExecutiveSummary = useCallback(async () => {
@@ -427,11 +561,14 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
       return;
     }
 
-    // Get compared vendors
+    // Get compared vendors - only include vendors that are in the current workflow
     const comparedVendors: ComparedVendor[] = [];
-    for (const state of Object.values(vendorComparisonStates)) {
-      if (state.status === 'completed' && state.comparedData) {
-        comparedVendors.push(state.comparedData);
+    if (workflowVendors) {
+      for (const vendor of workflowVendors) {
+        const state = vendorComparisonStates[vendor.id];
+        if (state?.status === 'completed' && state.comparedData) {
+          comparedVendors.push(state.comparedData);
+        }
       }
     }
 
@@ -469,7 +606,7 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
     } finally {
       setIsGeneratingSummary(false);
     }
-  }, [projectId, workflowCriteria, techRequest, vendorComparisonStates]);
+  }, [projectId, workflowCriteria, techRequest, vendorComparisonStates, workflowVendors]);
 
   // Regenerate executive summary handler
   const handleRegenerateExecutiveSummary = useCallback(async () => {
@@ -871,6 +1008,7 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
           isLoading={isGeneratingSummary}
           error={summaryError}
           onGenerate={handleGenerateExecutiveSummary}
+          cacheChecked={cacheChecked}
         />
 
         {/* Score Detail Popup */}
