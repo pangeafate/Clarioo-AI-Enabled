@@ -657,7 +657,9 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
                             ? 'bg-primary text-primary-foreground'
                             : 'bg-white border border-blue-100'
                         }`}>
-                          <p className={`${TYPOGRAPHY.body.default} leading-relaxed`}>
+                          <p className={`text-sm xs:text-base sm:text-lg font-normal leading-relaxed ${
+                            message.role === 'user' ? 'text-white' : 'text-foreground'
+                          }`}>
                             {message.role === 'assistant' ? highlightKeywords(message.content) : message.content}
                           </p>
                         </div>

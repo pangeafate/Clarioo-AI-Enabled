@@ -23,7 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { TechRequest, Criteria, Vendor } from "../VendorDiscovery";
 import { useVendorDiscovery } from "@/hooks/useVendorDiscovery";
 import { TYPOGRAPHY } from "@/styles/typography-config";
-import { LoadingState } from "@/components/shared/loading/LoadingState";
+import { VendorDiscoveryLoader } from "@/components/shared/loading/VendorDiscoveryLoader";
 
 interface VendorSelectionProps {
   criteria: Criteria[];
@@ -332,13 +332,10 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="py-12">
-          <LoadingState
-            icon={RefreshCw}
+        <CardContent className="py-8">
+          <VendorDiscoveryLoader
             message="Discovering vendors..."
             description={`AI is finding ${techRequest.category} vendors based on your requirements`}
-            showProgress={true}
-            progress={75}
           />
         </CardContent>
       </Card>

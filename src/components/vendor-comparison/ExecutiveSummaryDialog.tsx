@@ -8,7 +8,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Copy, Check, Bot, Share2, Send } from 'lucide-react';
+import { X, Copy, Check, Bot, Share2, Send, RefreshCw, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
@@ -17,30 +17,36 @@ import { TYPOGRAPHY } from '../../styles/typography-config';
 import { useToast } from '../../hooks/use-toast';
 import { ShareDialog } from '../vendor-discovery/ShareDialog';
 import type { Criteria } from '../VendorDiscovery';
+import type { ExecutiveSummaryData } from '../../services/n8nService';
 
 // Default empty executive summary structure when no data from n8n
 const defaultExecutiveSummary = {
-  recommendation: {
-    title: 'Executive Summary',
-    topPick: 'Awaiting Analysis',
-    reason: 'Complete the vendor comparison to generate an executive summary with recommendations.',
-    considerations: ['Run vendor comparison to analyze criteria', 'Review vendor scores and evidence', 'Generate AI-powered recommendations']
-  },
-  keyCriteria: {
-    title: 'Key Evaluation Criteria',
-    criteria: [] as Array<{ name: string; description: string; importance: string }>
-  },
-  topVendors: {
-    title: 'Top Vendors',
-    vendors: [] as Array<{ name: string; score: number; strengths: string[]; weaknesses: string[] }>
-  },
-  differentiators: {
-    title: 'Key Differentiators',
-    items: [] as Array<{ category: string; winner: string; reason: string }>
-  },
-  callPrep: {
-    title: 'Call Preparation Questions',
-    questions: ['What are your pricing tiers and typical contract terms?', 'Can you provide customer references in our industry?', 'What is your implementation timeline and support process?']
+  title: 'Executive Summary',
+  generatedAt: new Date().toISOString(),
+  sections: {
+    keyCriteria: {
+      title: 'Key Evaluation Criteria',
+      content: 'Complete the vendor comparison to see key criteria analysis.',
+      highPriority: ['Run vendor comparison to analyze criteria']
+    },
+    vendorRecommendations: {
+      title: 'Vendor Recommendations',
+      topPicks: [] as Array<{ rank: number; name: string; matchScore: number; reasoning: string }>
+    },
+    keyDifferentiators: {
+      title: 'Key Differentiators',
+      differentiators: [] as Array<{ category: string; leader: string; details: string }>
+    },
+    riskFactors: {
+      title: 'Risk Factors & Call Preparation',
+      description: 'Complete the vendor comparison to generate call preparation questions.',
+      questionsToAsk: [] as Array<{ vendor: string; questions: string[] }>,
+      generalConsiderations: [
+        'Ensure alignment with your technical requirements',
+        'Consider total cost of ownership',
+        'Evaluate vendor support and training options'
+      ]
+    }
   }
 };
 
@@ -48,16 +54,26 @@ interface ExecutiveSummaryDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenChat?: () => void;
+  onRegenerate?: () => void;
   criteria?: Criteria[];
   projectId?: string;
+  summaryData?: ExecutiveSummaryData | null;
+  isLoading?: boolean;
+  error?: string | null;
+  onGenerate?: () => void;
 }
 
 export const ExecutiveSummaryDialog: React.FC<ExecutiveSummaryDialogProps> = ({
   isOpen,
   onClose,
   onOpenChat,
+  onRegenerate,
   criteria = [],
-  projectId = 'comparison'
+  projectId = 'comparison',
+  summaryData,
+  isLoading = false,
+  error,
+  onGenerate
 }) => {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
@@ -66,8 +82,48 @@ export const ExecutiveSummaryDialog: React.FC<ExecutiveSummaryDialogProps> = ({
   const [chatMessage, setChatMessage] = useState('');
   const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
 
-  // Use default summary - in production this would come from n8n analysis
-  const summary = defaultExecutiveSummary;
+  // Transform n8n data to display format or use default
+  const summary = summaryData ? {
+    title: 'Executive Summary',
+    generatedAt: new Date().toISOString(),
+    sections: {
+      keyCriteria: {
+        title: 'Key Evaluation Criteria',
+        content: `Based on ${summaryData.keyCriteria.length} high-priority criteria.`,
+        highPriority: summaryData.keyCriteria.map(c => c.name)
+      },
+      vendorRecommendations: {
+        title: 'Vendor Recommendations',
+        topPicks: summaryData.vendorRecommendations.map(v => ({
+          rank: v.rank,
+          name: v.name,
+          matchScore: v.matchPercentage,
+          reasoning: v.overallAssessment
+        }))
+      },
+      keyDifferentiators: {
+        title: 'Key Differentiators',
+        differentiators: summaryData.keyDifferentiators.map(d => ({
+          category: d.category,
+          leader: d.leader,
+          details: d.details
+        }))
+      },
+      riskFactors: {
+        title: 'Risk Factors & Call Preparation',
+        description: `Questions to ask ${summaryData.riskFactors.vendorSpecific.length} vendors during evaluation calls.`,
+        questionsToAsk: summaryData.riskFactors.vendorSpecific,
+        generalConsiderations: summaryData.riskFactors.generalConsiderations
+      }
+    }
+  } : defaultExecutiveSummary;
+
+  // Auto-generate on open if no data and not loading
+  React.useEffect(() => {
+    if (isOpen && !summaryData && !isLoading && !error && onGenerate) {
+      onGenerate();
+    }
+  }, [isOpen, summaryData, isLoading, error, onGenerate]);
 
   const handleOpenChat = () => {
     setIsChatOpen(true);
@@ -190,6 +246,22 @@ export const ExecutiveSummaryDialog: React.FC<ExecutiveSummaryDialogProps> = ({
                   Executive Summary
                 </h2>
                 <div className="flex items-center gap-2">
+                  {/* Regenerate Button */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onRegenerate}
+                    disabled={isLoading}
+                    title="Regenerate summary"
+                    className="h-8 w-8"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4" />
+                    )}
+                  </Button>
+
                   {/* Copy Button */}
                   <Button
                     variant="ghost"
@@ -232,15 +304,44 @@ export const ExecutiveSummaryDialog: React.FC<ExecutiveSummaryDialogProps> = ({
               {/* Scrollable Content */}
               <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                 <div className="max-w-4xl mx-auto space-y-8">
-                  {/* Title */}
-                  <div className="text-center mb-8">
-                    <h1 className={`${TYPOGRAPHY.heading.h4} text-gray-900 mb-2`}>
-                      {summary.title}
-                    </h1>
-                    <p className={`${TYPOGRAPHY.muted.default} text-gray-500`}>
-                      Generated on {new Date(summary.generatedAt).toLocaleDateString()}
-                    </p>
-                  </div>
+                  {/* Loading State */}
+                  {isLoading && (
+                    <div className="flex flex-col items-center justify-center py-16">
+                      <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
+                      <p className={`${TYPOGRAPHY.body.default} text-gray-600`}>
+                        Generating executive summary...
+                      </p>
+                      <p className={`${TYPOGRAPHY.muted.default} text-gray-500 mt-2`}>
+                        This may take up to 2 minutes
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Error State */}
+                  {error && !isLoading && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                      <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-3" />
+                      <p className={`${TYPOGRAPHY.body.default} text-red-700 mb-4`}>
+                        {error}
+                      </p>
+                      <Button onClick={onGenerate} variant="outline" className="text-red-600 border-red-300 hover:bg-red-50">
+                        Try Again
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Content - only show when we have data and not loading/error */}
+                  {!isLoading && !error && (
+                    <>
+                      {/* Title */}
+                      <div className="text-center mb-8">
+                        <h1 className={`${TYPOGRAPHY.heading.h4} text-gray-900 mb-2`}>
+                          {summary.title}
+                        </h1>
+                        <p className={`${TYPOGRAPHY.muted.default} text-gray-500`}>
+                          Generated on {new Date(summary.generatedAt).toLocaleDateString()}
+                        </p>
+                      </div>
 
                   {/* Key Criteria Section */}
                   <section>
@@ -361,6 +462,8 @@ export const ExecutiveSummaryDialog: React.FC<ExecutiveSummaryDialogProps> = ({
                       </ul>
                     </div>
                   </section>
+                    </>
+                  )}
                 </div>
               </div>
 

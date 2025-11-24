@@ -31,7 +31,11 @@ import { TYPOGRAPHY } from '../styles/typography-config';
 import {
   compareVendor,
   ComparedVendor,
-  VendorForComparison
+  VendorForComparison,
+  generateExecutiveSummary,
+  getExecutiveSummaryFromStorage,
+  clearExecutiveSummaryFromStorage,
+  ExecutiveSummaryData
 } from '../services/n8nService';
 
 // ===========================================
@@ -351,7 +355,7 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
         killerFeature: v.description || '',
         executiveSummary: v.description || '',
         keyFeatures: v.features || [],
-        matchPercentage: Math.round((v.rating / 5) * 100),
+        matchPercentage: -1, // -1 indicates no data yet, display as "--"
         scores: new Map(Object.entries(scores)),
         color: VENDOR_COLOR_PALETTE[index % VENDOR_COLOR_PALETTE.length],
         // Additional state info for UI
@@ -402,6 +406,79 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
 
   // === EXECUTIVE SUMMARY DIALOG STATE ===
   const [isExecutiveSummaryOpen, setIsExecutiveSummaryOpen] = useState(false);
+  const [executiveSummaryData, setExecutiveSummaryData] = useState<ExecutiveSummaryData | null>(null);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
+
+  // Load cached executive summary when dialog opens
+  useEffect(() => {
+    if (isExecutiveSummaryOpen && projectId) {
+      const cached = getExecutiveSummaryFromStorage(projectId);
+      if (cached) {
+        setExecutiveSummaryData(cached);
+      }
+    }
+  }, [isExecutiveSummaryOpen, projectId]);
+
+  // Generate executive summary handler
+  const handleGenerateExecutiveSummary = useCallback(async () => {
+    if (!projectId || !workflowCriteria || !techRequest) {
+      setSummaryError('Missing project data');
+      return;
+    }
+
+    // Get compared vendors
+    const comparedVendors: ComparedVendor[] = [];
+    for (const state of Object.values(vendorComparisonStates)) {
+      if (state.status === 'completed' && state.comparedData) {
+        comparedVendors.push(state.comparedData);
+      }
+    }
+
+    if (comparedVendors.length === 0) {
+      setSummaryError('No compared vendors available. Please wait for comparison to complete.');
+      return;
+    }
+
+    setIsGeneratingSummary(true);
+    setSummaryError(null);
+
+    try {
+      const projectName = techRequest.companyInfo?.substring(0, 50) || 'Vendor Evaluation';
+      const projectDescription = techRequest.description || '';
+
+      const result = await generateExecutiveSummary(
+        projectId,
+        projectName,
+        projectDescription,
+        workflowCriteria.filter(c => !c.isArchived).map(c => ({
+          id: c.id,
+          name: c.name,
+          explanation: c.explanation || '',
+          importance: c.importance,
+          type: c.type || 'other',
+          isArchived: false
+        })),
+        comparedVendors
+      );
+
+      setExecutiveSummaryData(result);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to generate summary';
+      setSummaryError(message);
+    } finally {
+      setIsGeneratingSummary(false);
+    }
+  }, [projectId, workflowCriteria, techRequest, vendorComparisonStates]);
+
+  // Regenerate executive summary handler
+  const handleRegenerateExecutiveSummary = useCallback(async () => {
+    if (projectId) {
+      clearExecutiveSummaryFromStorage(projectId);
+      setExecutiveSummaryData(null);
+    }
+    await handleGenerateExecutiveSummary();
+  }, [projectId, handleGenerateExecutiveSummary]);
 
   // Listen for custom event from parent VendorDiscovery to open Executive Summary
   useEffect(() => {
@@ -780,6 +857,7 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
             // TODO: Integrate slide-in chat panel
             console.log('Open chat panel');
           }}
+          onRegenerate={handleRegenerateExecutiveSummary}
           criteria={workflowCriteria || standaloneCriteria.map(c => ({
             id: c.id,
             name: c.name,
@@ -789,6 +867,10 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
             isArchived: false
           }))}
           projectId={projectId || 'comparison'}
+          summaryData={executiveSummaryData}
+          isLoading={isGeneratingSummary}
+          error={summaryError}
+          onGenerate={handleGenerateExecutiveSummary}
         />
 
         {/* Score Detail Popup */}

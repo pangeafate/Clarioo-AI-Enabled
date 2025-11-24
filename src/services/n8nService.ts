@@ -494,6 +494,7 @@ export const findVendors = async (
 // ===========================================
 
 const N8N_COMPARE_VENDORS_URL = 'https://n8n.lakestrom.com/webhook/clarioo-compare-vendors';
+const N8N_EXECUTIVE_SUMMARY_URL = 'https://n8n.lakestrom.com/webhook/clarioo-executive-summary';
 const COMPARE_VENDOR_TIMEOUT_MS = 120000; // 2 minutes per vendor
 
 export interface VendorForComparison {
@@ -738,4 +739,246 @@ export const getCriteriaFromStorage = (projectId: string): TransformedCriterion[
  */
 export const updateCriteriaInStorage = (projectId: string, criteria: TransformedCriterion[]): void => {
   saveCriteriaToStorage(projectId, criteria);
+};
+
+// ===========================================
+// Executive Summary Types
+// ===========================================
+
+export interface ExecutiveSummaryData {
+  keyCriteria: Array<{
+    name: string;
+    description: string;
+    importance: string;
+  }>;
+  vendorRecommendations: Array<{
+    rank: number;
+    name: string;
+    matchPercentage: number;
+    overallAssessment: string;
+    keyStrengths: string[];
+    keyWeaknesses: string[];
+    bestFor: string;
+  }>;
+  keyDifferentiators: Array<{
+    category: string;
+    leader: string;
+    details: string;
+  }>;
+  riskFactors: {
+    vendorSpecific: Array<{
+      vendor: string;
+      questions: string[];
+    }>;
+    generalConsiderations: string[];
+  };
+  recommendation: {
+    topPick: string;
+    reason: string;
+    considerations: string[];
+  };
+}
+
+export interface ExecutiveSummaryRequest {
+  project_id: string;
+  project_name: string;
+  project_description: string;
+  session_id: string;
+  timestamp: string;
+  criteria: Array<{
+    id: string;
+    name: string;
+    description: string;
+    importance: string;
+  }>;
+  vendors: Array<{
+    id: string;
+    name: string;
+    website?: string;
+    matchPercentage: number;
+    description?: string;
+    scoreDetails: Array<{
+      criterionId: string;
+      criterionName: string;
+      score: number;
+      evidence: string;
+      source_urls: string[];
+      comments: string;
+    }>;
+  }>;
+}
+
+export interface ExecutiveSummaryResponse {
+  success: boolean;
+  data?: ExecutiveSummaryData;
+  generated_at?: string;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
+// ===========================================
+// Executive Summary API
+// ===========================================
+
+/**
+ * Generate executive summary via n8n AI workflow
+ */
+export const generateExecutiveSummary = async (
+  projectId: string,
+  projectName: string,
+  projectDescription: string,
+  criteria: TransformedCriterion[],
+  vendors: ComparedVendor[]
+): Promise<ExecutiveSummaryData> => {
+  console.log('[n8n-summary] Generating executive summary...');
+  console.log('[n8n-summary] Project:', projectName);
+  console.log('[n8n-summary] Criteria count:', criteria.length);
+  console.log('[n8n-summary] Vendor count:', vendors.length);
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  try {
+    // Transform criteria to request format
+    const criteriaPayload = criteria
+      .filter(c => !c.isArchived)
+      .map(c => ({
+        id: c.id,
+        name: c.name,
+        description: c.explanation,
+        importance: c.importance
+      }));
+
+    // Transform vendors to request format with scoreDetails
+    const vendorsPayload = vendors.map(v => {
+      // Convert scoreDetails from Record to Array
+      const scoreDetailsArray = Object.entries(v.scoreDetails || {}).map(([criterionId, detail]) => {
+        const criterion = criteria.find(c => c.id === criterionId);
+        return {
+          criterionId,
+          criterionName: criterion?.name || criterionId,
+          score: detail.state === 'star' ? 5 : detail.state === 'yes' ? 4 : detail.state === 'unknown' ? 3 : 1,
+          evidence: detail.evidence || '',
+          source_urls: detail.evidence ? [detail.evidence] : [],
+          comments: detail.comment || ''
+        };
+      });
+
+      return {
+        id: v.id,
+        name: v.name,
+        website: v.website,
+        matchPercentage: v.matchPercentage,
+        description: v.description,
+        scoreDetails: scoreDetailsArray
+      };
+    });
+
+    const requestBody: ExecutiveSummaryRequest = {
+      project_id: projectId,
+      project_name: projectName,
+      project_description: projectDescription,
+      session_id: getSessionId(),
+      timestamp: new Date().toISOString(),
+      criteria: criteriaPayload,
+      vendors: vendorsPayload
+    };
+
+    console.log('[n8n-summary] Sending request to:', N8N_EXECUTIVE_SUMMARY_URL);
+
+    const response = await fetch(N8N_EXECUTIVE_SUMMARY_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    console.log('[n8n-summary] Response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[n8n-summary] HTTP error:', response.status, errorText);
+      throw new Error(`HTTP error: ${response.status} - ${errorText}`);
+    }
+
+    const result: ExecutiveSummaryResponse = await response.json();
+
+    if (!result.success || !result.data) {
+      const errorMessage = result.error?.message || 'Failed to generate executive summary';
+      console.error('[n8n-summary] API error:', errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    console.log('[n8n-summary] Summary generated successfully');
+
+    // Cache the result
+    saveExecutiveSummaryToStorage(projectId, result.data);
+
+    return result.data;
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        console.error('[n8n-summary] Request timeout');
+        throw new Error('Executive summary generation timed out (2 min limit)');
+      }
+      throw error;
+    }
+
+    throw new Error('An unexpected error occurred during summary generation');
+  }
+};
+
+// ===========================================
+// Executive Summary Storage
+// ===========================================
+
+const EXECUTIVE_SUMMARY_PREFIX = 'clarioo_executive_summary_';
+
+/**
+ * Save executive summary to localStorage
+ */
+export const saveExecutiveSummaryToStorage = (projectId: string, data: ExecutiveSummaryData): void => {
+  const key = `${EXECUTIVE_SUMMARY_PREFIX}${projectId}`;
+  const stored = {
+    data,
+    generated_at: new Date().toISOString()
+  };
+  localStorage.setItem(key, JSON.stringify(stored));
+  console.log('[n8n-summary] Executive summary cached for project:', projectId);
+};
+
+/**
+ * Get cached executive summary from localStorage
+ */
+export const getExecutiveSummaryFromStorage = (projectId: string): ExecutiveSummaryData | null => {
+  const key = `${EXECUTIVE_SUMMARY_PREFIX}${projectId}`;
+  const stored = localStorage.getItem(key);
+
+  if (!stored) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(stored);
+    return parsed.data;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Clear cached executive summary
+ */
+export const clearExecutiveSummaryFromStorage = (projectId: string): void => {
+  const key = `${EXECUTIVE_SUMMARY_PREFIX}${projectId}`;
+  localStorage.removeItem(key);
+  console.log('[n8n-summary] Executive summary cache cleared for project:', projectId);
 };

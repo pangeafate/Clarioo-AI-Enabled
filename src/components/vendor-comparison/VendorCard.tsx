@@ -195,7 +195,7 @@ export const VendorCard: React.FC<VendorCardProps> = ({
                 {vendor?.name ?? 'No vendor selected'}
               </div>
               <div style={{ color: vendor?.color?.hex ?? '#111827' }} className="text-xs sm:text-sm opacity-80 mt-1">
-                Match {vendor?.matchPercentage ?? 0}%
+                Match {vendor?.matchPercentage === -1 || vendor?.matchPercentage === undefined ? '--' : vendor.matchPercentage}%
               </div>
             </div>
           </div>
@@ -323,7 +323,7 @@ export const VendorCard: React.FC<VendorCardProps> = ({
                     style={{ color: vendor.color?.hex ?? '#111827' }}
                     className="text-sm font-medium"
                   >
-                    {vendor.matchPercentage}% Match
+                    {vendor.matchPercentage === -1 ? '--' : vendor.matchPercentage}% Match
                   </span>
                   {vendor.website && (
                     <a

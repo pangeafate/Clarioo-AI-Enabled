@@ -185,7 +185,7 @@ export const DesktopColumnHeader: React.FC<DesktopColumnHeaderProps> = ({
                 style={{ color: vendor.color?.hex ?? '#111827' }}
                 className="text-xs opacity-80 xl:mt-0.5"
               >
-                {vendor.matchPercentage}%
+                {vendor.matchPercentage === -1 ? '--' : vendor.matchPercentage}%
               </div>
             </div>
           </div>
@@ -287,7 +287,7 @@ export const DesktopColumnHeader: React.FC<DesktopColumnHeaderProps> = ({
                     style={{ color: vendor.color?.hex ?? '#111827' }}
                     className="text-sm font-medium"
                   >
-                    {vendor.matchPercentage}% Match
+                    {vendor.matchPercentage === -1 ? '--' : vendor.matchPercentage}% Match
                   </span>
                   {vendor.website && (
                     <a

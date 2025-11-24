@@ -564,7 +564,7 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
                   {vendor.name}
                 </span>
                 <span className="text-[8px] xs:text-[9px] sm:text-[10px] text-gray-500 flex-shrink-0">
-                  {vendor.matchPercentage}%
+                  {vendor.matchPercentage === -1 ? '--' : vendor.matchPercentage}%
                 </span>
               </div>
             );
