@@ -635,6 +635,18 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
         {techRequest && (
           <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-100">
             <CardContent className={`${SPACING.vendorDiscovery.chat.card} flex flex-col`}>
+              {/* Robot Welcome Message */}
+              <div className="flex items-start gap-3 mb-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Bot className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1 bg-white border border-blue-100 rounded-lg p-3">
+                  <p className="text-sm text-foreground leading-relaxed">
+                    Hello! I have generated a few key criteria for your search. You can modify them, delete or ask for more just by telling me! I can also explain things.
+                  </p>
+                </div>
+              </div>
+
               {/* Chat History - Dynamic Height Container */}
               <div
                 ref={chatContainerRef}
