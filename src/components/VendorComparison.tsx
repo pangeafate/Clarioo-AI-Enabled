@@ -561,13 +561,33 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
       return;
     }
 
+    // Get criteria for match percentage calculation
+    const criteriaForCalc = workflowCriteria
+      .filter(c => !c.isArchived)
+      .map(c => ({
+        id: c.id,
+        importance: c.importance,
+        type: c.type || 'other'
+      }));
+
     // Get compared vendors - only include vendors that are in the current workflow
+    // Update matchPercentage with client-side calculated value
     const comparedVendors: ComparedVendor[] = [];
     if (workflowVendors) {
       for (const vendor of workflowVendors) {
         const state = vendorComparisonStates[vendor.id];
         if (state?.status === 'completed' && state.comparedData) {
-          comparedVendors.push(state.comparedData);
+          // Calculate match percentage client-side
+          const calculatedMatchPercentage = calculateMatchPercentage(
+            state.comparedData.scores,
+            criteriaForCalc
+          );
+
+          // Create a copy with the calculated match percentage
+          comparedVendors.push({
+            ...state.comparedData,
+            matchPercentage: calculatedMatchPercentage
+          });
         }
       }
     }
