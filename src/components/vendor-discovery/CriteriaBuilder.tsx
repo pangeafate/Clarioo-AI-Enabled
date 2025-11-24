@@ -25,7 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { TechRequest, Criteria } from "../VendorDiscovery";
 import { useCriteriaGeneration } from "@/hooks/useCriteriaGeneration";
 import { useCriteriaChat, type OnCriteriaAction } from "@/hooks/useCriteriaChat";
-import { type CriteriaAction, saveCriteriaToStorage } from "@/services/n8nService";
+import { type CriteriaAction, saveCriteriaToStorage, getCriteriaFromStorage } from "@/services/n8nService";
 import { storageService } from "@/services/storageService";
 import { SPACING } from '@/styles/spacing-config';
 import { TYPOGRAPHY } from '@/styles/typography-config';
@@ -171,6 +171,9 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
   const hasInitialized = useRef(false);
   const previousProjectId = useRef<string>(projectId);
 
+  // Ref to prevent persistence during project switching
+  const isLoadingCriteria = useRef(false);
+
   /**
    * Auto-scroll to latest message when chat messages change
    * Only scrolls if user is already near the bottom
@@ -301,18 +304,54 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
    * Sync local criteria state when initialCriteria changes
    * This handles navigation back to completed steps
    * Ensures saved criteria are displayed when returning to this stage
+   *
+   * 🐛 CRITICAL FIX: Always prioritize n8n storage over initialCriteria prop
+   * This prevents stale criteria from overwriting fresh n8n-generated criteria
    */
   useEffect(() => {
-    if (initialCriteria && initialCriteria.length > 0) {
+    // Set loading flag to prevent persistence effect from running
+    isLoadingCriteria.current = true;
+
+    // Load from n8n storage first (source of truth)
+    const n8nCriteria = getCriteriaFromStorage(projectId);
+
+    if (n8nCriteria.length > 0) {
+      // Use fresh criteria from n8n storage
+      const mappedCriteria: Criteria[] = n8nCriteria.map(c => ({
+        id: c.id,
+        name: c.name,
+        explanation: c.explanation,
+        importance: c.importance,
+        type: c.type,
+        isArchived: c.isArchived || false
+      }));
+      setCriteria(mappedCriteria);
+      console.log('[CriteriaBuilder] Loaded criteria from n8n storage:', n8nCriteria.length);
+    } else if (initialCriteria && initialCriteria.length > 0) {
+      // Fall back to initialCriteria only if n8n storage is empty
       setCriteria(initialCriteria);
+      console.log('[CriteriaBuilder] Using initialCriteria prop:', initialCriteria.length);
     }
-  }, [initialCriteria]);
+
+    // Clear loading flag after state update takes effect
+    setTimeout(() => {
+      isLoadingCriteria.current = false;
+    }, 0);
+  }, [initialCriteria, projectId]);
 
   /**
    * Persist criteria to localStorage whenever they change
    * This ensures chat-based modifications are saved immediately
+   *
+   * 🐛 CRITICAL FIX: Don't save during project switching to prevent race condition
    */
   useEffect(() => {
+    // Skip saving if we're in the middle of loading criteria for a new project
+    if (isLoadingCriteria.current) {
+      console.log('[CriteriaBuilder] Skipping persistence during project load');
+      return;
+    }
+
     if (criteria.length > 0 && projectId) {
       // Map Criteria to TransformedCriterion format for storage
       const transformedCriteria = criteria.map(c => ({

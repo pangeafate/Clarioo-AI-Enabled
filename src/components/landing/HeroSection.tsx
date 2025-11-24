@@ -38,7 +38,7 @@ export const HeroSection = ({ children, currentView, onViewToggle }: HeroSection
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
-      className="relative flex flex-col items-center justify-center px-4 py-16 md:py-20 bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50"
+      className="relative flex flex-col items-center justify-center px-4 py-12 md:py-16 bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50"
     >
       {/* Subtle gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-blue-600/5 pointer-events-none" />
@@ -86,8 +86,8 @@ export const HeroSection = ({ children, currentView, onViewToggle }: HeroSection
           Supercharge your software vendor's selection with AI assistant. Discover and evaluate software based on your business needs and company context.
         </motion.p>
 
-        {/* Explore Link with Text */}
-        <motion.p
+        {/* Explore Link with Text - HIDDEN */}
+        {/* <motion.p
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.35 }}
@@ -106,7 +106,7 @@ export const HeroSection = ({ children, currentView, onViewToggle }: HeroSection
           </button>
           <ChevronRight className="inline h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6 text-blue-500 mx-1" />
           software comparison and criteria templates
-        </motion.p>
+        </motion.p> */}
 
         {/* Authentication Toggle (passed as children) */}
         {children && (

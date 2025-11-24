@@ -122,6 +122,11 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
    * GAP-5 FIX: Initialize techRequest from project data if not in localStorage
    * - Creates techRequest from project.description and project.name
    * - Enables Criteria Builder to work for newly created projects
+   *
+   * 🐛 CRITICAL FIX: Always prioritize n8n storage for criteria
+   * - n8n storage is the source of truth for criteria
+   * - Workflow state is only for navigation/vendors/other state
+   * - This prevents old criteria from persisting when switching projects
    */
   useEffect(() => {
     const loadWorkflowState = () => {
@@ -129,6 +134,16 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
       setIsLoading(true);
 
       try {
+        // 🔥 ALWAYS load fresh criteria from n8n storage first (source of truth)
+        const n8nCriteria = getCriteriaFromStorage(project.id);
+        const n8nProject = getProjectByIdFromStorage(project.id);
+
+        console.log('[VendorDiscovery] Loading project', {
+          projectId: project.id,
+          n8nCriteriaCount: n8nCriteria.length,
+          hasN8nProject: !!n8nProject
+        });
+
         const savedState = localStorage.getItem(storageKey);
         if (savedState) {
           const state: WorkflowState = JSON.parse(savedState);
@@ -157,24 +172,43 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
             ? 'criteria'
             : state.currentStep;
 
-          // Restore state
+          // Restore workflow navigation state
           setCurrentStep(validatedStep);
           setMaxStepReached(state.maxStepReached || 0); // Default to 0 if not set
           setTechRequest(state.techRequest);
 
-          // Data migration: Backfill missing explanations from criteria.json
-          const migratedCriteria = state.criteria.map(c => ({
-            ...c,
-            explanation: backfillExplanation(c)
-          }));
-          setCriteria(migratedCriteria);
+          // 🔥 CRITICAL: Always use n8n criteria if available (source of truth)
+          // Only fall back to workflow state criteria if n8n has none
+          if (n8nCriteria.length > 0) {
+            const mappedCriteria: Criteria[] = n8nCriteria.map(c => ({
+              id: c.id,
+              name: c.name,
+              explanation: c.explanation,
+              importance: c.importance,
+              type: c.type,
+              isArchived: c.isArchived || false
+            }));
 
-          // Debug: Log summary
-          const withoutExplanation = migratedCriteria.filter(c => !c.explanation || c.explanation.trim() === '').length;
-          if (withoutExplanation > 0) {
-            console.warn(`⚠️ ${withoutExplanation} of ${migratedCriteria.length} criteria still have no explanations after migration`);
+            setCriteria(mappedCriteria);
+            console.log('✅ Using fresh n8n criteria (overriding workflow state)', {
+              n8nCount: mappedCriteria.length,
+              workflowCount: state.criteria.length
+            });
           } else {
-            console.log(`✅ All ${migratedCriteria.length} criteria have explanations`);
+            // No n8n criteria - fall back to workflow state
+            const migratedCriteria = state.criteria.map(c => ({
+              ...c,
+              explanation: backfillExplanation(c)
+            }));
+            setCriteria(migratedCriteria);
+
+            const withoutExplanation = migratedCriteria.filter(c => !c.explanation || c.explanation.trim() === '').length;
+            if (withoutExplanation > 0) {
+              console.warn(`⚠️ ${withoutExplanation} of ${migratedCriteria.length} criteria still have no explanations after migration`);
+            }
+            console.log('✅ Using workflow state criteria (no n8n criteria found)', {
+              criteriaCount: migratedCriteria.length
+            });
           }
 
           setSelectedVendors(state.selectedVendors);
@@ -192,15 +226,13 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
             currentStep: validatedStep,
             wasLegacyTechInput: state.currentStep === 'tech-input',
             hasRequest: !!state.techRequest,
-            criteriaCount: state.criteria.length,
+            criteriaCount: (n8nCriteria.length > 0 ? n8nCriteria.length : state.criteria.length),
             vendorCount: state.selectedVendors.length,
             shortlistedCount: (state.shortlistedVendorIds || []).length
           });
         } else {
           // GAP-5: No saved state - initialize techRequest from project data
           // SP_016: Check for n8n-generated criteria first
-          const n8nCriteria = getCriteriaFromStorage(project.id);
-          const n8nProject = getProjectByIdFromStorage(project.id);
 
           // CRITICAL: Reset workflow state to initial values for new projects
           // This ensures new projects start fresh at step 1
@@ -549,9 +581,10 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
               <CardContent className={SPACING.vendorDiscovery.container}>
                 {currentStep === 'criteria' && techRequest && (
                   <CriteriaBuilder
+                    key={project.id} // Force remount on project change to reset all internal state
                     techRequest={techRequest}
                     onComplete={handleCriteriaComplete}
-                    initialCriteria={criteria}
+                    initialCriteria={isLoading ? [] : criteria} // Don't pass stale criteria while loading
                     projectId={project.id}
                     projectName={project.name}
                     projectDescription={project.description || ''}
