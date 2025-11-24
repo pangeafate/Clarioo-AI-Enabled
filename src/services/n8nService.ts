@@ -797,6 +797,9 @@ export interface ExecutiveSummaryRequest {
     website?: string;
     matchPercentage: number;
     description?: string;
+    killerFeature?: string; // Killer feature for executive summary consideration
+    keyFeatures?: string[]; // Research insights for comprehensive analysis
+    executiveSummary?: string; // About section for context
     scoreDetails: Array<{
       criterionId: string;
       criterionName: string;
@@ -872,6 +875,9 @@ export const generateExecutiveSummary = async (
         website: v.website,
         matchPercentage: v.matchPercentage,
         description: v.description,
+        killerFeature: v.killerFeature, // Include killer feature for n8n to consider
+        keyFeatures: v.keyFeatures, // Include all research insights
+        executiveSummary: v.executiveSummary, // Include About section for context
         scoreDetails: scoreDetailsArray
       };
     });

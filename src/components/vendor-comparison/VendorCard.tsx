@@ -355,7 +355,7 @@ export const VendorCard: React.FC<VendorCardProps> = ({
               )}
 
               {/* Research Insights */}
-              {vendor.keyFeatures && vendor.keyFeatures.length > 0 && (
+              {(vendor.killerFeature || (vendor.keyFeatures && vendor.keyFeatures.length > 0)) && (
                 <div>
                   <h4
                     style={{ color: vendor.color?.hex ?? '#111827' }}
@@ -364,7 +364,22 @@ export const VendorCard: React.FC<VendorCardProps> = ({
                     Research Insights
                   </h4>
                   <ul className="space-y-2">
-                    {vendor.keyFeatures.slice(0, 5).map((feature, index) => (
+                    {/* Killer Feature - First bullet with star icon */}
+                    {vendor.killerFeature && (
+                      <li className="flex items-start gap-2">
+                        <span
+                          style={{ color: vendor.color?.hex ?? '#6b7280' }}
+                          className="text-sm mt-0.5 flex-shrink-0"
+                        >
+                          ⭐
+                        </span>
+                        <span className="text-sm text-gray-700 leading-snug font-semibold">
+                          {vendor.killerFeature}
+                        </span>
+                      </li>
+                    )}
+                    {/* Other key features */}
+                    {vendor.keyFeatures?.slice(0, 4).map((feature, index) => (
                       <li key={index} className="flex items-start gap-2">
                         <span
                           style={{ color: vendor.color?.hex ?? '#6b7280' }}
