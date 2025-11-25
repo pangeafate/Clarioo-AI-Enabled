@@ -115,9 +115,8 @@ const calculateMatchPercentage = (
     console.log(`🔍 Match % calculation for ${vendorName}:`, {
       scores: scoreCount,
       totalWeight: totalWeight.toFixed(2),
-      basePercentage: (weightedScore / totalWeight).toFixed(2),
-      starBonusAccumulator: starBonusAccumulator.toFixed(2),
-      normalizedStarBonus: normalizedStarBonus.toFixed(2),
+      weightedScore: weightedScore.toFixed(2),
+      basePercentage: percentage.toFixed(2),
       finalBeforeCap: percentage.toFixed(2),
       final: Math.min(percentage, 98).toFixed(2)
     });
