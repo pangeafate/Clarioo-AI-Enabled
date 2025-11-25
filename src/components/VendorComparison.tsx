@@ -275,8 +275,14 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
       // Get project details from techRequest
       // Note: TechRequest has: category, description, companyInfo
       const projectName = techRequest.companyInfo?.substring(0, 50) || 'Vendor Evaluation';
-      const projectDescription = techRequest.description || '';
+      const baseProjectDescription = techRequest.description || '';
       const projectCategory = techRequest.category || 'Software';
+
+      // Append all vendor names to project description for n8n context
+      const allVendorNames = workflowVendors?.map(v => v.name).join(', ') || '';
+      const projectDescription = allVendorNames
+        ? `${baseProjectDescription}. Comparing the following vendors: ${allVendorNames}`
+        : baseProjectDescription;
 
       // Call n8n workflow
       const response = await compareVendor(
