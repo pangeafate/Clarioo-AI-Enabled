@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? '/Clarioo-AI-Enabled/' : '/',
+  base: '/', // Root path for custom domain (demo.clarioo.io)
   server: {
     host: "::",
     port: 8080,
