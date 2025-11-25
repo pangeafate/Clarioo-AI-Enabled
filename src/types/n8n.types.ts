@@ -95,3 +95,50 @@ export interface ProjectCreationResult {
   project: TransformedProject;
   criteria: TransformedCriterion[];
 }
+
+// ===========================================
+// Email Collection Types (SP_017)
+// ===========================================
+
+/**
+ * Device metadata for analytics
+ */
+export interface DeviceMetadata {
+  browser: string;
+  os: string;
+  deviceType: 'mobile' | 'tablet' | 'desktop';
+  screenResolution: string;
+  timezone: string;
+}
+
+/**
+ * Request payload for n8n email collection webhook
+ */
+export interface EmailCollectionRequest {
+  email: string;
+  user_id: string;
+  timestamp: string; // ISO 8601 format
+  device_metadata: DeviceMetadata;
+}
+
+/**
+ * Response from n8n email collection webhook
+ */
+export interface EmailCollectionResponse {
+  success: boolean;
+  message?: string;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
+/**
+ * Email collection data stored in localStorage
+ */
+export interface EmailCollectionStorage {
+  email_submitted: boolean;
+  email: string;
+  timestamp: string;
+  email_passed_to_n8n: boolean;
+}

@@ -1,0 +1,435 @@
+{
+  "name": "Clarioo Executive Summary",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "clarioo-executive-summary",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "https://pangeafate.github.io"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "exec-webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -1760,
+        -224
+      ],
+      "webhookId": "clarioo-executive-summary",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = items[0].json.body || {};\n\nconst project_id = body.project_id;\nconst project_name = body.project_name || '';\nconst project_description = body.project_description || '';\nconst session_id = body.session_id;\nconst criteria = body.criteria || [];\nconst vendors = body.vendors || [];\nconst timestamp = body.timestamp;\n\nconst errors = [];\n\nif (!project_id || project_id.trim() === '') {\n  errors.push('project_id is required');\n}\n\nif (!session_id || session_id.trim() === '') {\n  errors.push('session_id is required');\n}\n\nif (!Array.isArray(criteria) || criteria.length === 0) {\n  errors.push('At least one criterion is required');\n}\n\nif (!Array.isArray(vendors) || vendors.length === 0) {\n  errors.push('At least one compared vendor is required');\n}\n\nif (!timestamp) {\n  errors.push('timestamp is required');\n}\n\nif (errors.length > 0) {\n  return [{\n    json: {\n      validation_error: true,\n      error_code: 'INVALID_INPUT',\n      error_message: errors.join(', ')\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    validation_error: false,\n    project_id,\n    project_name: project_name.trim(),\n    project_description: project_description.trim(),\n    session_id,\n    criteria,\n    vendors,\n    timestamp\n  }\n}];"
+      },
+      "id": "exec-input-validation",
+      "name": "Input Validation",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -1536,
+        -224
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "validation-check",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "leftValue": "={{ $json.validation_error }}",
+              "rightValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "exec-check-validation",
+      "name": "Check Validation",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -1312,
+        -224
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  success: false,\n  error: {\n    code: $json.error_code,\n    message: $json.error_message\n  }\n} }}",
+        "options": {
+          "responseCode": 400,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "https://pangeafate.github.io"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "exec-return-validation-error",
+      "name": "Return Validation Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -1024,
+        -368
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze these vendor comparison results and generate an executive summary. Return ONLY a JSON object.\n\nPROJECT CONTEXT:\n- Name: {{ $json.project_name }}\n- Description: {{ $json.project_description }}\n- Number of Vendors: {{ $json.vendors.length }}\n- Number of Criteria: {{ $json.criteria.length }}\n\nEVALUATION CRITERIA:\n{{ $json.criteria.map(c => `- ${c.name} (${c.importance}): ${c.description}`).join('\\n') }}\n\nVENDOR ANALYSIS RESULTS:\n{{ $json.vendors.map(v => {\n  const scores = v.scoreDetails.map(s => {\n    const sources = s.source_urls && s.source_urls.length > 0 ? `\\n    Sources: ${s.source_urls.join(', ')}` : '';\n    return `  - ${s.criterionName}: ${s.score}/5\\n    ${s.evidence}${sources}`;\n  }).join('\\n');\n  return `### ${v.name} (${v.matchPercentage}% match)\\nWebsite: ${v.website || 'N/A'}\\n${scores}`;\n}).join('\\n\\n') }}\n\nTASK:\nGenerate a comprehensive executive summary with these sections:\n1. keyCriteria - High priority criteria from the evaluation\n2. vendorRecommendations - Rank ALL vendors (use EXACT matchPercentage values)\n3. keyDifferentiators - Categories where vendors differ significantly\n4. riskFactors - Vendor-specific questions and general considerations\n5. recommendation - Top pick with reasoning",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert technology analyst creating executive summaries for vendor evaluations.\n\nYour task is to analyze vendor comparison data and generate a structured JSON summary.\n\nCRITICAL RULES:\n1. Use the EXACT matchPercentage values provided for each vendor\n2. Base all analysis on actual scores and evidence\n3. Be specific - reference criterion names and scores\n4. Provide actionable insights\n\nYour response MUST be a valid JSON object with this structure:\n{\n  \"keyCriteria\": [\n    { \"name\": \"string\", \"description\": \"string\", \"importance\": \"string\" }\n  ],\n  \"vendorRecommendations\": [\n    {\n      \"rank\": 1,\n      \"name\": \"Vendor Name\",\n      \"matchPercentage\": 85,\n      \"overallAssessment\": \"2-3 sentences\",\n      \"keyStrengths\": [\"strength1\", \"strength2\"],\n      \"keyWeaknesses\": [\"weakness1\"],\n      \"bestFor\": \"Description of ideal use case\"\n    }\n  ],\n  \"keyDifferentiators\": [\n    { \"category\": \"string\", \"leader\": \"string\", \"details\": \"string\" }\n  ],\n  \"riskFactors\": {\n    \"vendorSpecific\": [\n      { \"vendor\": \"string\", \"questions\": [\"q1\", \"q2\", \"q3\"] }\n    ],\n    \"generalConsiderations\": [\"consideration1\", \"consideration2\"]\n  },\n  \"recommendation\": {\n    \"topPick\": \"Vendor Name\",\n    \"reason\": \"2-3 sentence explanation\",\n    \"considerations\": [\"factor1\", \"factor2\"]\n  }\n}\n\nDo NOT include any text before or after the JSON. Only output the JSON object."
+        }
+      },
+      "id": "exec-ai-agent",
+      "name": "AI Analysis Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -1088,
+        -80
+      ],
+      "typeVersion": 2.2,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "maxTokens": 8000,
+          "temperature": 0.3
+        }
+      },
+      "id": "exec-openai-model",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        -1168,
+        176
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "jKn3GZ9W5ZRgXc2d",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"keyCriteria\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"name\": { \"type\": \"string\" },\n          \"description\": { \"type\": \"string\" },\n          \"importance\": { \"type\": \"string\" }\n        },\n        \"required\": [\"name\", \"description\", \"importance\"]\n      }\n    },\n    \"vendorRecommendations\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"rank\": { \"type\": \"number\" },\n          \"name\": { \"type\": \"string\" },\n          \"matchPercentage\": { \"type\": \"number\" },\n          \"overallAssessment\": { \"type\": \"string\" },\n          \"keyStrengths\": { \"type\": \"array\", \"items\": { \"type\": \"string\" } },\n          \"keyWeaknesses\": { \"type\": \"array\", \"items\": { \"type\": \"string\" } },\n          \"bestFor\": { \"type\": \"string\" }\n        },\n        \"required\": [\"rank\", \"name\", \"matchPercentage\", \"overallAssessment\", \"keyStrengths\", \"keyWeaknesses\", \"bestFor\"]\n      }\n    },\n    \"keyDifferentiators\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"category\": { \"type\": \"string\" },\n          \"leader\": { \"type\": \"string\" },\n          \"details\": { \"type\": \"string\" }\n        },\n        \"required\": [\"category\", \"leader\", \"details\"]\n      }\n    },\n    \"riskFactors\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"vendorSpecific\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"vendor\": { \"type\": \"string\" },\n              \"questions\": { \"type\": \"array\", \"items\": { \"type\": \"string\" } }\n            },\n            \"required\": [\"vendor\", \"questions\"]\n          }\n        },\n        \"generalConsiderations\": {\n          \"type\": \"array\",\n          \"items\": { \"type\": \"string\" }\n        }\n      },\n      \"required\": [\"vendorSpecific\", \"generalConsiderations\"]\n    },\n    \"recommendation\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"topPick\": { \"type\": \"string\" },\n        \"reason\": { \"type\": \"string\" },\n        \"considerations\": { \"type\": \"array\", \"items\": { \"type\": \"string\" } }\n      },\n      \"required\": [\"topPick\", \"reason\", \"considerations\"]\n    }\n  },\n  \"required\": [\"keyCriteria\", \"vendorRecommendations\", \"keyDifferentiators\", \"riskFactors\", \"recommendation\"]\n}"
+      },
+      "id": "exec-structured-output",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        -880,
+        176
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  const aiOutput = items[0].json.output;\n\n  if (!aiOutput || !aiOutput.keyCriteria || !aiOutput.vendorRecommendations) {\n    throw new Error('Invalid AI response: missing required sections');\n  }\n\n  return [{\n    json: {\n      success: true,\n      data: aiOutput,\n      generated_at: new Date().toISOString()\n    }\n  }];\n\n} catch (error) {\n  return [{\n    json: {\n      success: false,\n      error: {\n        code: 'AI_PROCESSING_ERROR',\n        message: `Executive summary generation failed: ${error.message}`\n      }\n    }\n  }];\n}"
+      },
+      "id": "exec-format-response",
+      "name": "Format Success Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -736,
+        -176
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "success-check",
+              "operator": {
+                "type": "boolean",
+                "operation": "false"
+              },
+              "leftValue": "={{ $json.success }}",
+              "rightValue": false
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "exec-check-success",
+      "name": "Check Success",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -528,
+        -176
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "https://pangeafate.github.io"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "exec-return-success",
+      "name": "Return Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -288,
+        -192
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "jsCode": "if (items[0].json.error && items[0].json.error.code) {\n  return [{\n    json: {\n      success: false,\n      error: items[0].json.error\n    }\n  }];\n}\n\nconst errorMessage = items[0].json.error?.message || items[0].json.message || 'An unexpected error occurred during executive summary generation';\n\nreturn [{\n  json: {\n    success: false,\n    error: {\n      code: 'INTERNAL_ERROR',\n      message: errorMessage\n    }\n  }\n}];"
+      },
+      "id": "exec-handle-error",
+      "name": "Handle Processing Error",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -288,
+        48
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 500,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "https://pangeafate.github.io"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "exec-return-error",
+      "name": "Return Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -64,
+        48
+      ],
+      "typeVersion": 1.4
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Input Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Validation": {
+      "main": [
+        [
+          {
+            "node": "Check Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Validation": {
+      "main": [
+        [
+          {
+            "node": "Return Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Analysis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Analysis Agent": {
+      "main": [
+        [
+          {
+            "node": "Format Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Processing Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Analysis Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Analysis Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Success Response": {
+      "main": [
+        [
+          {
+            "node": "Check Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Success": {
+      "main": [
+        [
+          {
+            "node": "Handle Processing Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Processing Error": {
+      "main": [
+        [
+          {
+            "node": "Return Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "exec-summary-v1",
+  "meta": {
+    "instanceId": "d8d0f3a1b5452865880018369d00dbc23f6a859a8ab8f3d9720659ce3799163c"
+  },
+  "id": "ClariooExecSummary",
+  "tags": []
+}

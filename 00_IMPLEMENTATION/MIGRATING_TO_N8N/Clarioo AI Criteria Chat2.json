@@ -1,0 +1,434 @@
+{
+  "name": "Clarioo AI Criteria Chat",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "clarioo-criteria-chat",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "http://localhost:8080"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "e91d37d0-9d5c-443f-91f0-b66815a86213",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        240,
+        340
+      ],
+      "webhookId": "clarioo-criteria-chat",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = items[0].json.body || {};\n\nconst user_id = body.user_id;\nconst session_id = body.session_id;\nconst project_id = body.project_id;\nconst project_name = body.project_name;\nconst project_description = body.project_description;\nconst project_category = body.project_category;\nconst criteria = body.criteria;\nconst user_message = body.user_message;\nconst chat_history = body.chat_history || [];\nconst timestamp = body.timestamp;\n\n// Validation\nconst errors = [];\n\nif (!user_id || user_id.trim() === '') {\n  errors.push('user_id is required');\n}\n\nif (!session_id || session_id.trim() === '') {\n  errors.push('session_id is required');\n}\n\nif (!project_id || project_id.trim() === '') {\n  errors.push('project_id is required');\n}\n\nif (!project_name || project_name.trim() === '') {\n  errors.push('project_name is required');\n}\n\nif (!project_description || project_description.trim() === '') {\n  errors.push('project_description is required');\n}\n\nif (!project_category || project_category.trim() === '') {\n  errors.push('project_category is required');\n}\n\nif (!Array.isArray(criteria)) {\n  errors.push('criteria must be an array');\n}\n\nif (!user_message || user_message.trim() === '') {\n  errors.push('user_message is required and must not be empty');\n}\n\nif (!Array.isArray(chat_history)) {\n  errors.push('chat_history must be an array');\n}\n\nif (!timestamp) {\n  errors.push('timestamp is required');\n}\n\nif (errors.length > 0) {\n  return [{\n    json: {\n      validation_error: true,\n      error_code: 'INVALID_INPUT',\n      error_message: errors.join(', ')\n    }\n  }];\n}\n\n// Pass through validated data\nreturn [{\n  json: {\n    validation_error: false,\n    user_id,\n    session_id,\n    project_id,\n    project_name: project_name.trim(),\n    project_description: project_description.trim(),\n    project_category: project_category.trim(),\n    criteria,\n    user_message: user_message.trim(),\n    chat_history,\n    timestamp\n  }\n}];"
+      },
+      "id": "df8a1dfe-b9a7-48ef-afae-0235a6fd18ff",
+      "name": "Input Validation",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        464,
+        340
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "validation-check",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "leftValue": "={{ $json.validation_error }}",
+              "rightValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ae3f281e-0f4b-427b-a43e-44645b99e9ff",
+      "name": "Check Validation",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        688,
+        340
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  success: false,\n  message: '',\n  actions: [],\n  error: {\n    code: $json.error_code,\n    message: $json.error_message\n  }\n} }}",
+        "options": {
+          "responseCode": 400,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "http://localhost:8080"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "98dffc4a-97f4-450e-9615-522edfd096bd",
+      "name": "Return Validation Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        976,
+        192
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a criteria management assistant helping users work with their project evaluation criteria.\n\nPROJECT CONTEXT:\n- Name: {{ $json.project_name }}\n- Description: {{ $json.project_description }}\n- Category: {{ $json.project_category }}\n\nCURRENT CRITERIA:\n{{ JSON.stringify($json.criteria, null, 2) }}\n\nCONVERSATION HISTORY:\n{{ JSON.stringify($json.chat_history, null, 2) }}\n\nUSER MESSAGE:\n{{ $json.user_message }}\n\nINSTRUCTIONS:\n1. Analyze the user's request in context of their project and existing criteria\n2. Determine if they want information, or want to modify criteria\n3. For modifications, generate appropriate actions (create/update/delete)\n4. Always provide a helpful, conversational response\n\nGUIDELINES FOR CRITERIA:\n- Names should be concise and actionable (2-5 words)\n- Descriptions should be detailed (1-2 sentences)\n- Importance: high = critical/explicitly requested, medium = important/implied, low = nice-to-have\n- Types: feature (functionality), technical (architecture/integration), business (ROI/process), compliance (regulatory/security)\n- Generate UUID v4 format IDs for new criteria\n\nMATCHING CRITERIA:\n- When user refers to a criterion by name, match it flexibly (ignore case, partial match OK)\n- If ID is provided, use it directly\n- If ambiguous, ask for clarification in your message\n\nACTION FORMAT REQUIREMENTS (CRITICAL):\n- For 'create' actions: Include COMPLETE criterion object with NEW UUID v4 id, name, description, importance, type, isArchived=false\n- For 'update' actions: Include COMPLETE criterion object with the EXISTING ID from the criteria list above, plus ALL fields (id, name, description, importance, type, isArchived) - even fields that did not change\n- For 'delete' actions: Include criterion_id only (the ID to delete from the list above)\n\nIMPORTANT: For updates, you MUST:\n1. Find the criterion in CURRENT CRITERIA by name match\n2. Copy its exact 'id' field\n3. Return ALL fields in the criterion object, not just changed ones\n\nBATCH SIZE LIMITS:\n- When creating multiple criteria, limit to 5 criteria per response maximum\n- If user requests more than 5 (e.g., 'add 9 criteria'), create the first 5 and tell them to ask again for the remaining ones\n- This ensures reliable processing and better conversation flow\n\nRESPONSE REQUIREMENTS:\n- message: Conversational response explaining what you did or answering the question\n- actions: Array of modifications (can be empty for info queries)\n- Each action needs type, criterion (with ALL fields for create/update) or criterion_id (for delete), and summary",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert criteria management assistant. You help users create comprehensive, well-organized evaluation criteria for vendor selection. Always be helpful, concise, and proactive in suggesting improvements. Format your responses with markdown for readability."
+        }
+      },
+      "id": "e2413520-7c28-4210-ba59-5eb81a843336",
+      "name": "AI Criteria Chat Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        912,
+        488
+      ],
+      "typeVersion": 2.2,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "maxTokens": 8000,
+          "temperature": 0.7
+        }
+      },
+      "id": "be180f0c-4dea-4e79-ae51-446fbb516fa1",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        920,
+        712
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "jKn3GZ9W5ZRgXc2d",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"message\": {\n      \"type\": \"string\",\n      \"description\": \"Conversational response to display in chat\"\n    },\n    \"actions\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"type\": {\n            \"type\": \"string\",\n            \"enum\": [\"create\", \"update\", \"delete\"]\n          },\n          \"criterion\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"id\": { \"type\": \"string\" },\n              \"name\": { \"type\": \"string\" },\n              \"description\": { \"type\": \"string\" },\n              \"importance\": {\n                \"type\": \"string\",\n                \"enum\": [\"low\", \"medium\", \"high\"]\n              },\n              \"type\": {\n                \"type\": \"string\",\n                \"enum\": [\"feature\", \"technical\", \"business\", \"compliance\"]\n              },\n              \"isArchived\": { \"type\": \"boolean\" }\n            }\n          },\n          \"criterion_id\": { \"type\": \"string\" },\n          \"summary\": { \"type\": \"string\" }\n        },\n        \"required\": [\"type\", \"summary\"]\n      }\n    }\n  },\n  \"required\": [\"message\", \"actions\"]\n}"
+      },
+      "id": "fee39931-15f2-479e-8c9c-4b863d4ef394",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        1048,
+        712
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  const aiOutput = items[0].json.output;\n\n  // Validate AI output structure\n  if (!aiOutput || typeof aiOutput.message !== 'string') {\n    throw new Error('Invalid AI response: missing message');\n  }\n\n  if (!Array.isArray(aiOutput.actions)) {\n    throw new Error('Invalid AI response: actions must be an array');\n  }\n\n  // Validate each action\n  for (const action of aiOutput.actions) {\n    if (!['create', 'update', 'delete'].includes(action.type)) {\n      throw new Error(`Invalid action type: ${action.type}`);\n    }\n\n    if (!action.summary) {\n      throw new Error('Each action must have a summary');\n    }\n\n    if (action.type === 'create' || action.type === 'update') {\n      if (!action.criterion || !action.criterion.id || !action.criterion.name) {\n        throw new Error(`${action.type} action must include criterion with id and name`);\n      }\n    }\n\n    if (action.type === 'delete' && !action.criterion_id) {\n      throw new Error('delete action must include criterion_id');\n    }\n  }\n\n  return [{\n    json: {\n      success: true,\n      message: aiOutput.message,\n      actions: aiOutput.actions\n    }\n  }];\n\n} catch (error) {\n  return [{\n    json: {\n      success: false,\n      message: '',\n      actions: [],\n      error: {\n        code: 'AI_PROCESSING_ERROR',\n        message: `AI processing failed: ${error.message}`\n      }\n    }\n  }];\n}"
+      },
+      "id": "f58fbf3b-ad3f-48fc-98b3-bbaf778113f0",
+      "name": "Format Success Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1264,
+        416
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "success-check",
+              "operator": {
+                "type": "boolean",
+                "operation": "false"
+              },
+              "leftValue": "={{ $json.success }}",
+              "rightValue": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d3ec2deb-8a18-4067-843d-26b342856e2b",
+      "name": "Check Success",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1488,
+        416
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "http://localhost:8080"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "c01206db-e861-4970-9d20-7040e740621b",
+      "name": "Return Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        1712,
+        368
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// Check if we already have a formatted error from Format Success Response\nif (items[0].json.error && items[0].json.error.code) {\n  return [{\n    json: {\n      success: false,\n      message: '',\n      actions: [],\n      error: items[0].json.error\n    }\n  }];\n}\n\n// Otherwise, handle raw errors\nconst errorMessage = items[0].json.error?.message || items[0].json.message || 'An unexpected error occurred during processing';\n\nreturn [{\n  json: {\n    success: false,\n    message: '',\n    actions: [],\n    error: {\n      code: 'INTERNAL_ERROR',\n      message: errorMessage\n    }\n  }\n}];"
+      },
+      "id": "76a261bd-beed-46fd-9409-4f1cdaa9f626",
+      "name": "Handle Processing Error",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1712,
+        584
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 500,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "http://localhost:8080"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "1df474f9-3e35-41e1-aebd-63a5304eb9f2",
+      "name": "Return Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        1936,
+        584
+      ],
+      "typeVersion": 1.4
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Check Success": {
+      "main": [
+        [
+          {
+            "node": "Handle Processing Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Input Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Validation": {
+      "main": [
+        [
+          {
+            "node": "Return Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Criteria Chat Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Validation": {
+      "main": [
+        [
+          {
+            "node": "Check Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Criteria Chat Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Success Response": {
+      "main": [
+        [
+          {
+            "node": "Check Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Processing Error": {
+      "main": [
+        [
+          {
+            "node": "Return Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Criteria Chat Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Criteria Chat Agent": {
+      "main": [
+        [
+          {
+            "node": "Format Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Processing Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "versionId": "a2fae672-a350-42e4-b825-e6099f018ed2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d8d0f3a1b5452865880018369d00dbc23f6a859a8ab8f3d9720659ce3799163c"
+  },
+  "id": "QcuQjRjeVJolUd3j",
+  "tags": []
+}

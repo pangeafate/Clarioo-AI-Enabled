@@ -1,0 +1,464 @@
+{
+  "name": "Clarioo AI Find Vendors",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "clarioo-find-vendors",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "http://localhost:8080"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "webhook-find-vendors",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        240,
+        340
+      ],
+      "webhookId": "clarioo-find-vendors",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = items[0].json.body || {};\n\nconst user_id = body.user_id;\nconst session_id = body.session_id;\nconst project_id = body.project_id;\nconst project_name = body.project_name || '';\nconst project_description = body.project_description || '';\nconst project_category = body.project_category || '';\nconst criteria = body.criteria || [];\nconst max_vendors = body.max_vendors || 10;\nconst timestamp = body.timestamp;\n\n// Validation\nconst errors = [];\n\nif (!user_id || user_id.trim() === '') {\n  errors.push('user_id is required');\n}\n\nif (!session_id || session_id.trim() === '') {\n  errors.push('session_id is required');\n}\n\nif (!project_id || project_id.trim() === '') {\n  errors.push('project_id is required');\n}\n\nif (!project_name || project_name.trim() === '') {\n  errors.push('project_name is required');\n}\n\nif (project_description.trim().length < 10) {\n  errors.push('project_description must be at least 10 characters');\n}\n\nif (!project_category || project_category.trim() === '') {\n  errors.push('project_category is required');\n}\n\nif (!Array.isArray(criteria)) {\n  errors.push('criteria must be an array');\n}\n\nif (max_vendors < 1 || max_vendors > 20) {\n  errors.push('max_vendors must be between 1 and 20');\n}\n\nif (!timestamp) {\n  errors.push('timestamp is required');\n}\n\nif (errors.length > 0) {\n  return [{\n    json: {\n      validation_error: true,\n      error_code: 'INVALID_INPUT',\n      error_message: errors.join(', ')\n    }\n  }];\n}\n\n// Pass through validated data\nreturn [{\n  json: {\n    validation_error: false,\n    user_id,\n    session_id,\n    project_id,\n    project_name: project_name.trim(),\n    project_description: project_description.trim(),\n    project_category: project_category.trim(),\n    criteria,\n    max_vendors,\n    timestamp\n  }\n}];"
+      },
+      "id": "input-validation-vendors",
+      "name": "Input Validation",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        464,
+        340
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "validation-check",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "leftValue": "={{ $json.validation_error }}",
+              "rightValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "check-validation-vendors",
+      "name": "Check Validation",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        688,
+        340
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  success: false,\n  vendors: [],\n  error: {\n    code: $json.error_code,\n    message: $json.error_message\n  }\n} }}",
+        "options": {
+          "responseCode": 400,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "http://localhost:8080"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-validation-error-vendors",
+      "name": "Return Validation Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        976,
+        192
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Find vendors matching this project:\n\nPROJECT: {{ $json.project_name }}\nCATEGORY: {{ $json.project_category }}\nDESCRIPTION: {{ $json.project_description }}\n\nCRITERIA TO MATCH:\n{{ JSON.stringify($json.criteria, null, 2) }}\n\nINSTRUCTIONS:\n1. Use Perplexity to search for \"{{ $json.project_category }} software vendors\" and related terms\n2. Find up to {{ $json.max_vendors }} real vendors that match the project requirements\n3. For each vendor found, gather:\n   - Official website URL (must be valid and accessible)\n   - Pricing information (e.g., \"Starting at $25/user/month\", \"Contact for pricing\", \"Free tier available\")\n   - Overall rating (1-5 scale, use .5 increments if appropriate)\n   - Key features relevant to the criteria (list 3-5 main features)\n   - Brief description of what the vendor/product does\n4. Include only vendors with verified, working websites\n5. Prioritize vendors that match high-importance criteria\n6. Ensure variety - include a mix of established players and newer alternatives\n\nGenerate a UUID v4 for each vendor's id field.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert vendor research analyst specializing in software evaluation. Your task is to find real, currently active software vendors that match the given project requirements and evaluation criteria.\n\nUse Perplexity search to find accurate, up-to-date vendor information. Always verify that:\n1. The vendor/product actually exists and is actively maintained\n2. The website URL is correct and accessible\n3. Pricing information is current\n4. Features claimed are actually offered\n\nReturn only vendors you are confident exist and match the requirements. Quality over quantity."
+        }
+      },
+      "id": "ai-vendor-discovery",
+      "name": "AI Vendor Discovery Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        912,
+        488
+      ],
+      "typeVersion": 2.2,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "maxTokens": 4000,
+          "temperature": 0.3
+        }
+      },
+      "id": "openai-model-vendors",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        840,
+        712
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "jKn3GZ9W5ZRgXc2d",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "perplexity-tool",
+      "name": "Perplexity",
+      "type": "@n8n/n8n-nodes-langchain.toolPerplexity",
+      "position": [
+        984,
+        712
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "perplexityApi": {
+          "id": "perplexity-api-id",
+          "name": "Perplexity account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"vendors\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"id\": { \"type\": \"string\", \"description\": \"UUID v4 for the vendor\" },\n          \"name\": { \"type\": \"string\", \"description\": \"Vendor/product name\" },\n          \"description\": { \"type\": \"string\", \"description\": \"Brief description of the vendor/product\" },\n          \"website\": { \"type\": \"string\", \"description\": \"Official website URL\" },\n          \"pricing\": { \"type\": \"string\", \"description\": \"Pricing model description\" },\n          \"rating\": { \"type\": \"number\", \"description\": \"Rating from 1-5\" },\n          \"features\": {\n            \"type\": \"array\",\n            \"items\": { \"type\": \"string\" },\n            \"description\": \"Key features relevant to criteria\"\n          }\n        },\n        \"required\": [\"id\", \"name\", \"description\", \"website\", \"pricing\", \"rating\", \"features\"]\n      }\n    },\n    \"search_summary\": {\n      \"type\": \"string\",\n      \"description\": \"Brief summary of the search performed\"\n    }\n  },\n  \"required\": [\"vendors\", \"search_summary\"]\n}"
+      },
+      "id": "output-parser-vendors",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        1128,
+        712
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  const aiOutput = items[0].json.output;\n\n  // Validate output structure\n  if (!aiOutput || !Array.isArray(aiOutput.vendors)) {\n    throw new Error('Invalid AI response: missing vendors array');\n  }\n\n  // Validate and clean each vendor\n  const validatedVendors = [];\n  for (const vendor of aiOutput.vendors) {\n    if (!vendor.id || !vendor.name || !vendor.website) {\n      console.log('Skipping vendor with missing required fields:', vendor.name || 'unknown');\n      continue;\n    }\n\n    // Ensure features is an array\n    if (!Array.isArray(vendor.features)) {\n      vendor.features = [];\n    }\n\n    // Validate and clamp rating\n    if (typeof vendor.rating !== 'number' || vendor.rating < 1 || vendor.rating > 5) {\n      vendor.rating = 3;\n    }\n\n    // Ensure description exists\n    if (!vendor.description) {\n      vendor.description = '';\n    }\n\n    // Ensure pricing exists\n    if (!vendor.pricing) {\n      vendor.pricing = 'Contact for pricing';\n    }\n\n    // Initialize empty criteriaScores (will be populated in deep research stage)\n    vendor.criteriaScores = {};\n\n    validatedVendors.push(vendor);\n  }\n\n  if (validatedVendors.length === 0) {\n    throw new Error('No valid vendors found in search results');\n  }\n\n  return [{\n    json: {\n      success: true,\n      vendors: validatedVendors,\n      search_summary: aiOutput.search_summary || `Found ${validatedVendors.length} vendors`\n    }\n  }];\n\n} catch (error) {\n  return [{\n    json: {\n      success: false,\n      vendors: [],\n      error: {\n        code: 'AI_PROCESSING_ERROR',\n        message: `Vendor search failed: ${error.message}`\n      }\n    }\n  }];\n}"
+      },
+      "id": "format-success-vendors",
+      "name": "Format Success Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1264,
+        384
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "success-check",
+              "operator": {
+                "type": "boolean",
+                "operation": "false"
+              },
+              "leftValue": "={{ $json.success }}",
+              "rightValue": false
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-success-vendors",
+      "name": "Check Success",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1472,
+        384
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "http://localhost:8080"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-success-vendors",
+      "name": "Return Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        1712,
+        368
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// Check if we already have a formatted error from Format Success Response\nif (items[0].json.error && items[0].json.error.code) {\n  return [{\n    json: {\n      success: false,\n      vendors: [],\n      error: items[0].json.error\n    }\n  }];\n}\n\n// Otherwise, handle raw errors\nconst errorMessage = items[0].json.error?.message || items[0].json.message || 'An unexpected error occurred during vendor search';\n\nreturn [{\n  json: {\n    success: false,\n    vendors: [],\n    error: {\n      code: 'INTERNAL_ERROR',\n      message: errorMessage\n    }\n  }\n}];"
+      },
+      "id": "handle-error-vendors",
+      "name": "Handle Processing Error",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1712,
+        592
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 500,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "http://localhost:8080"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-error-vendors",
+      "name": "Return Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        1936,
+        584
+      ],
+      "typeVersion": 1.4
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Input Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Validation": {
+      "main": [
+        [
+          {
+            "node": "Check Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Validation": {
+      "main": [
+        [
+          {
+            "node": "Return Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Vendor Discovery Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Vendor Discovery Agent": {
+      "main": [
+        [
+          {
+            "node": "Format Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Processing Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Vendor Discovery Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perplexity": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Vendor Discovery Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Vendor Discovery Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Success Response": {
+      "main": [
+        [
+          {
+            "node": "Check Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Success": {
+      "main": [
+        [
+          {
+            "node": "Handle Processing Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Processing Error": {
+      "main": [
+        [
+          {
+            "node": "Return Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionTimeout": 120
+  },
+  "versionId": "v1-find-vendors",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d8d0f3a1b5452865880018369d00dbc23f6a859a8ab8f3d9720659ce3799163c"
+  },
+  "id": "find-vendors-workflow",
+  "tags": []
+}

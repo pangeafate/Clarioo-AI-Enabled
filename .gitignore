@@ -27,6 +27,4 @@ dist-ssr
 *.sw?
 
 # Project documentation (keep private)
-00_IMPLEMENTATION/
-00_PLAN/
 archived/

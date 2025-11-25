@@ -1,0 +1,902 @@
+{
+  "projectId": "mock_crm_project",
+  "project": {
+    "id": "mock_crm_project",
+    "name": "CRM System Selection",
+    "category": "CRM Software",
+    "description": "Customer Relationship Management"
+  },
+  "criteria": [
+    { "id": "crm_1", "name": "Contact Management System", "description": "Robust system for organizing customer data including contact details, company information, and interaction history. Must support custom fields, tagging, and advanced search capabilities.", "importance": 5, "type": "feature" },
+    { "id": "crm_2", "name": "Sales Pipeline Visualization", "description": "Clear visual representation of sales opportunities through pipeline stages with drag-and-drop functionality. Should provide deal value totals, probability tracking, and customizable stages.", "importance": 5, "type": "feature" },
+    { "id": "crm_3", "name": "Email Integration (Gmail/Outlook)", "description": "Seamless two-way email sync with Gmail and Outlook. Automatic logging of email conversations, ability to send tracked emails directly from CRM, and email template management.", "importance": 5, "type": "feature" },
+    { "id": "crm_4", "name": "Mobile App Availability", "description": "Full-featured mobile applications for iOS and Android with offline access. Must include core CRM functions: contact management, deal updates, task completion, and real-time notifications.", "importance": 5, "type": "feature" },
+    { "id": "crm_5", "name": "Custom Fields & Workflows", "description": "Ability to create custom data fields without coding and design automated workflows for sales processes. Should support conditional logic, multi-step approvals, and custom notifications.", "importance": 3, "type": "feature" },
+    { "id": "crm_6", "name": "Reporting & Analytics Dashboard", "description": "Pre-built and customizable reports covering sales metrics, pipeline health, team performance, and revenue forecasting. Real-time dashboards with drill-down capabilities and export options.", "importance": 5, "type": "feature" },
+    { "id": "crm_7", "name": "Lead Scoring Automation", "description": "Automated lead qualification based on engagement metrics, demographics, and behavior. Configurable scoring rules with lead routing to appropriate sales reps based on score thresholds.", "importance": 3, "type": "feature" },
+    { "id": "crm_8", "name": "Task & Activity Tracking", "description": "Comprehensive task management system with reminders, recurring tasks, and activity history. Integration with calendar for scheduling calls, meetings, and follow-ups with automatic logging.", "importance": 3, "type": "feature" },
+    { "id": "crm_9", "name": "API Access for Integrations", "description": "Well-documented RESTful API for custom integrations. Must support webhooks for real-time data sync, rate limits appropriate for enterprise use, and comprehensive error handling.", "importance": 3, "type": "technical" },
+    { "id": "crm_10", "name": "Real-time Synchronization", "description": "Instant data sync across all devices and users without manual refresh. Changes made by one user should appear to others within 2-3 seconds. Conflict resolution for simultaneous edits required.", "importance": 5, "type": "technical" },
+    { "id": "crm_11", "name": "Data Import/Export Capabilities", "description": "Support for bulk data import from CSV/Excel files with field mapping wizard. Export functionality for backup and analysis purposes. Migration tools for transitioning from other CRM platforms.", "importance": 3, "type": "technical" },
+    { "id": "crm_12", "name": "System Performance & Speed", "description": "Page load times under 2 seconds for standard operations. Search results returned within 1 second even with large databases (100,000+ records). Minimal lag during data entry and navigation.", "importance": 5, "type": "technical" },
+    { "id": "crm_13", "name": "Multi-user Collaboration", "description": "Support for team selling with shared contact visibility, deal collaboration, and @mentions for team communication. Role-based permissions to control data access by user or team.", "importance": 5, "type": "feature" },
+    { "id": "crm_14", "name": "Pricing Model & Affordability", "description": "Transparent pricing with no hidden fees. Flexible plans scaling with team size and feature requirements. Free trial period and money-back guarantee. Annual payment discounts available.", "importance": 5, "type": "business" },
+    { "id": "crm_15", "name": "Customer Support Quality", "description": "Email and chat support during business hours (minimum). Phone support for critical issues. Average first response time under 4 hours. Dedicated account manager for enterprise customers.", "importance": 5, "type": "business" },
+    { "id": "crm_16", "name": "Onboarding & Training Resources", "description": "Comprehensive onboarding program including live training sessions, video tutorials, and documentation. Self-service knowledge base with search functionality. Regular webinars for advanced features.", "importance": 3, "type": "business" },
+    { "id": "crm_17", "name": "Vendor Reputation & Stability", "description": "Established vendor with proven track record (3+ years in market). Positive reviews from similar-sized companies. Strong financial backing and customer retention rates above 90%.", "importance": 3, "type": "business" },
+    { "id": "crm_18", "name": "Data Security & Encryption", "description": "AES-256 encryption for data at rest and TLS 1.2+ for data in transit. SOC 2 Type II certified. Regular third-party security audits. Intrusion detection and prevention systems in place.", "importance": 5, "type": "compliance" },
+    { "id": "crm_19", "name": "GDPR Compliance", "description": "Full GDPR compliance with data processing agreements, right to deletion, data portability, and breach notification procedures. EU data residency options available for European customers.", "importance": 5, "type": "compliance" },
+    { "id": "crm_20", "name": "SOC 2 Certification", "description": "Valid SOC 2 Type II certification demonstrating security, availability, and confidentiality controls. Annual recertification with publicly accessible audit reports. CCPA compliance for California residents.", "importance": 3, "type": "compliance" }
+  ],
+  "vendors": [
+    {
+      "id": "crm_vendor_1",
+      "name": "Salesforce",
+      "logo": "https://logo.clearbit.com/salesforce.com",
+      "website": "https://salesforce.com",
+      "email": "sales@salesforce.com",
+      "killerFeature": "Enterprise-grade customization & AI-powered Einstein",
+      "executiveSummary": "Salesforce is the world's leading cloud-based CRM platform, trusted by enterprises globally. Known for its robust ecosystem and AI-powered Einstein intelligence, it offers unparalleled scalability and customization options for complex sales operations.",
+      "keyFeatures": [
+        "AI-powered Einstein for predictive analytics and insights",
+        "Extensive AppExchange marketplace with 5,000+ integrations",
+        "Advanced workflow automation and process builder",
+        "Enterprise-grade security and compliance",
+        "Multi-cloud solution (Sales, Service, Marketing, Commerce)"
+      ],
+      "matchPercentage": 92,
+      "scores": {
+        "crm_1": "star", "crm_2": "yes", "crm_3": "yes", "crm_4": "yes", "crm_5": "star",
+        "crm_6": "star", "crm_7": "yes", "crm_8": "yes", "crm_9": "star", "crm_10": "yes",
+        "crm_11": "yes", "crm_12": "yes", "crm_13": "yes", "crm_14": "no", "crm_15": "yes",
+        "crm_16": "yes", "crm_17": "star", "crm_18": "star", "crm_19": "yes", "crm_20": "star"
+      }
+    },
+    {
+      "id": "crm_vendor_2",
+      "name": "HubSpot",
+      "logo": "https://logo.clearbit.com/hubspot.com",
+      "website": "https://hubspot.com",
+      "email": "sales@hubspot.com",
+      "killerFeature": "Free tier with powerful marketing automation",
+      "executiveSummary": "HubSpot offers a comprehensive CRM suite with exceptional marketing automation and sales tools. Its free tier is generous, and the platform is known for its user-friendly interface and strong content management capabilities, making it ideal for growing businesses.",
+      "keyFeatures": [
+        "Generous free tier with core CRM features",
+        "Intuitive user interface and onboarding",
+        "Integrated marketing, sales, and service hubs",
+        "Strong content management and SEO tools",
+        "Excellent educational resources and community"
+      ],
+      "matchPercentage": 89,
+      "scores": {
+        "crm_1": "yes", "crm_2": "yes", "crm_3": "star", "crm_4": "yes", "crm_5": "yes",
+        "crm_6": "yes", "crm_7": "star", "crm_8": "yes", "crm_9": "yes", "crm_10": "yes",
+        "crm_11": "yes", "crm_12": "yes", "crm_13": "yes", "crm_14": "star", "crm_15": "yes",
+        "crm_16": "star", "crm_17": "yes", "crm_18": "yes", "crm_19": "yes", "crm_20": "yes"
+      }
+    },
+    {
+      "id": "crm_vendor_3",
+      "name": "Pipedrive",
+      "logo": "https://logo.clearbit.com/pipedrive.com",
+      "website": "https://pipedrive.com",
+      "email": "sales@pipedrive.com",
+      "killerFeature": "Intuitive pipeline-focused sales management",
+      "executiveSummary": "Pipedrive is a sales-focused CRM built by salespeople for salespeople. Its visual pipeline management and deal-tracking capabilities make it exceptionally easy to manage your sales process and forecast revenue accurately.",
+      "keyFeatures": [
+        "Intuitive visual pipeline and deal tracking",
+        "Simple and clean user interface",
+        "Excellent mobile app for on-the-go sales",
+        "Strong email integration and tracking",
+        "Affordable pricing with transparent tiers"
+      ],
+      "matchPercentage": 87,
+      "scores": {
+        "crm_1": "yes", "crm_2": "star", "crm_3": "yes", "crm_4": "star", "crm_5": "no",
+        "crm_6": "yes", "crm_7": "yes", "crm_8": "yes", "crm_9": "no", "crm_10": "yes",
+        "crm_11": "yes", "crm_12": "star", "crm_13": "yes", "crm_14": "star", "crm_15": "yes",
+        "crm_16": "yes", "crm_17": "yes", "crm_18": "yes", "crm_19": "yes", "crm_20": "yes"
+      }
+    },
+    {
+      "id": "crm_vendor_4",
+      "name": "Zoho CRM",
+      "logo": "https://logo.clearbit.com/zoho.com",
+      "website": "https://zoho.com/crm",
+      "email": "sales@zoho.com",
+      "killerFeature": "Cost-effective with AI assistant Zia",
+      "executiveSummary": "Zoho CRM provides a cost-effective solution with AI-powered sales assistant (Zia) and extensive customization options. It's part of the larger Zoho ecosystem, offering seamless integration with other Zoho business applications.",
+      "keyFeatures": [
+        "Cost-effective with generous feature set",
+        "AI assistant (Zia) for predictions and recommendations",
+        "Multi-channel communication (email, phone, social, live chat)",
+        "Extensive customization and workflow automation",
+        "Part of comprehensive Zoho ecosystem"
+      ],
+      "matchPercentage": 84,
+      "scores": {
+        "crm_1": "yes", "crm_2": "yes", "crm_3": "yes", "crm_4": "yes", "crm_5": "yes",
+        "crm_6": "yes", "crm_7": "yes", "crm_8": "yes", "crm_9": "unknown", "crm_10": "yes",
+        "crm_11": "yes", "crm_12": "no", "crm_13": "yes", "crm_14": "star", "crm_15": "unknown",
+        "crm_16": "no", "crm_17": "yes", "crm_18": "yes", "crm_19": "yes", "crm_20": "unknown"
+      }
+    },
+    {
+      "id": "crm_vendor_5",
+      "name": "monday.com CRM",
+      "logo": "https://logo.clearbit.com/monday.com",
+      "website": "https://monday.com",
+      "email": "sales@monday.com",
+      "killerFeature": "Highly customizable workflows with no-code automation",
+      "executiveSummary": "monday.com CRM brings the visual, no-code flexibility of monday.com to customer relationship management. With customizable boards and automations, it adapts to any sales workflow while maintaining simplicity and ease of use.",
+      "keyFeatures": [
+        "Highly visual and customizable boards",
+        "No-code automation builder",
+        "Easy to adapt to any workflow",
+        "Excellent collaboration features",
+        "Intuitive drag-and-drop interface"
+      ],
+      "matchPercentage": 85,
+      "scores": {
+        "crm_1": "yes", "crm_2": "yes", "crm_3": "yes", "crm_4": "yes", "crm_5": "yes",
+        "crm_6": "star", "crm_7": "yes", "crm_8": "yes", "crm_9": "no", "crm_10": "yes",
+        "crm_11": "star", "crm_12": "yes", "crm_13": "yes", "crm_14": "yes", "crm_15": "yes",
+        "crm_16": "star", "crm_17": "yes", "crm_18": "yes", "crm_19": "yes", "crm_20": "yes"
+      }
+    },
+    {
+      "id": "crm_vendor_6",
+      "name": "Freshsales",
+      "logo": "https://logo.clearbit.com/freshworks.com",
+      "website": "https://freshworks.com/crm",
+      "email": "sales@freshworks.com",
+      "killerFeature": "Built-in phone & email with AI-powered lead scoring",
+      "executiveSummary": "Freshsales by Freshworks is a modern CRM with built-in phone, email, and activity capture. Its AI-powered lead scoring and deal insights help sales teams prioritize effectively and close deals faster.",
+      "keyFeatures": [
+        "Built-in phone and email with auto-dialer",
+        "AI-based lead scoring (Freddy AI)",
+        "Clean and modern interface",
+        "Good workflow automation",
+        "Reasonable pricing for SMBs"
+      ],
+      "matchPercentage": 82,
+      "scores": {
+        "crm_1": "yes", "crm_2": "yes", "crm_3": "yes", "crm_4": "yes", "crm_5": "no",
+        "crm_6": "yes", "crm_7": "star", "crm_8": "yes", "crm_9": "unknown", "crm_10": "yes",
+        "crm_11": "yes", "crm_12": "yes", "crm_13": "yes", "crm_14": "yes", "crm_15": "yes",
+        "crm_16": "yes", "crm_17": "unknown", "crm_18": "yes", "crm_19": "yes", "crm_20": "unknown"
+      }
+    },
+    {
+      "id": "crm_vendor_7",
+      "name": "Insightly",
+      "logo": "https://logo.clearbit.com/insightly.com",
+      "website": "https://insightly.com",
+      "killerFeature": "Integrated project management",
+      "executiveSummary": "Insightly combines CRM with project management, making it ideal for businesses that need to track both customer relationships and project delivery. It's particularly strong for professional services and B2B companies.",
+      "keyFeatures": [
+        "Integrated project management",
+        "Good for professional services",
+        "Relationship linking (organizations to contacts)",
+        "Custom fields and objects",
+        "Mobile app with offline access"
+      ],
+      "matchPercentage": 78,
+      "scores": {
+        "crm_1": "yes", "crm_2": "yes", "crm_3": "yes", "crm_4": "yes", "crm_5": "no",
+        "crm_6": "yes", "crm_7": "yes", "crm_8": "star", "crm_9": "unknown", "crm_10": "yes",
+        "crm_11": "yes", "crm_12": "yes", "crm_13": "yes", "crm_14": "yes", "crm_15": "yes",
+        "crm_16": "yes", "crm_17": "yes", "crm_18": "unknown", "crm_19": "yes", "crm_20": "unknown"
+      }
+    },
+    {
+      "id": "crm_vendor_8",
+      "name": "Copper",
+      "logo": "https://logo.clearbit.com/copper.com",
+      "website": "https://copper.com",
+      "email": "sales@copper.com",
+      "killerFeature": "Native Google Workspace integration for Gmail users",
+      "executiveSummary": "Copper (formerly ProsperWorks) is designed specifically for Google Workspace users, living directly inside Gmail. It automatically captures contacts and interactions, minimizing manual data entry for Google-centric teams.",
+      "keyFeatures": [
+        "Seamless Gmail and Google Workspace integration",
+        "Automatic contact and interaction capture",
+        "Chrome extension for easy access",
+        "Simple and intuitive interface",
+        "Minimal manual data entry"
+      ],
+      "matchPercentage": 80,
+      "scores": {
+        "crm_1": "yes", "crm_2": "yes", "crm_3": "star", "crm_4": "yes", "crm_5": "no",
+        "crm_6": "yes", "crm_7": "unknown", "crm_8": "yes", "crm_9": "unknown", "crm_10": "star",
+        "crm_11": "yes", "crm_12": "yes", "crm_13": "yes", "crm_14": "yes", "crm_15": "yes",
+        "crm_16": "yes", "crm_17": "yes", "crm_18": "unknown", "crm_19": "yes", "crm_20": "yes"
+      }
+    },
+    {
+      "id": "crm_vendor_9",
+      "name": "Zendesk Sell",
+      "logo": "https://logo.clearbit.com/zendesk.com",
+      "website": "https://zendesk.com/sell",
+      "killerFeature": "Sales engagement tools with built-in calling",
+      "executiveSummary": "Zendesk Sell (formerly Base CRM) is a sales-focused CRM with powerful communication tools and productivity features. Built by the team behind Zendesk Support, it excels at helping sales teams stay organized and efficient.",
+      "keyFeatures": [
+        "Built-in calling and email tracking",
+        "Sales engagement and cadence tools",
+        "Mobile app with offline mode",
+        "Integrates with Zendesk Support",
+        "Good prospecting and lead enrichment"
+      ],
+      "matchPercentage": 84,
+      "scores": {
+        "crm_1": "yes", "crm_2": "yes", "crm_3": "yes", "crm_4": "star", "crm_5": "no",
+        "crm_6": "yes", "crm_7": "yes", "crm_8": "yes", "crm_9": "unknown", "crm_10": "yes",
+        "crm_11": "yes", "crm_12": "yes", "crm_13": "yes", "crm_14": "yes", "crm_15": "star",
+        "crm_16": "yes", "crm_17": "unknown", "crm_18": "unknown", "crm_19": "yes", "crm_20": "yes"
+      }
+    },
+    {
+      "id": "crm_vendor_10",
+      "name": "Close",
+      "logo": "https://logo.clearbit.com/close.com",
+      "website": "https://close.com",
+      "email": "sales@close.com",
+      "killerFeature": "Built for inside sales teams with power dialer",
+      "executiveSummary": "Close is built for inside sales teams that live on the phone. With built-in calling, SMS, and email, plus powerful automation and reporting, it's designed to maximize productivity for high-volume outbound sales teams.",
+      "keyFeatures": [
+        "Built-in power dialer and calling",
+        "SMS and email sequences",
+        "Strong automation for outbound sales",
+        "Excellent reporting and analytics",
+        "No per-minute calling fees"
+      ],
+      "matchPercentage": 86,
+      "scores": {
+        "crm_1": "yes", "crm_2": "yes", "crm_3": "yes", "crm_4": "yes", "crm_5": "no",
+        "crm_6": "star", "crm_7": "yes", "crm_8": "star", "crm_9": "no", "crm_10": "yes",
+        "crm_11": "yes", "crm_12": "yes", "crm_13": "yes", "crm_14": "yes", "crm_15": "yes",
+        "crm_16": "yes", "crm_17": "yes", "crm_18": "yes", "crm_19": "yes", "crm_20": "yes"
+      }
+    }
+  ],
+  "vendorsByCategory": {
+    "CRM Software": [
+      {
+        "id": "crm_vendor_1",
+        "name": "Salesforce",
+        "description": "Salesforce is the world's leading cloud-based CRM platform, trusted by enterprises globally. Known for its robust ecosystem and AI-powered Einstein intelligence, it offers unparalleled scalability and customization options for complex sales operations.",
+        "category": "CRM Software",
+        "website": "https://salesforce.com",
+        "logo_url": "https://logo.clearbit.com/salesforce.com",
+        "match_score": 92,
+        "pricing": "$25-300/user/month",
+        "pros": [
+          "AI-powered Einstein for predictive analytics and insights",
+          "Extensive AppExchange marketplace with 5,000+ integrations",
+          "Advanced workflow automation and process builder",
+          "Enterprise-grade security and compliance",
+          "Multi-cloud solution (Sales, Service, Marketing, Commerce)"
+        ],
+        "cons": ["Steep learning curve", "Higher price point", "Complex setup and customization can require consultants"]
+      },
+      {
+        "id": "crm_vendor_2",
+        "name": "HubSpot",
+        "description": "HubSpot offers a comprehensive CRM suite with exceptional marketing automation and sales tools. Its free tier is generous, and the platform is known for its user-friendly interface and strong content management capabilities, making it ideal for growing businesses.",
+        "category": "CRM Software",
+        "website": "https://hubspot.com",
+        "logo_url": "https://logo.clearbit.com/hubspot.com",
+        "match_score": 89,
+        "pricing": "Free - $1,200/month",
+        "pros": [
+          "Generous free tier with core CRM features",
+          "Intuitive user interface and onboarding",
+          "Integrated marketing, sales, and service hubs",
+          "Strong content management and SEO tools",
+          "Excellent educational resources and community"
+        ],
+        "cons": ["Limited customization on free plan", "Can get expensive at scale", "Some advanced features require higher tiers"]
+      },
+      {
+        "id": "crm_vendor_3",
+        "name": "Pipedrive",
+        "description": "Pipedrive is a sales-focused CRM built by salespeople for salespeople. Its visual pipeline management and deal-tracking capabilities make it exceptionally easy to manage your sales process and forecast revenue accurately.",
+        "category": "CRM Software",
+        "website": "https://pipedrive.com",
+        "logo_url": "https://logo.clearbit.com/pipedrive.com",
+        "match_score": 87,
+        "pricing": "$14-99/user/month",
+        "pros": [
+          "Intuitive visual pipeline and deal tracking",
+          "Simple and clean user interface",
+          "Excellent mobile app for on-the-go sales",
+          "Strong email integration and tracking",
+          "Affordable pricing with transparent tiers"
+        ],
+        "cons": ["Limited marketing features", "Fewer integrations than competitors", "Reporting capabilities could be more robust"]
+      },
+      {
+        "id": "crm_vendor_4",
+        "name": "Zoho CRM",
+        "description": "Zoho CRM provides a cost-effective solution with AI-powered sales assistant (Zia) and extensive customization options. It's part of the larger Zoho ecosystem, offering seamless integration with other Zoho business applications.",
+        "category": "CRM Software",
+        "website": "https://zoho.com/crm",
+        "logo_url": "https://logo.clearbit.com/zoho.com",
+        "match_score": 84,
+        "pricing": "$14-52/user/month",
+        "pros": [
+          "Cost-effective with generous feature set",
+          "AI assistant (Zia) for predictions and recommendations",
+          "Multi-channel communication (email, phone, social, live chat)",
+          "Extensive customization and workflow automation",
+          "Part of comprehensive Zoho ecosystem"
+        ],
+        "cons": ["UI can feel dated", "Learning curve for advanced features", "Support quality can vary"]
+      },
+      {
+        "id": "crm_vendor_5",
+        "name": "monday.com CRM",
+        "description": "monday.com CRM brings the visual, no-code flexibility of monday.com to customer relationship management. With customizable boards and automations, it adapts to any sales workflow while maintaining simplicity and ease of use.",
+        "category": "CRM Software",
+        "website": "https://monday.com",
+        "logo_url": "https://logo.clearbit.com/monday.com",
+        "match_score": 85,
+        "pricing": "$10-24/user/month",
+        "pros": [
+          "Highly visual and customizable boards",
+          "No-code automation builder",
+          "Easy to adapt to any workflow",
+          "Excellent collaboration features",
+          "Intuitive drag-and-drop interface"
+        ],
+        "cons": ["Not purpose-built for CRM", "Can be overwhelming with customization options", "Limited native sales-specific features"]
+      },
+      {
+        "id": "crm_vendor_6",
+        "name": "Freshsales",
+        "description": "Freshsales by Freshworks is a modern CRM with built-in phone, email, and activity capture. Its AI-powered lead scoring and deal insights help sales teams prioritize effectively and close deals faster.",
+        "category": "CRM Software",
+        "website": "https://freshworks.com/crm",
+        "logo_url": "https://logo.clearbit.com/freshworks.com",
+        "match_score": 82,
+        "pricing": "$15-69/user/month",
+        "pros": [
+          "Built-in phone and email with auto-dialer",
+          "AI-based lead scoring (Freddy AI)",
+          "Clean and modern interface",
+          "Good workflow automation",
+          "Reasonable pricing for SMBs"
+        ],
+        "cons": ["Fewer third-party integrations", "Reporting could be better", "Limited customization compared to enterprise CRMs"]
+      },
+      {
+        "id": "crm_vendor_7",
+        "name": "Insightly",
+        "description": "Insightly combines CRM with project management, making it ideal for businesses that need to track both customer relationships and project delivery. It's particularly strong for professional services and B2B companies.",
+        "category": "CRM Software",
+        "website": "https://insightly.com",
+        "logo_url": "https://logo.clearbit.com/insightly.com",
+        "match_score": 78,
+        "pricing": "$29-99/user/month",
+        "pros": [
+          "Integrated project management",
+          "Good for professional services",
+          "Relationship linking (organizations to contacts)",
+          "Custom fields and objects",
+          "Mobile app with offline access"
+        ],
+        "cons": ["UI feels dated", "Limited workflow automation", "Reporting could be more powerful"]
+      },
+      {
+        "id": "crm_vendor_8",
+        "name": "Copper",
+        "description": "Copper (formerly ProsperWorks) is designed specifically for Google Workspace users, living directly inside Gmail. It automatically captures contacts and interactions, minimizing manual data entry for Google-centric teams.",
+        "category": "CRM Software",
+        "website": "https://copper.com",
+        "logo_url": "https://logo.clearbit.com/copper.com",
+        "match_score": 80,
+        "pricing": "$25-119/user/month",
+        "pros": [
+          "Seamless Gmail and Google Workspace integration",
+          "Automatic contact and interaction capture",
+          "Chrome extension for easy access",
+          "Simple and intuitive interface",
+          "Minimal manual data entry"
+        ],
+        "cons": ["Limited outside Google ecosystem", "Fewer features than competitors", "Higher cost for what it offers"]
+      },
+      {
+        "id": "crm_vendor_9",
+        "name": "Zendesk Sell",
+        "description": "Zendesk Sell (formerly Base CRM) is a sales-focused CRM with powerful communication tools and productivity features. Built by the team behind Zendesk Support, it excels at helping sales teams stay organized and efficient.",
+        "category": "CRM Software",
+        "website": "https://zendesk.com/sell",
+        "logo_url": "https://logo.clearbit.com/zendesk.com",
+        "match_score": 84,
+        "pricing": "$19-99/user/month",
+        "pros": [
+          "Built-in calling and email tracking",
+          "Sales engagement and cadence tools",
+          "Mobile app with offline mode",
+          "Integrates with Zendesk Support",
+          "Good prospecting and lead enrichment"
+        ],
+        "cons": ["Limited customization", "Reporting could be better", "Fewer third-party integrations"]
+      },
+      {
+        "id": "crm_vendor_10",
+        "name": "Close",
+        "description": "Close is built for inside sales teams that live on the phone. With built-in calling, SMS, and email, plus powerful automation and reporting, it's designed to maximize productivity for high-volume outbound sales teams.",
+        "category": "CRM Software",
+        "website": "https://close.com",
+        "logo_url": "https://logo.clearbit.com/close.com",
+        "match_score": 86,
+        "pricing": "$49-149/user/month",
+        "pros": [
+          "Built-in power dialer and calling",
+          "SMS and email sequences",
+          "Strong automation for outbound sales",
+          "Excellent reporting and analytics",
+          "No per-minute calling fees"
+        ],
+        "cons": ["Higher price point", "Limited for non-phone-heavy sales", "Fewer workflow customization options"]
+      }
+    ],
+    "Marketing Automation": [
+      {
+        "id": "mkt_vendor_1",
+        "name": "HubSpot Marketing Hub",
+        "description": "All-in-one inbound marketing platform with powerful automation",
+        "category": "Marketing Automation",
+        "website": "https://www.hubspot.com/products/marketing",
+        "logo_url": "https://logo.clearbit.com/hubspot.com",
+        "match_score": 93,
+        "pricing": "$45-3600/month",
+        "pros": ["Comprehensive features", "Excellent content management", "Strong analytics"],
+        "cons": ["Can be expensive", "Complexity for small teams", "Steep learning curve"]
+      },
+      {
+        "id": "mkt_vendor_2",
+        "name": "Mailchimp",
+        "description": "Popular email marketing platform with automation capabilities",
+        "category": "Marketing Automation",
+        "website": "https://mailchimp.com",
+        "logo_url": "https://logo.clearbit.com/mailchimp.com",
+        "match_score": 88,
+        "pricing": "$0-350/month",
+        "pros": ["User-friendly", "Free plan available", "Great email builder"],
+        "cons": ["Limited advanced automation", "Contact-based pricing can add up"]
+      },
+      {
+        "id": "mkt_vendor_3",
+        "name": "ActiveCampaign",
+        "description": "Customer experience automation platform with advanced segmentation",
+        "category": "Marketing Automation",
+        "website": "https://www.activecampaign.com",
+        "logo_url": "https://logo.clearbit.com/activecampaign.com",
+        "match_score": 90,
+        "pricing": "$29-259/month",
+        "pros": ["Powerful automation", "CRM included", "Affordable pricing"],
+        "cons": ["Interface can be cluttered", "Support response times vary"]
+      },
+      {
+        "id": "mkt_vendor_4",
+        "name": "Marketo Engage",
+        "description": "Adobe's enterprise marketing automation solution",
+        "category": "Marketing Automation",
+        "website": "https://business.adobe.com/products/marketo",
+        "logo_url": "https://logo.clearbit.com/adobe.com",
+        "match_score": 87,
+        "pricing": "Custom (typically $1000+/month)",
+        "pros": ["Enterprise-grade features", "Advanced attribution", "Adobe ecosystem"],
+        "cons": ["Very expensive", "Complex setup", "Requires dedicated admin"]
+      },
+      {
+        "id": "mkt_vendor_5",
+        "name": "Pardot (by Salesforce)",
+        "description": "B2B marketing automation integrated with Salesforce",
+        "category": "Marketing Automation",
+        "website": "https://www.salesforce.com/products/marketing-cloud/marketing-automation",
+        "logo_url": "https://logo.clearbit.com/salesforce.com",
+        "match_score": 85,
+        "pricing": "$1250-4000/month",
+        "pros": ["Deep Salesforce integration", "Strong lead scoring", "ROI tracking"],
+        "cons": ["Expensive", "Requires Salesforce", "Complex reporting"]
+      },
+      {
+        "id": "mkt_vendor_6",
+        "name": "Klaviyo",
+        "description": "eCommerce-focused marketing automation with strong email capabilities",
+        "category": "Marketing Automation",
+        "website": "https://www.klaviyo.com",
+        "logo_url": "https://logo.clearbit.com/klaviyo.com",
+        "match_score": 82,
+        "pricing": "$20-2000+/month",
+        "pros": ["Excellent for eCommerce", "Strong segmentation", "Good templates"],
+        "cons": ["Limited for non-eCommerce", "Can be expensive at scale"]
+      },
+      {
+        "id": "mkt_vendor_7",
+        "name": "Brevo (Sendinblue)",
+        "description": "Affordable all-in-one marketing platform for SMBs",
+        "category": "Marketing Automation",
+        "website": "https://www.brevo.com",
+        "logo_url": "https://logo.clearbit.com/brevo.com",
+        "match_score": 79,
+        "pricing": "$0-65/month",
+        "pros": ["Very affordable", "SMS included", "Easy to use"],
+        "cons": ["Limited advanced features", "Fewer integrations", "Basic reporting"]
+      },
+      {
+        "id": "mkt_vendor_8",
+        "name": "GetResponse",
+        "description": "Email marketing and automation platform with webinar capabilities",
+        "category": "Marketing Automation",
+        "website": "https://www.getresponse.com",
+        "logo_url": "https://logo.clearbit.com/getresponse.com",
+        "match_score": 76,
+        "pricing": "$15-99/month",
+        "pros": ["Webinar feature", "Affordable", "Landing page builder"],
+        "cons": ["UI feels outdated", "Limited CRM functionality"]
+      }
+    ],
+    "Cloud Infrastructure": [
+      {
+        "id": "cloud_vendor_1",
+        "name": "Amazon Web Services (AWS)",
+        "description": "Market-leading cloud platform with the most comprehensive service offerings",
+        "category": "Cloud Infrastructure",
+        "website": "https://aws.amazon.com",
+        "logo_url": "https://logo.clearbit.com/aws.amazon.com",
+        "match_score": 94,
+        "pricing": "Pay-as-you-go, from $0/month",
+        "pros": ["Largest service catalog", "Global infrastructure", "Mature ecosystem"],
+        "cons": ["Complex pricing", "Steep learning curve", "Can be expensive"]
+      },
+      {
+        "id": "cloud_vendor_2",
+        "name": "Microsoft Azure",
+        "description": "Enterprise-focused cloud platform with strong hybrid capabilities",
+        "category": "Cloud Infrastructure",
+        "website": "https://azure.microsoft.com",
+        "logo_url": "https://logo.clearbit.com/microsoft.com",
+        "match_score": 92,
+        "pricing": "Pay-as-you-go, from $0/month",
+        "pros": ["Microsoft integration", "Hybrid cloud strength", "Enterprise support"],
+        "cons": ["Complex portal", "Documentation gaps", "Pricing complexity"]
+      },
+      {
+        "id": "cloud_vendor_3",
+        "name": "Google Cloud Platform (GCP)",
+        "description": "Cloud platform with strength in data analytics and machine learning",
+        "category": "Cloud Infrastructure",
+        "website": "https://cloud.google.com",
+        "logo_url": "https://logo.clearbit.com/google.com",
+        "match_score": 89,
+        "pricing": "Pay-as-you-go, from $0/month",
+        "pros": ["Best ML/AI tools", "Simple pricing", "Strong in data analytics"],
+        "cons": ["Smaller service catalog", "Less enterprise focused", "Fewer regions"]
+      },
+      {
+        "id": "cloud_vendor_4",
+        "name": "DigitalOcean",
+        "description": "Developer-friendly cloud platform with simple pricing",
+        "category": "Cloud Infrastructure",
+        "website": "https://www.digitalocean.com",
+        "logo_url": "https://logo.clearbit.com/digitalocean.com",
+        "match_score": 84,
+        "pricing": "$4-960+/month",
+        "pros": ["Simple pricing", "Easy to use", "Great documentation"],
+        "cons": ["Fewer services", "Limited enterprise features", "Smaller scale"]
+      },
+      {
+        "id": "cloud_vendor_5",
+        "name": "Linode (Akamai)",
+        "description": "Affordable cloud computing with predictable pricing",
+        "category": "Cloud Infrastructure",
+        "website": "https://www.linode.com",
+        "logo_url": "https://logo.clearbit.com/linode.com",
+        "match_score": 81,
+        "pricing": "$5-960+/month",
+        "pros": ["Affordable", "Straightforward pricing", "Good performance"],
+        "cons": ["Limited managed services", "Fewer datacenters", "Basic features"]
+      },
+      {
+        "id": "cloud_vendor_6",
+        "name": "Vultr",
+        "description": "High-performance cloud compute with global presence",
+        "category": "Cloud Infrastructure",
+        "website": "https://www.vultr.com",
+        "logo_url": "https://logo.clearbit.com/vultr.com",
+        "match_score": 79,
+        "pricing": "$2.50-960+/month",
+        "pros": ["Cost-effective", "Many locations", "Fast deployment"],
+        "cons": ["Basic dashboard", "Limited managed services", "Support quality varies"]
+      },
+      {
+        "id": "cloud_vendor_7",
+        "name": "Oracle Cloud Infrastructure",
+        "description": "Enterprise cloud with strong database and autonomous services",
+        "category": "Cloud Infrastructure",
+        "website": "https://www.oracle.com/cloud",
+        "logo_url": "https://logo.clearbit.com/oracle.com",
+        "match_score": 83,
+        "pricing": "Pay-as-you-go, generous free tier",
+        "pros": ["Excellent for Oracle databases", "Competitive pricing", "Free tier"],
+        "cons": ["Smaller ecosystem", "Complex licensing", "Limited adoption"]
+      },
+      {
+        "id": "cloud_vendor_8",
+        "name": "IBM Cloud",
+        "description": "Hybrid cloud platform with AI and data services focus",
+        "category": "Cloud Infrastructure",
+        "website": "https://www.ibm.com/cloud",
+        "logo_url": "https://logo.clearbit.com/ibm.com",
+        "match_score": 77,
+        "pricing": "Pay-as-you-go",
+        "pros": ["Strong in AI/Watson", "Hybrid cloud capabilities", "Enterprise support"],
+        "cons": ["Complex interface", "Smaller market share", "Limited documentation"]
+      }
+    ],
+    "default": [
+      {
+        "id": "default_vendor_1",
+        "name": "Sample Vendor A",
+        "description": "Leading solution provider with comprehensive features",
+        "category": "General",
+        "website": "https://example.com/vendor-a",
+        "logo_url": "",
+        "match_score": 85,
+        "pricing": "$50-500/month",
+        "pros": ["Feature-rich", "Good support", "Easy to use"],
+        "cons": ["Can be expensive", "Learning curve"]
+      },
+      {
+        "id": "default_vendor_2",
+        "name": "Sample Vendor B",
+        "description": "Cost-effective solution for small to medium businesses",
+        "category": "General",
+        "website": "https://example.com/vendor-b",
+        "logo_url": "",
+        "match_score": 80,
+        "pricing": "$25-250/month",
+        "pros": ["Affordable", "Simple setup", "Good value"],
+        "cons": ["Fewer features", "Limited integrations"]
+      },
+      {
+        "id": "default_vendor_3",
+        "name": "Sample Vendor C",
+        "description": "Enterprise-grade platform with advanced capabilities",
+        "category": "General",
+        "website": "https://example.com/vendor-c",
+        "logo_url": "",
+        "match_score": 75,
+        "pricing": "Custom pricing",
+        "pros": ["Scalable", "Customizable", "Strong security"],
+        "cons": ["Complex", "Expensive", "Requires training"]
+      }
+    ]
+  },
+  "aiSummaries": {
+    "summaries": {
+      "CRM Software": "I have explored 20 criteria that are most likely relevant to you.",
+      "Marketing Automation": "I have explored 20 criteria that are most likely relevant to you.",
+      "DevOps & Infrastructure": "I have explored 20 criteria that are most likely relevant to you.",
+      "Project Management": "I have explored 20 criteria that are most likely relevant to you.",
+      "Analytics & BI": "I have explored 20 criteria that are most likely relevant to you.",
+      "Communication Tools": "I have explored 20 criteria that are most likely relevant to you.",
+      "Security Solutions": "I have explored 20 criteria that are most likely relevant to you.",
+      "HR & Talent Management": "I have explored 20 criteria that are most likely relevant to you.",
+      "E-commerce Platforms": "I have explored 20 criteria that are most likely relevant to you.",
+      "Data Management": "I have explored 20 criteria that are most likely relevant to you.",
+      "AI & Machine Learning": "I have explored 20 criteria that are most likely relevant to you.",
+      "Cloud Infrastructure": "I have explored 20 criteria that are most likely relevant to you."
+    },
+    "default": "I have explored 20 criteria that are most likely relevant to you."
+  },
+  "auth": {
+    "user": {
+      "id": "user_demo_12345",
+      "email": "demo@vendora.ai",
+      "name": "Demo User",
+      "company": "Acme Corporation",
+      "role": "user",
+      "status": "active",
+      "created_at": "2024-11-01T10:00:00Z",
+      "updated_at": "2024-11-12T10:00:00Z"
+    },
+    "session": {
+      "access_token": "demo_access_token_xyz123abc",
+      "refresh_token": "demo_refresh_token_abc789xyz",
+      "expires_at": "2099-12-31T23:59:59Z",
+      "expires_in": 2147483647,
+      "token_type": "bearer"
+    }
+  },
+  "executiveSummary": {
+    "title": "CRM System Selection - Executive Summary",
+    "generatedAt": "2024-11-22T10:30:00Z",
+    "sections": {
+      "keyCriteria": {
+        "title": "Key Criteria Overview",
+        "content": "Based on your evaluation framework, the following criteria are most critical to your CRM selection:",
+        "highPriority": [
+          "Contact Management System",
+          "Sales Pipeline Visualization",
+          "Email Integration (Gmail/Outlook)",
+          "Mobile App Availability",
+          "Reporting & Analytics Dashboard",
+          "Real-time Synchronization",
+          "System Performance & Speed",
+          "Multi-user Collaboration",
+          "Pricing Model & Affordability",
+          "Customer Support Quality",
+          "Data Security & Encryption",
+          "GDPR Compliance"
+        ]
+      },
+      "vendorRecommendations": {
+        "title": "Top Vendor Recommendations",
+        "topPicks": [
+          {
+            "rank": 1,
+            "name": "Salesforce",
+            "matchScore": 92,
+            "reasoning": "Best overall match for enterprise needs with strongest performance in contact management, reporting/analytics, and security compliance. Ideal if budget is flexible and you need maximum customization and scalability."
+          },
+          {
+            "rank": 2,
+            "name": "HubSpot",
+            "matchScore": 89,
+            "reasoning": "Excellent balance of features and usability with superior onboarding resources. Best choice if you value ease of adoption and have mixed marketing/sales needs. Strong email integration and lead scoring capabilities."
+          },
+          {
+            "rank": 3,
+            "name": "Pipedrive",
+            "matchScore": 87,
+            "reasoning": "Best value for sales-focused teams prioritizing pipeline management and mobile access. Offers transparent, affordable pricing with excellent visual pipeline tools. Limited API access may be a concern for complex integrations."
+          }
+        ]
+      },
+      "keyDifferentiators": {
+        "title": "Key Differentiators Between Top Vendors",
+        "differentiators": [
+          {
+            "category": "Customization & Flexibility",
+            "leader": "Salesforce",
+            "details": "Salesforce offers unmatched customization with custom fields, workflows, and the AppExchange marketplace. HubSpot provides good customization within its ecosystem. Pipedrive is more limited but simpler."
+          },
+          {
+            "category": "Ease of Use",
+            "leader": "HubSpot",
+            "details": "HubSpot has the most intuitive interface and best onboarding experience. Pipedrive is also user-friendly. Salesforce has a steeper learning curve due to its extensive features."
+          },
+          {
+            "category": "Pricing & Value",
+            "leader": "Pipedrive/HubSpot",
+            "details": "Pipedrive offers the most transparent and affordable pricing. HubSpot provides excellent value with its free tier. Salesforce is the most expensive but offers enterprise-grade capabilities."
+          },
+          {
+            "category": "AI & Automation",
+            "leader": "Salesforce",
+            "details": "Salesforce Einstein provides the most advanced AI capabilities. HubSpot offers strong marketing automation. Pipedrive has basic automation features."
+          },
+          {
+            "category": "Mobile Experience",
+            "leader": "Pipedrive",
+            "details": "Pipedrive has the most polished mobile app experience. All three offer mobile apps, but Pipedrive's is considered best for on-the-go sales teams."
+          }
+        ]
+      },
+      "riskFactors": {
+        "title": "Risk Factors & Call Preparation",
+        "description": "Critical questions and considerations for your vendor evaluation calls:",
+        "questionsToAsk": [
+          {
+            "vendor": "Salesforce",
+            "questions": [
+              "What is the total cost of ownership including implementation, training, and ongoing admin support?",
+              "How long does typical implementation take for a team of our size?",
+              "What support tier is included in our pricing, and what are the response time SLAs?",
+              "Can you provide references from companies in our industry with similar team sizes?"
+            ]
+          },
+          {
+            "vendor": "HubSpot",
+            "questions": [
+              "What features are limited on our chosen tier that we might need later?",
+              "How does pricing scale as we add more users and contacts?",
+              "What is the process for migrating our existing data from [current system]?",
+              "Can you demonstrate the reporting capabilities for our specific KPIs?"
+            ]
+          },
+          {
+            "vendor": "Pipedrive",
+            "questions": [
+              "What workarounds exist for the limited API access?",
+              "How do you handle custom workflows beyond the standard pipeline stages?",
+              "What integrations are available for our tech stack?",
+              "Can you show us how teams of our size typically organize their pipelines?"
+            ]
+          }
+        ],
+        "generalConsiderations": [
+          "Request a trial period with full feature access before committing",
+          "Verify data export capabilities and migration support if switching vendors later",
+          "Confirm GDPR compliance documentation and data processing agreements",
+          "Ask about upcoming feature releases and product roadmap",
+          "Clarify contract terms, cancellation policies, and price lock periods"
+        ]
+      }
+    }
+  },
+  "projects": [
+    {
+      "id": "proj_001_crm",
+      "user_id": "user_demo_12345",
+      "name": "CRM Software Selection",
+      "description": "Finding the best CRM solution for our sales team of 50 people",
+      "category": "CRM Software",
+      "status": "in_progress",
+      "workflow_state": {
+        "current_step": 3,
+        "completed_steps": [1, 2],
+        "step_1_data": {
+          "description": "CRM for sales team management and customer tracking",
+          "team_size": "50",
+          "requirements": ["Contact management", "Pipeline tracking", "Email integration"]
+        },
+        "step_2_data": {
+          "criteria_count": 20
+        }
+      },
+      "created_at": "2024-11-10T14:30:00Z",
+      "updated_at": "2024-11-12T09:15:00Z"
+    },
+    {
+      "id": "proj_002_marketing",
+      "user_id": "user_demo_12345",
+      "name": "Marketing Automation Platform",
+      "description": "Evaluating marketing automation tools for email campaigns and lead nurturing",
+      "category": "Marketing Automation",
+      "status": "draft",
+      "workflow_state": {
+        "current_step": 1,
+        "completed_steps": [],
+        "step_1_data": {}
+      },
+      "created_at": "2024-11-11T10:00:00Z",
+      "updated_at": "2024-11-11T10:00:00Z"
+    },
+    {
+      "id": "proj_003_cloud",
+      "user_id": "user_demo_12345",
+      "name": "Cloud Infrastructure Provider",
+      "description": "Comparing AWS, Azure, and GCP for our cloud migration project",
+      "category": "Cloud Infrastructure",
+      "status": "completed",
+      "workflow_state": {
+        "current_step": 5,
+        "completed_steps": [1, 2, 3, 4, 5],
+        "step_1_data": {
+          "description": "Cloud hosting for web applications",
+          "team_size": "10",
+          "requirements": ["Auto-scaling", "Load balancing", "Global CDN"]
+        },
+        "step_2_data": {
+          "criteria_count": 20
+        },
+        "step_3_data": {
+          "vendors_count": 8
+        },
+        "step_4_data": {
+          "comparison_complete": true
+        },
+        "step_5_data": {
+          "emails_generated": 8
+        }
+      },
+      "created_at": "2024-11-05T08:00:00Z",
+      "updated_at": "2024-11-09T16:45:00Z"
+    }
+  ]
+}

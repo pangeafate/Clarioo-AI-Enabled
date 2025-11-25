@@ -14,7 +14,7 @@ import VendorInviteNew from "./vendor-discovery/VendorInviteNew";
 import { WorkflowNavigation, WORKFLOW_STEPS, type Step } from "./WorkflowNavigation";
 import { SPACING } from '@/styles/spacing-config';
 import { TYPOGRAPHY } from '@/styles/typography-config';
-import { getCriteriaFromStorage, getProjectByIdFromStorage } from '@/services/n8nService';
+import { getCriteriaFromStorage, getProjectByIdFromStorage, needsEmailRetry, retryEmailCollection } from '@/services/n8nService';
 
 /**
  * GAP-1: Workflow State Persistence Structure
@@ -484,6 +484,13 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
   };
 
   const handleStepClick = async (stepId: Step) => {
+    // SP_017: Silent email retry on navigation
+    if (needsEmailRetry()) {
+      retryEmailCollection().catch(err => {
+        console.error('[email-retry] Silent retry failed during step navigation:', err);
+      });
+    }
+
     // GAP-2 FIX: Navigation handled by WorkflowNavigation component
     // This allows bidirectional navigation - users can go back and then forward again
     setCurrentStep(stepId);

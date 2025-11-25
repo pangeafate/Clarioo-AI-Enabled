@@ -14,9 +14,13 @@ import type {
   TransformedProject,
   TransformedCriterion,
   ProjectCreationResult,
+  EmailCollectionRequest,
+  EmailCollectionResponse,
+  EmailCollectionStorage,
 } from '@/types';
 
 import type { CriterionScoreDetail } from '@/types/comparison.types';
+import { collectDeviceMetadata } from '@/utils/deviceMetadata';
 
 // ===========================================
 // Configuration
@@ -25,6 +29,7 @@ import type { CriterionScoreDetail } from '@/types/comparison.types';
 const N8N_PROJECT_CREATION_URL = 'https://n8n.lakestrom.com/webhook/clarioo-project-creation';
 const N8N_CRITERIA_CHAT_URL = 'https://n8n.lakestrom.com/webhook/clarioo-criteria-chat';
 const N8N_FIND_VENDORS_URL = 'https://n8n.lakestrom.com/webhook/clarioo-find-vendors';
+const N8N_EMAIL_COLLECTION_URL = 'https://n8n.lakestrom.com/webhook/clarioo-email-collection';
 const TIMEOUT_MS = 120000; // 2 minutes for project creation and criteria chat
 const VENDOR_SEARCH_TIMEOUT_MS = 180000; // 3 minutes for vendor search
 
@@ -988,4 +993,269 @@ export const clearExecutiveSummaryFromStorage = (projectId: string): void => {
   const key = `${EXECUTIVE_SUMMARY_PREFIX}${projectId}`;
   localStorage.removeItem(key);
   console.log('[n8n-summary] Executive summary cache cleared for project:', projectId);
+};
+
+// ===========================================
+// Email Collection (SP_017)
+// ===========================================
+
+const EMAIL_STORAGE_KEY = 'clarioo_email';
+
+// ===========================================
+// Email Collection Storage Functions
+// ===========================================
+
+/**
+ * Get email collection status from localStorage
+ *
+ * @returns EmailCollectionStorage object or null if not found
+ */
+export const getEmailFromStorage = (): EmailCollectionStorage | null => {
+  const stored = localStorage.getItem(EMAIL_STORAGE_KEY);
+  if (!stored) return null;
+
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Save email collection status to localStorage
+ *
+ * @param email - User's email address
+ * @param passedToN8n - Whether email was successfully sent to n8n
+ */
+export const saveEmailToStorage = (email: string, passedToN8n: boolean): void => {
+  const data: EmailCollectionStorage = {
+    email_submitted: true,
+    email: email.toLowerCase().trim(),
+    timestamp: new Date().toISOString(),
+    email_passed_to_n8n: passedToN8n,
+  };
+
+  localStorage.setItem(EMAIL_STORAGE_KEY, JSON.stringify(data));
+  console.log('[email] Email collection status saved:', { email, passedToN8n });
+};
+
+/**
+ * Check if email has been submitted
+ *
+ * @returns True if email has been submitted, false otherwise
+ */
+export const hasSubmittedEmail = (): boolean => {
+  const stored = getEmailFromStorage();
+  return stored?.email_submitted === true;
+};
+
+/**
+ * Check if email needs retry (submitted but not passed to n8n)
+ *
+ * @returns True if email needs retry, false otherwise
+ */
+export const needsEmailRetry = (): boolean => {
+  const stored = getEmailFromStorage();
+  return stored?.email_submitted === true && stored?.email_passed_to_n8n === false;
+};
+
+/**
+ * Update email_passed_to_n8n flag after successful retry
+ */
+export const markEmailPassedToN8n = (): void => {
+  const stored = getEmailFromStorage();
+  if (stored) {
+    stored.email_passed_to_n8n = true;
+    localStorage.setItem(EMAIL_STORAGE_KEY, JSON.stringify(stored));
+    console.log('[email] Email marked as passed to n8n');
+  }
+};
+
+// ===========================================
+// Email Collection API
+// ===========================================
+
+/**
+ * Collect user email and send to n8n workflow for Google Sheets storage
+ *
+ * This function is called when the user submits their email in the
+ * EmailCollectionModal. It collects device metadata, generates/retrieves
+ * user_id, and sends everything to the n8n webhook.
+ *
+ * @param email - User's email address
+ * @returns Promise resolving to success/failure response
+ * @throws Error if request fails or times out
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   const result = await collectEmail('user@example.com');
+ *   if (result.success) {
+ *     console.log('Email collected successfully');
+ *   }
+ * } catch (error) {
+ *   console.error('Email collection failed:', error);
+ * }
+ * ```
+ */
+export const collectEmail = async (email: string): Promise<EmailCollectionResponse> => {
+  console.log('[email] Starting email collection...');
+  console.log('[email] Email:', email);
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new Error('Invalid email format');
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  try {
+    // Get or create user_id (from existing SP_016 function)
+    const userId = getUserId();
+    console.log('[email] User ID:', userId);
+
+    // Collect device metadata
+    const deviceMetadata = collectDeviceMetadata();
+    console.log('[email] Device metadata:', deviceMetadata);
+
+    const requestBody: EmailCollectionRequest = {
+      email: email.toLowerCase().trim(),
+      user_id: userId,
+      timestamp: new Date().toISOString(),
+      device_metadata: deviceMetadata,
+    };
+
+    console.log('[email] Sending request to:', N8N_EMAIL_COLLECTION_URL);
+    console.log('[email] Request body:', JSON.stringify(requestBody, null, 2));
+
+    const response = await fetch(N8N_EMAIL_COLLECTION_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    console.log('[email] Response status:', response.status, response.statusText);
+
+    if (!response.ok) {
+      console.error('[email] HTTP error:', response.status, response.statusText);
+
+      // Save to localStorage with failed flag for retry
+      saveEmailToStorage(email, false);
+
+      // Don't throw error - allow user to proceed
+      return {
+        success: false,
+        error: {
+          code: `HTTP_${response.status}`,
+          message: `HTTP error: ${response.status} ${response.statusText}`,
+        },
+      };
+    }
+
+    const data: EmailCollectionResponse = await response.json();
+    console.log('[email] Response data:', JSON.stringify(data, null, 2));
+
+    if (data.success) {
+      // Save to localStorage with success flag
+      saveEmailToStorage(email, true);
+      console.log('[email] Email collected successfully');
+    } else {
+      // Save to localStorage with failed flag for retry
+      saveEmailToStorage(email, false);
+      console.log('[email] Email collection failed, will retry later');
+    }
+
+    return data;
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        console.error('[email] Request timeout after', TIMEOUT_MS, 'ms');
+
+        // Save to localStorage with failed flag for retry
+        saveEmailToStorage(email, false);
+
+        // Don't throw error - allow user to proceed
+        return {
+          success: false,
+          error: {
+            code: 'TIMEOUT',
+            message: 'Request timeout - will retry later',
+          },
+        };
+      }
+
+      console.error('[email] Error:', error.message);
+
+      // Save to localStorage with failed flag for retry
+      saveEmailToStorage(email, false);
+
+      // Don't throw error - allow user to proceed
+      return {
+        success: false,
+        error: {
+          code: 'NETWORK_ERROR',
+          message: error.message,
+        },
+      };
+    }
+
+    console.error('[email] Unexpected error:', error);
+
+    // Save to localStorage with failed flag for retry
+    saveEmailToStorage(email, false);
+
+    // Don't throw error - allow user to proceed
+    return {
+      success: false,
+      error: {
+        code: 'UNKNOWN_ERROR',
+        message: 'An unexpected error occurred',
+      },
+    };
+  }
+};
+
+/**
+ * Retry email collection silently in background
+ * Called on user actions (step navigation, project creation, etc.)
+ *
+ * This function checks if there's a pending email retry, and if so,
+ * attempts to send the email to n8n again. It runs silently without
+ * blocking user interaction or showing errors.
+ *
+ * @returns Promise resolving when retry completes (success or failure)
+ */
+export const retryEmailCollection = async (): Promise<void> => {
+  if (!needsEmailRetry()) {
+    return; // No retry needed
+  }
+
+  const stored = getEmailFromStorage();
+  if (!stored) {
+    return; // No stored email
+  }
+
+  console.log('[email-retry] Attempting silent retry for:', stored.email);
+
+  try {
+    const result = await collectEmail(stored.email);
+    if (result.success) {
+      console.log('[email-retry] Retry successful');
+      markEmailPassedToN8n();
+    } else {
+      console.log('[email-retry] Retry failed, will try again later');
+    }
+  } catch (error) {
+    console.error('[email-retry] Retry error:', error);
+    // Silently fail - will retry on next user action
+  }
 };

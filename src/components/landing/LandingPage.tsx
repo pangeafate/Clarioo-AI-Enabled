@@ -54,10 +54,11 @@ import { AnimatedInputs } from './AnimatedInputs';
 import { ArtifactVisualization } from './ArtifactVisualization';
 import { CardCarousel } from './CardCarousel';
 import { ProjectCreationAnimation } from './ProjectCreationAnimation';
+import { EmailCollectionModal } from '../email/EmailCollectionModal';
 import ProjectDashboard from '../ProjectDashboard';
 import VendorDiscovery, { Project } from '../VendorDiscovery';
 import * as projectService from '@/services/mock/projectService';
-import { saveCriteriaToStorage } from '@/services/n8nService';
+import { saveCriteriaToStorage, hasSubmittedEmail, needsEmailRetry, retryEmailCollection } from '@/services/n8nService';
 
 // SP_011: View mode type definition
 type ViewMode = 'landing' | 'project';
@@ -111,6 +112,9 @@ export const LandingPage = () => {
   const [showCreationAnimation, setShowCreationAnimation] = useState(false);
   const [pendingProject, setPendingProject] = useState<Project | null>(null);
   const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0); // Force dashboard re-mount
+
+  // SP_017: Email collection modal state
+  const [showEmailModal, setShowEmailModal] = useState(false);
 
   // SP_011: View toggle handler
   const handleViewToggle = () => {
@@ -248,20 +252,29 @@ export const LandingPage = () => {
   /**
    * Create new project from landing page inputs using n8n AI workflow
    * SP_016: Uses n8n to generate project name, description, category, and criteria
+   * SP_017: Added email collection check before project creation
    *
    * Flow:
-   * 1. Show animation IMMEDIATELY when button clicked
-   * 2. Call n8n API in background
-   * 3. When n8n returns, store project and criteria
-   * 4. Animation continues until complete
-   * 5. On animation complete, show project in dashboard
+   * 1. Check if email has been submitted
+   * 2. If not, show EmailCollectionModal (blocking)
+   * 3. On email success, proceed with project creation
+   * 4. Show animation IMMEDIATELY
+   * 5. Call n8n API in background
+   * 6. When n8n returns, store project and criteria
+   * 7. Animation continues until complete
+   * 8. On animation complete, show project in dashboard
    */
   const handleCreateProject = async () => {
+    console.log('[LandingPage] ===== handleCreateProject START =====');
+
     // Validate inputs - at least one field must have 10+ characters for n8n
     const hasEnoughCompany = companyInput.trim().length >= 10;
     const hasEnoughSolution = solutionInput.trim().length >= 10;
 
+    console.log('[LandingPage] Input validation:', { hasEnoughCompany, hasEnoughSolution });
+
     if (!hasEnoughCompany && !hasEnoughSolution) {
+      console.log('[LandingPage] VALIDATION FAILED - returning early');
       toast({
         title: "More details needed",
         description: "Please provide at least 10 characters in one of the fields for AI processing.",
@@ -270,9 +283,60 @@ export const LandingPage = () => {
       return;
     }
 
+    // SP_017: Check if email has been submitted
+    const emailSubmitted = hasSubmittedEmail();
+    console.log('[LandingPage] Email submitted check:', emailSubmitted);
+    console.log('[LandingPage] localStorage clarioo_email:', localStorage.getItem('clarioo_email'));
+
+    if (!emailSubmitted) {
+      // Show email collection modal (blocking)
+      console.log('[LandingPage] ===== EMAIL NOT SUBMITTED - SHOWING MODAL AND RETURNING =====');
+      setShowEmailModal(true);
+      console.log('[LandingPage] showEmailModal set to true, now RETURNING');
+      return;
+    }
+
+    console.log('[LandingPage] ===== EMAIL ALREADY SUBMITTED - PROCEEDING WITH PROJECT CREATION =====');
+
+    // SP_017: Check if email needs silent retry
+    if (needsEmailRetry()) {
+      retryEmailCollection().catch(err => {
+        console.error('[email-retry] Silent retry failed:', err);
+        // Continue anyway - will retry on next action
+      });
+    }
+
+    // Proceed with project creation
+    proceedWithProjectCreation();
+  };
+
+  /**
+   * SP_017: Handle email collection success
+   */
+  const handleEmailSuccess = () => {
+    console.log('[LandingPage] ===== EMAIL SUCCESS CALLBACK =====');
+    setShowEmailModal(false);
+    console.log('[LandingPage] Modal closed, now calling proceedWithProjectCreation');
+    // Proceed with actual project creation
+    proceedWithProjectCreation();
+  };
+
+  /**
+   * SP_017: Handle email modal close (user clicked outside)
+   */
+  const handleEmailModalClose = () => {
+    setShowEmailModal(false);
+  };
+
+  /**
+   * SP_017: Actual project creation logic (extracted from handleCreateProject)
+   */
+  const proceedWithProjectCreation = async () => {
+    console.log('[LandingPage] ===== proceedWithProjectCreation START =====');
     setIsCreatingProject(true);
 
     // IMMEDIATELY show animation and switch to project view
+    console.log('[LandingPage] Setting currentView to project and showing animation');
     setCurrentView('project');
     setShowCreationAnimation(true);
 
@@ -479,6 +543,13 @@ export const LandingPage = () => {
         isOpen={showCreationAnimation}
         onComplete={handleAnimationComplete}
         isApiComplete={pendingProject !== null}
+      />
+
+      {/* SP_017: Email Collection Modal */}
+      <EmailCollectionModal
+        isOpen={showEmailModal}
+        onSuccess={handleEmailSuccess}
+        onClose={handleEmailModalClose}
       />
     </motion.div>
   );
