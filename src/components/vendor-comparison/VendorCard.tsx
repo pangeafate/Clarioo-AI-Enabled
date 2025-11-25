@@ -363,6 +363,11 @@ export const VendorCard: React.FC<VendorCardProps> = ({
                   >
                     Research Insights
                   </h4>
+                  {console.log('[VendorCard] Rendering Research Insights for', vendor.name, ':', {
+                    killerFeature: vendor.killerFeature,
+                    keyFeaturesCount: vendor.keyFeatures?.length,
+                    executiveSummary: vendor.executiveSummary
+                  })}
                   <ul className="space-y-2">
                     {/* Killer Feature - First bullet with star icon */}
                     {vendor.killerFeature && (

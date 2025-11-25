@@ -26,7 +26,7 @@ const N8N_PROJECT_CREATION_URL = 'https://n8n.lakestrom.com/webhook/clarioo-proj
 const N8N_CRITERIA_CHAT_URL = 'https://n8n.lakestrom.com/webhook/clarioo-criteria-chat';
 const N8N_FIND_VENDORS_URL = 'https://n8n.lakestrom.com/webhook/clarioo-find-vendors';
 const TIMEOUT_MS = 120000; // 2 minutes for project creation and criteria chat
-const VENDOR_SEARCH_TIMEOUT_MS = 120000; // 2 minutes for vendor search
+const VENDOR_SEARCH_TIMEOUT_MS = 180000; // 3 minutes for vendor search
 
 // ===========================================
 // Criteria Chat Types
@@ -495,7 +495,7 @@ export const findVendors = async (
 
 const N8N_COMPARE_VENDORS_URL = 'https://n8n.lakestrom.com/webhook/clarioo-compare-vendors';
 const N8N_EXECUTIVE_SUMMARY_URL = 'https://n8n.lakestrom.com/webhook/clarioo-executive-summary';
-const COMPARE_VENDOR_TIMEOUT_MS = 120000; // 2 minutes per vendor
+const COMPARE_VENDOR_TIMEOUT_MS = 180000; // 3 minutes per vendor comparison
 
 export interface VendorForComparison {
   id: string;
@@ -597,6 +597,7 @@ export const compareVendor = async (
       matchPercentage: data.vendor?.matchPercentage,
       summary: data.research_summary
     });
+    console.log('[n8n-compare] Full vendor data:', data.vendor);
 
     if (!data.success) {
       const errorMessage = data.error?.message || 'Vendor comparison failed';

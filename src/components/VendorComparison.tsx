@@ -213,6 +213,12 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
     if (stored) {
       try {
         const parsedStates: Record<string, VendorComparisonState> = JSON.parse(stored);
+        console.log('[VendorComparison] Loading from localStorage:', Object.keys(parsedStates).map(id => ({
+          id,
+          name: parsedStates[id].comparedData?.name,
+          hasKillerFeature: !!parsedStates[id].comparedData?.killerFeature,
+          killerFeature: parsedStates[id].comparedData?.killerFeature
+        })));
         setVendorComparisonStates(parsedStates);
 
         // Check if all vendors have been compared
@@ -290,6 +296,11 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
       );
 
       if (response.success && response.vendor) {
+        console.log('[VendorComparison] Storing compared data for', vendor.name, ':', {
+          killerFeature: response.vendor.killerFeature,
+          executiveSummary: response.vendor.executiveSummary,
+          keyFeatures: response.vendor.keyFeatures
+        });
         setVendorComparisonStates(prev => ({
           ...prev,
           [vendor.id]: {
@@ -433,6 +444,12 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
           comparedData.scores,
           criteriaForCalc
         );
+
+        console.log('[VendorComparison] Using compared data for', v.name, ':', {
+          killerFeature: comparedData.killerFeature,
+          executiveSummary: comparedData.executiveSummary,
+          keyFeaturesCount: comparedData.keyFeatures?.length
+        });
 
         return {
           id: v.id,
