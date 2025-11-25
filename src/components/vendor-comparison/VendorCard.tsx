@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Info, Bot, Trash2, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Info, Bot, Trash2, Star, RotateCcw, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ComparisonVendor } from '../../types/comparison.types';
 import { Button } from '../ui/button';
@@ -23,6 +23,7 @@ interface VendorCardProps {
   className?: string;
   isShortlisted?: boolean;
   onToggleShortlist?: (vendorId: string) => void;
+  onRetryVendor?: (vendorId: string) => void;
 }
 
 const colorClasses = {
@@ -58,6 +59,7 @@ export const VendorCard: React.FC<VendorCardProps> = ({
   className = '',
   isShortlisted = false,
   onToggleShortlist,
+  onRetryVendor,
 }) => {
   const { toast } = useToast();
   const hasPrevious = currentIndex > 0;
@@ -71,6 +73,10 @@ export const VendorCard: React.FC<VendorCardProps> = ({
 
   // Star shine animation state
   const [isShining, setIsShining] = useState(false);
+
+  // Check if vendor has failed
+  const isFailed = vendor?.comparisonStatus === 'failed';
+  const isTimeout = vendor?.comparisonErrorCode === 'TIMEOUT';
 
   const handleToggleShortlist = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -91,6 +97,17 @@ export const VendorCard: React.FC<VendorCardProps> = ({
           description: `${vendor.name} has been removed from the shortlist.`
         });
       }
+    }
+  };
+
+  const handleRetry = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (vendor && onRetryVendor) {
+      onRetryVendor(vendor.id);
+      toast({
+        title: "Retrying comparison",
+        description: `Re-researching ${vendor.name}...`
+      });
     }
   };
 
@@ -171,9 +188,25 @@ export const VendorCard: React.FC<VendorCardProps> = ({
           }}
           className={`flex-1 flex items-center border-2 rounded-2xl ${SPACING.vendorComparison.card.container} min-w-0 overflow-hidden cursor-pointer hover:shadow-md transition-shadow relative bg-white`}
         >
-          {/* Info Icon - Top Right */}
+          {/* Retry Button (for failed vendors) or Info Icon - Top Right */}
           <div className="absolute top-2 right-2">
-            <Info className="h-4 w-4 text-gray-400" />
+            {isFailed ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleRetry}
+                className="h-6 w-6 hover:bg-orange-50"
+                title={isTimeout ? "Timeout - Click to retry" : "Error - Click to retry"}
+              >
+                {isTimeout ? (
+                  <RotateCcw className="h-4 w-4 text-orange-500" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-red-500" />
+                )}
+              </Button>
+            ) : (
+              <Info className="h-4 w-4 text-gray-400" />
+            )}
           </div>
 
           {/* Logo + Vendor Info */}

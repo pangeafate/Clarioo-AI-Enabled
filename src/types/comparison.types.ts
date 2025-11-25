@@ -66,6 +66,7 @@ export interface ComparisonVendor {
   scoreDetails?: Record<string, CriterionScoreDetail>; // Detailed scores with evidence
   comparisonStatus?: VendorComparisonStatus; // Status of comparison research
   comparisonError?: string; // Error message if comparison failed
+  comparisonErrorCode?: string; // Error code from n8n ('TIMEOUT', etc.)
 }
 
 /**

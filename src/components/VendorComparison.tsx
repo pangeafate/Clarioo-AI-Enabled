@@ -46,17 +46,17 @@ import {
  * Calculate match percentage from vendor scores and criteria
  *
  * Algorithm:
- * - Base scores: yes=80, star=80 (same base, stars add bonus)
- * - Unknown=40, No=10
+ * - Base scores: star=95, yes=80, unknown=60, no=10
  * - Importance weights: high=1.5, medium=1.0, low=0.7
  * - Feature category: 1.3x weight multiplier
- * - Star bonus: Each star adds weighted bonus points on top
- * - Result: 80% for all yes, stars add incrementally above that
+ * - Star scores are valued higher to differentiate exceptional performance
+ * - Result: Weighted average based on importance and type
  * - Cap at 98%
  */
 const calculateMatchPercentage = (
   scores: Record<string, 'no' | 'unknown' | 'yes' | 'star'>,
-  criteria: { id: string; importance: string; type?: string }[]
+  criteria: { id: string; importance: string; type?: string }[],
+  vendorName?: string // Optional for debugging
 ): number => {
   if (!scores || Object.keys(scores).length === 0 || criteria.length === 0) {
     return -1; // No data
@@ -69,25 +69,26 @@ const calculateMatchPercentage = (
     low: 0.7
   };
 
-  // Base score values (scaled so all "yes" = 80)
+  // Base score values
   const baseScores: Record<string, number> = {
-    star: 80,   // Same base as yes
+    star: 95,
     yes: 80,
-    unknown: 40,
+    unknown: 60,
     no: 10
   };
 
-  // Star bonus per weighted point (to add on top of base)
-  // This allows differentiation between vendors with different star counts
-  const starBonusBase = 6; // Each star adds this bonus to weighted average
-
   let totalWeight = 0;
   let weightedScore = 0;
-  let starBonusAccumulator = 0;
+
+  // Count scores by type for debugging
+  const scoreCount = { star: 0, yes: 0, unknown: 0, no: 0 };
 
   for (const criterion of criteria) {
     const score = scores[criterion.id];
     if (!score) continue;
+
+    // Track score counts
+    scoreCount[score]++;
 
     // Get importance multiplier
     const importanceWeight = importanceMultipliers[criterion.importance] || 1.0;
@@ -99,28 +100,28 @@ const calculateMatchPercentage = (
     const weight = importanceWeight * typeMultiplier;
 
     // Add to totals
-    const baseScore = baseScores[score] || 40;
+    const baseScore = baseScores[score] || 60;
     weightedScore += baseScore * weight;
     totalWeight += weight;
-
-    // Calculate star bonus separately (additive, not in base)
-    if (score === 'star') {
-      // Star bonus is proportional to the criterion's importance
-      // Higher importance stars contribute more bonus
-      const starBonus = starBonusBase * weight;
-      starBonusAccumulator += starBonus;
-    }
   }
 
   if (totalWeight === 0) return -1;
 
-  // Calculate base percentage (this will be 80 for all "yes")
+  // Calculate percentage
   let percentage = weightedScore / totalWeight;
 
-  // Add star bonuses (distributed across total weight to prevent extreme spikes)
-  // Normalize by dividing by total weight to get per-point bonus
-  const normalizedStarBonus = starBonusAccumulator / totalWeight;
-  percentage += normalizedStarBonus;
+  // Debug logging
+  if (vendorName) {
+    console.log(`🔍 Match % calculation for ${vendorName}:`, {
+      scores: scoreCount,
+      totalWeight: totalWeight.toFixed(2),
+      basePercentage: (weightedScore / totalWeight).toFixed(2),
+      starBonusAccumulator: starBonusAccumulator.toFixed(2),
+      normalizedStarBonus: normalizedStarBonus.toFixed(2),
+      finalBeforeCap: percentage.toFixed(2),
+      final: Math.min(percentage, 98).toFixed(2)
+    });
+  }
 
   // Cap at 98%
   percentage = Math.min(percentage, 98);
@@ -139,6 +140,7 @@ interface VendorComparisonState {
   status: VendorComparisonStatus;
   comparedData?: ComparedVendor;
   error?: string;
+  errorCode?: string; // 'TIMEOUT' or other error codes from n8n
 }
 
 // localStorage key prefix for compared vendors
@@ -319,7 +321,8 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
           ...prev,
           [vendor.id]: {
             status: 'failed',
-            error: response.error?.message || 'Comparison failed'
+            error: response.error?.message || 'Comparison failed',
+            errorCode: response.error?.code || 'UNKNOWN_ERROR'
           }
         }));
       }
@@ -328,7 +331,8 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
         ...prev,
         [vendor.id]: {
           status: 'failed',
-          error: error instanceof Error ? error.message : 'Comparison failed'
+          error: error instanceof Error ? error.message : 'Comparison failed',
+          errorCode: 'UNKNOWN_ERROR'
         }
       }));
     }
@@ -448,7 +452,8 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
         // Calculate match percentage client-side from scores
         const calculatedMatchPercentage = calculateMatchPercentage(
           comparedData.scores,
-          criteriaForCalc
+          criteriaForCalc,
+          v.name // Pass vendor name for debugging
         );
 
         console.log('[VendorComparison] Using compared data for', v.name, ':', {
@@ -490,6 +495,7 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
         // Additional state info for UI
         comparisonStatus: comparisonState?.status || 'pending',
         comparisonError: comparisonState?.error,
+        comparisonErrorCode: comparisonState?.errorCode,
       };
     });
 
@@ -603,7 +609,8 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
           // Calculate match percentage client-side
           const calculatedMatchPercentage = calculateMatchPercentage(
             state.comparedData.scores,
-            criteriaForCalc
+            criteriaForCalc,
+            vendor.name // Pass vendor name for debugging
           );
 
           // Create a copy with the calculated match percentage
@@ -914,6 +921,7 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
                 onNavigate={handleVendor1Navigate}
                 isShortlisted={shortlistedVendorIds.has(vendor1.id)}
                 onToggleShortlist={toggleShortlist}
+                onRetryVendor={retryVendor}
               />
             )}
 
@@ -926,6 +934,7 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
                 onNavigate={handleVendor2Navigate}
                 isShortlisted={shortlistedVendorIds.has(vendor2.id)}
                 onToggleShortlist={toggleShortlist}
+                onRetryVendor={retryVendor}
               />
             )}
 
@@ -938,6 +947,7 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
                 onNavigate={handleVendor3Navigate}
                 isShortlisted={shortlistedVendorIds.has(vendor3.id)}
                 onToggleShortlist={toggleShortlist}
+                onRetryVendor={retryVendor}
               />
             )}
           </motion.div>

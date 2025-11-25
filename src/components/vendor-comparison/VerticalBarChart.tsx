@@ -9,7 +9,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, ChevronDown, ChevronRight, ChevronLeft, Star, HelpCircle, Check, Minus, Loader2 } from 'lucide-react';
+import { Bot, ChevronDown, ChevronRight, ChevronLeft, Star, HelpCircle, Check, Minus, Loader2, RotateCcw, AlertCircle } from 'lucide-react';
 import { ComparisonVendor, CriterionState } from '../../types/comparison.types';
 import { Criterion } from '../../types';
 import { SignalAntenna } from '../vendor-discovery/SignalAntenna';
@@ -50,12 +50,14 @@ interface VerticalBarChartProps {
  * - star: Gold star with yellow circle background
  * - loading: Rotating loader icon (when vendor is being researched)
  * - pending: Empty/dim state (when vendor hasn't started yet)
+ * - failed: Retry icon (orange for timeout, red for other errors)
  */
 const renderCriterionState = (
   state: CriterionState,
   criterionIndex: number,
   vendorIndex: number,
-  comparisonStatus?: 'pending' | 'loading' | 'completed' | 'failed'
+  comparisonStatus?: 'pending' | 'loading' | 'completed' | 'failed',
+  errorCode?: string
 ) => {
   const baseDelay = criterionIndex * 0.05 + vendorIndex * 0.1;
 
@@ -82,6 +84,28 @@ const renderCriterionState = (
           <div className="w-2 h-2 rounded-full bg-gray-300" />
         </div>
       </div>
+    );
+  }
+
+  // Show retry icon for failed vendors
+  if (comparisonStatus === 'failed') {
+    const isTimeout = errorCode === 'TIMEOUT';
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3, delay: baseDelay }}
+        className="flex items-center justify-center h-full cursor-pointer hover:scale-110 transition-transform"
+        title={isTimeout ? "Timeout - Click to retry" : "Error - Click to retry"}
+      >
+        <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 ${isTimeout ? 'lg:bg-orange-100/70' : 'lg:bg-red-100/70'} flex items-center justify-center`}>
+          {isTimeout ? (
+            <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500" />
+          ) : (
+            <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />
+          )}
+        </div>
+      </motion.div>
     );
   }
 
@@ -516,20 +540,26 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
                                 const state = vendor.scores.get(criterion.id) ?? 'unknown';
                                 const hasScoreDetails = vendor.scoreDetails && vendor.scoreDetails[criterion.id];
                                 const comparisonStatus = vendor.comparisonStatus;
+                                const errorCode = vendor.comparisonErrorCode;
+                                const isFailed = comparisonStatus === 'failed';
 
                                 return (
                                   <div key={`vendor-${vendorIndex}`} className="min-w-0">
-                                    {/* Icon Cell - clickable when score details exist */}
+                                    {/* Icon Cell - clickable when score details exist OR when failed (for retry) */}
                                     <div
-                                      className={`w-full h-8 xs:h-9 sm:h-10 flex items-center justify-center ${hasScoreDetails ? 'cursor-pointer hover:bg-gray-100/50 rounded-md transition-colors' : ''}`}
+                                      className={`w-full h-8 xs:h-9 sm:h-10 flex items-center justify-center ${(hasScoreDetails || isFailed) ? 'cursor-pointer hover:bg-gray-100/50 rounded-md transition-colors' : ''}`}
                                       onClick={() => {
-                                        if (hasScoreDetails && onScoreClick) {
+                                        if (isFailed && onRetryVendor) {
+                                          // Retry failed vendor
+                                          onRetryVendor(vendor.id);
+                                        } else if (hasScoreDetails && onScoreClick) {
+                                          // View score details
                                           onScoreClick(vendor.id, criterion.id, vendor.name, criterion.name);
                                         }
                                       }}
-                                      title={hasScoreDetails ? 'Click to view evidence' : undefined}
+                                      title={isFailed ? (errorCode === 'TIMEOUT' ? 'Timeout - Click to retry' : 'Error - Click to retry') : (hasScoreDetails ? 'Click to view evidence' : undefined)}
                                     >
-                                      {renderCriterionState(state, criterionIndex, vendorIndex, comparisonStatus)}
+                                      {renderCriterionState(state, criterionIndex, vendorIndex, comparisonStatus, errorCode)}
                                     </div>
                                   </div>
                                 );
