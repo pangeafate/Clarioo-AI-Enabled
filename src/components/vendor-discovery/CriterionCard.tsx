@@ -38,7 +38,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bot } from 'lucide-react';
+import { Bot, SquarePen } from 'lucide-react';
 import { SignalAntenna } from './SignalAntenna';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import { useToast } from '@/hooks/use-toast';
@@ -49,7 +49,7 @@ import { cn } from '@/lib/utils';
 
 export interface CriterionCardProps {
   criterion: Criteria & { isArchived?: boolean };
-  onEdit: (criterion: Criteria) => void;
+  onEdit: (criterion: Criteria, initialTab?: 'chat' | 'edit') => void;
   onImportanceChange?: (id: string, importance: 'low' | 'medium' | 'high', isArchived: boolean) => void;
   /** When true, disables swipe gestures (for use in drag-and-drop containers) */
   disableSwipe?: boolean;
@@ -321,47 +321,63 @@ export const CriterionCard: React.FC<CriterionCardProps> = ({
                 criterion.isArchived && 'text-gray-400'
               )}
             >
-              <h4 className={`${TYPOGRAPHY.card.title} flex-1`}>
+              <h4 className={`${TYPOGRAPHY.card.criterionName} flex-1`}>
                 {criterion.name}
               </h4>
 
               <div className="flex items-center gap-1.5 xs:gap-2 flex-shrink-0">
                 {/* Signal Antenna - Priority Indicator with +/- controls */}
-                <SignalAntenna
-                  importance={criterion.importance}
-                  isInteractive={!criterion.isArchived && !!onImportanceChange}
-                  onImportanceChange={(newImportance) => {
-                    if (!onImportanceChange) return;
-                    if (newImportance === 'archive') {
-                      onImportanceChange(criterion.id, criterion.importance, true);
-                      toast({
-                        title: 'Criterion archived',
-                        description: `"${criterion.name}" moved to archive`,
-                        duration: 2000
-                      });
-                    } else {
-                      onImportanceChange(criterion.id, newImportance, false);
-                      toast({
-                        title: 'Importance updated',
-                        description: `"${criterion.name}" set to ${newImportance} priority`,
-                        duration: 2000
-                      });
-                    }
-                  }}
-                />
+                <div className="flex items-center justify-center h-7 w-7 xs:h-8 xs:w-8">
+                  <SignalAntenna
+                    importance={criterion.importance}
+                    isInteractive={!criterion.isArchived && !!onImportanceChange}
+                    onImportanceChange={(newImportance) => {
+                      if (!onImportanceChange) return;
+                      if (newImportance === 'archive') {
+                        onImportanceChange(criterion.id, criterion.importance, true);
+                        toast({
+                          title: 'Criterion archived',
+                          description: `"${criterion.name}" moved to archive`,
+                          duration: 2000
+                        });
+                      } else {
+                        onImportanceChange(criterion.id, newImportance, false);
+                        toast({
+                          title: 'Importance updated',
+                          description: `"${criterion.name}" set to ${newImportance} priority`,
+                          duration: 2000
+                        });
+                      }
+                    }}
+                  />
+                </div>
 
-                {/* AI Edit Button */}
+                {/* AI Chat Button */}
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent swipe interference
-                    onEdit(criterion);
+                    onEdit(criterion, 'chat');
                   }}
                   className={SPACING.vendorDiscovery.criterion.iconButton}
-                  title="Edit with AI"
+                  title="Chat with AI"
                 >
                   <Bot className={SPACING.vendorDiscovery.criterion.icon} />
+                </Button>
+
+                {/* Edit Button */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent swipe interference
+                    onEdit(criterion, 'edit');
+                  }}
+                  className={SPACING.vendorDiscovery.criterion.iconButton}
+                  title="Edit criterion"
+                >
+                  <SquarePen className={SPACING.vendorDiscovery.criterion.icon} />
                 </Button>
               </div>
             </div>
@@ -466,47 +482,63 @@ export const CriterionCard: React.FC<CriterionCardProps> = ({
               criterion.isArchived && 'text-gray-400'
             )}
           >
-            <h4 className={`${TYPOGRAPHY.card.title} flex-1`}>
+            <h4 className={`${TYPOGRAPHY.card.criterionName} flex-1`}>
               {criterion.name}
             </h4>
 
             <div className="flex items-center gap-1.5 xs:gap-2 flex-shrink-0">
               {/* Signal Antenna - Priority Indicator with +/- controls */}
-              <SignalAntenna
-                importance={criterion.importance}
-                isInteractive={!criterion.isArchived && !!onImportanceChange}
-                onImportanceChange={(newImportance) => {
-                  if (!onImportanceChange) return;
-                  if (newImportance === 'archive') {
-                    onImportanceChange(criterion.id, criterion.importance, true);
-                    toast({
-                      title: 'Criterion archived',
-                      description: `"${criterion.name}" moved to archive`,
-                      duration: 2000
-                    });
-                  } else {
-                    onImportanceChange(criterion.id, newImportance, false);
-                    toast({
-                      title: 'Importance updated',
-                      description: `"${criterion.name}" set to ${newImportance} priority`,
-                      duration: 2000
-                    });
-                  }
-                }}
-              />
+              <div className="flex items-center justify-center h-7 w-7 xs:h-8 xs:w-8">
+                <SignalAntenna
+                  importance={criterion.importance}
+                  isInteractive={!criterion.isArchived && !!onImportanceChange}
+                  onImportanceChange={(newImportance) => {
+                    if (!onImportanceChange) return;
+                    if (newImportance === 'archive') {
+                      onImportanceChange(criterion.id, criterion.importance, true);
+                      toast({
+                        title: 'Criterion archived',
+                        description: `"${criterion.name}" moved to archive`,
+                        duration: 2000
+                      });
+                    } else {
+                      onImportanceChange(criterion.id, newImportance, false);
+                      toast({
+                        title: 'Importance updated',
+                        description: `"${criterion.name}" set to ${newImportance} priority`,
+                        duration: 2000
+                      });
+                    }
+                  }}
+                />
+              </div>
 
-              {/* AI Edit Button */}
+              {/* AI Chat Button */}
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={(e) => {
                   e.stopPropagation(); // Prevent swipe interference
-                  onEdit(criterion);
+                  onEdit(criterion, 'chat');
                 }}
                 className={SPACING.vendorDiscovery.criterion.iconButton}
-                title="Edit with AI"
+                title="Chat with AI"
               >
                 <Bot className={SPACING.vendorDiscovery.criterion.icon} />
+              </Button>
+
+              {/* Edit Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent swipe interference
+                  onEdit(criterion, 'edit');
+                }}
+                className={SPACING.vendorDiscovery.criterion.iconButton}
+                title="Edit criterion"
+              >
+                <SquarePen className={SPACING.vendorDiscovery.criterion.icon} />
               </Button>
             </div>
           </div>

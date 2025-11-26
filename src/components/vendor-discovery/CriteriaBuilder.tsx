@@ -60,6 +60,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
     new Set(['feature']) // Feature section expanded by default
   );
   const [editingCriterion, setEditingCriterion] = useState<Criteria | null>(null);
+  const [editingInitialTab, setEditingInitialTab] = useState<'chat' | 'edit'>('edit');
   const [newCriterionCategory, setNewCriterionCategory] = useState<string | null>(null);
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -817,7 +818,10 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
               criteria={getCriteriaByType('feature')}
               isExpanded={expandedSections.has('feature')}
               onToggle={() => toggleSection('feature')}
-              onEditCriterion={(criterion) => setEditingCriterion(criterion)}
+              onEditCriterion={(criterion, initialTab) => {
+                setEditingCriterion(criterion);
+                setEditingInitialTab(initialTab || 'edit');
+              }}
               onAddCriterion={handleAddCriterion}
               onImportanceChange={handleImportanceChange}
               isSortedByImportance={isSortedByImportance}
@@ -831,7 +835,10 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
               criteria={getCriteriaByType('technical')}
               isExpanded={expandedSections.has('technical')}
               onToggle={() => toggleSection('technical')}
-              onEditCriterion={(criterion) => setEditingCriterion(criterion)}
+              onEditCriterion={(criterion, initialTab) => {
+                setEditingCriterion(criterion);
+                setEditingInitialTab(initialTab || 'edit');
+              }}
               onAddCriterion={handleAddCriterion}
               onImportanceChange={handleImportanceChange}
               isSortedByImportance={isSortedByImportance}
@@ -845,7 +852,10 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
               criteria={getCriteriaByType('business')}
               isExpanded={expandedSections.has('business')}
               onToggle={() => toggleSection('business')}
-              onEditCriterion={(criterion) => setEditingCriterion(criterion)}
+              onEditCriterion={(criterion, initialTab) => {
+                setEditingCriterion(criterion);
+                setEditingInitialTab(initialTab || 'edit');
+              }}
               onAddCriterion={handleAddCriterion}
               onImportanceChange={handleImportanceChange}
               isSortedByImportance={isSortedByImportance}
@@ -859,7 +869,10 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
               criteria={getCriteriaByType('compliance')}
               isExpanded={expandedSections.has('compliance')}
               onToggle={() => toggleSection('compliance')}
-              onEditCriterion={(criterion) => setEditingCriterion(criterion)}
+              onEditCriterion={(criterion, initialTab) => {
+                setEditingCriterion(criterion);
+                setEditingInitialTab(initialTab || 'edit');
+              }}
               onAddCriterion={handleAddCriterion}
               onImportanceChange={handleImportanceChange}
               isSortedByImportance={isSortedByImportance}
@@ -875,7 +888,10 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
                 criteria={getCriteriaByType(type)}
                 isExpanded={expandedSections.has(type)}
                 onToggle={() => toggleSection(type)}
-                onEditCriterion={(criterion) => setEditingCriterion(criterion)}
+                onEditCriterion={(criterion, initialTab) => {
+                setEditingCriterion(criterion);
+                setEditingInitialTab(initialTab || 'edit');
+              }}
                 onAddCriterion={handleAddCriterion}
                 onImportanceChange={handleImportanceChange}
                 isSortedByImportance={isSortedByImportance}
@@ -1244,6 +1260,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
           customTypes={customTypes}
           mode={newCriterionCategory !== null ? 'create' : 'edit'}
           defaultCategory={newCriterionCategory || 'feature'}
+          initialTab={editingInitialTab}
         />
 
         {/* Share Dialog */}

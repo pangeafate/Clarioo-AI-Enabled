@@ -1,0 +1,15 @@
+Analyzing requirements
+Understanding context
+Mapping business needs
+Identifying priorities
+Evaluating features
+Assessing technology fit
+Reviewing compliance needs
+Structuring criteria
+Defining parameters
+Building framework
+Organizing dimensions
+Validating requirements
+Finalizing criteria
+Preparing recommendations
+Framework complete

@@ -106,7 +106,7 @@ export const AnimatedInputs = ({
       <div className={`grid grid-cols-1 md:grid-cols-2 ${SPACING.landing.inputs.grid}`}>
         {/* Left Input: Company Information */}
         <div className="relative">
-          <Label htmlFor="company-input" className={`${TYPOGRAPHY.label.large} bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-3 block`}>
+          <Label htmlFor="company-input" className={`${TYPOGRAPHY.label.large} text-gray-700 mb-3 block max-[420px]:text-sm`}>
             Tell me more about your company
           </Label>
 
@@ -123,8 +123,8 @@ export const AnimatedInputs = ({
 
         {/* Right Input: Solution Requirements */}
         <div className="relative">
-          <Label htmlFor="solution-input" className={`${TYPOGRAPHY.label.large} bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-3 block`}>
-            Tell me what solution you're looking for
+          <Label htmlFor="solution-input" className={`${TYPOGRAPHY.label.large} text-gray-700 mb-3 block max-[420px]:text-sm`}>
+            Feel free to give examples or specify your need
           </Label>
 
           <div className="relative">

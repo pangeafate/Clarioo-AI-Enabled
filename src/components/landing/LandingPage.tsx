@@ -53,7 +53,7 @@ import { RegistrationToggle } from './RegistrationToggle';
 import { AnimatedInputs } from './AnimatedInputs';
 import { ArtifactVisualization } from './ArtifactVisualization';
 import { CardCarousel } from './CardCarousel';
-import { ProjectCreationAnimation } from './ProjectCreationAnimation';
+import { CriteriaCreationAnimation } from './CriteriaCreationAnimation';
 import { EmailCollectionModal } from '../email/EmailCollectionModal';
 import ProjectDashboard from '../ProjectDashboard';
 import VendorDiscovery, { Project } from '../VendorDiscovery';
@@ -538,8 +538,8 @@ export const LandingPage = () => {
       {/* Footer Spacer */}
       <div className="h-16" />
 
-      {/* Project Creation Animation */}
-      <ProjectCreationAnimation
+      {/* Criteria Creation Animation */}
+      <CriteriaCreationAnimation
         isOpen={showCreationAnimation}
         onComplete={handleAnimationComplete}
         isApiComplete={pendingProject !== null}

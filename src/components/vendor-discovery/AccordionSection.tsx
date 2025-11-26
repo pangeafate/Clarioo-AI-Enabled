@@ -44,7 +44,7 @@ export interface AccordionSectionProps {
   criteria: Criteria[];
   isExpanded: boolean;
   onToggle: () => void;
-  onEditCriterion: (criterion: Criteria) => void;
+  onEditCriterion: (criterion: Criteria, initialTab?: 'chat' | 'edit') => void;
   onAddCriterion: (categoryType: string) => void;
   onImportanceChange?: (id: string, importance: 'low' | 'medium' | 'high', isArchived: boolean) => void;
   // SP_014: Sorting and drag-and-drop props

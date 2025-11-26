@@ -58,6 +58,7 @@ export interface CriterionEditSidebarProps {
   customTypes: string[];
   mode?: 'edit' | 'create';
   defaultCategory?: string;
+  initialTab?: 'chat' | 'edit';
 }
 
 export const CriterionEditSidebar: React.FC<CriterionEditSidebarProps> = ({
@@ -68,7 +69,8 @@ export const CriterionEditSidebar: React.FC<CriterionEditSidebarProps> = ({
   onDelete,
   customTypes,
   mode = 'edit',
-  defaultCategory = 'feature'
+  defaultCategory = 'feature',
+  initialTab = 'edit'
 }) => {
   const [editedCriterion, setEditedCriterion] = useState<Criteria | null>(criterion);
   const [chatMessage, setChatMessage] = useState('');
@@ -151,7 +153,7 @@ export const CriterionEditSidebar: React.FC<CriterionEditSidebarProps> = ({
             </div>
 
             {/* Tabs */}
-            <Tabs defaultValue="edit" className="flex-1 flex flex-col overflow-auto">
+            <Tabs defaultValue={initialTab} className="flex-1 flex flex-col overflow-auto">
               <TabsList className="grid w-full grid-cols-2 mx-4 mt-4">
                 <TabsTrigger value="edit">Edit</TabsTrigger>
                 <TabsTrigger value="chat">Chat with AI</TabsTrigger>

@@ -206,6 +206,9 @@ export const TYPOGRAPHY = {
 
     // Card metadata (dates, authors, etc.)
     metadata: 'text-xs xs:text-sm font-normal text-muted-foreground',
+
+    // Criterion card name (mobile: same as description, desktop: larger + bold + charcoal)
+    criterionName: 'text-sm xs:text-base font-bold leading-normal text-gray-800 md:text-lg',
   },
 
   /**
