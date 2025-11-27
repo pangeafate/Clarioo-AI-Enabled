@@ -3,7 +3,7 @@
  * Uses mock AI service instead of OpenAI
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -50,6 +50,9 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
   });
   const { toast } = useToast();
 
+  // Ref to track if we're clearing vendors (prevents saving during project switch)
+  const isClearingRef = useRef(false);
+
   // Storage key for vendor persistence
   const vendorStorageKey = `vendors_${projectId}`;
   const selectionStorageKey = `vendor_selection_${projectId}`;
@@ -61,12 +64,18 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
   } = useVendorDiscovery();
 
   // 🐛 CRITICAL FIX: Clear vendors when project changes to prevent cross-contamination
-  // This must run BEFORE the save effect to prevent old vendors from being saved to new project's storage
+  // Set flag to prevent save effect from running with stale data
   useEffect(() => {
     console.log('[VendorSelection] Project changed, clearing vendors:', projectId);
+    isClearingRef.current = true;
     setVendors([]);
     setSelectedVendorIds(new Set());
     setIsLoading(true);
+
+    // Reset flag after state updates complete
+    queueMicrotask(() => {
+      isClearingRef.current = false;
+    });
   }, [projectId]);
 
   // Load vendors from localStorage on mount
@@ -103,19 +112,23 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
   }, [projectId]);
 
   // Save vendors to localStorage when they change
+  // 🐛 FIX: Don't save if we're clearing due to project change
   useEffect(() => {
-    if (vendors.length > 0) {
-      localStorage.setItem(vendorStorageKey, JSON.stringify(vendors));
-      console.log('[VendorSelection] Saved vendors to storage:', vendors.length);
+    if (vendors.length > 0 && !isClearingRef.current) {
+      const key = `vendors_${projectId}`;
+      localStorage.setItem(key, JSON.stringify(vendors));
+      console.log('[VendorSelection] Saved vendors to storage:', vendors.length, 'for project:', projectId);
     }
-  }, [vendors, vendorStorageKey]);
+  }, [vendors, projectId]);
 
   // Save selection to localStorage when it changes
+  // 🐛 FIX: Don't save if we're clearing due to project change
   useEffect(() => {
-    if (selectedVendorIds.size > 0) {
-      localStorage.setItem(selectionStorageKey, JSON.stringify([...selectedVendorIds]));
+    if (selectedVendorIds.size > 0 && !isClearingRef.current) {
+      const key = `vendor_selection_${projectId}`;
+      localStorage.setItem(key, JSON.stringify([...selectedVendorIds]));
     }
-  }, [selectedVendorIds, selectionStorageKey]);
+  }, [selectedVendorIds, projectId]);
 
   /**
    * Handle initial vendor discovery (when no saved vendors exist)
