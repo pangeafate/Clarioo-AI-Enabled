@@ -56,13 +56,13 @@ export const ExpertsModal = ({ isOpen, onClose }: ExpertsModalProps) => {
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+              <div className="sticky top-0 bg-gray-100 border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
                 <h2 className={`${TYPOGRAPHY.heading.h3} bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent`}>
                   Clarioo Experts
                 </h2>
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  className="p-2 hover:bg-gray-200 rounded-full transition-colors"
                   aria-label="Close modal"
                 >
                   <X className="w-5 h-5 text-gray-500" />
@@ -75,9 +75,9 @@ export const ExpertsModal = ({ isOpen, onClose }: ExpertsModalProps) => {
                 <div className="border border-gray-200 rounded-xl overflow-hidden">
                   <button
                     onClick={() => toggleSection('users')}
-                    className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
+                    className="w-full flex items-center justify-between px-6 py-4 bg-gray-100 hover:bg-gray-200 transition-colors"
                   >
-                    <span className={`${TYPOGRAPHY.heading.h4} text-gray-900`}>
+                    <span className="text-xl font-semibold text-gray-700">
                       For Users
                     </span>
                     {expandedSection === 'users' ? (
@@ -110,9 +110,9 @@ export const ExpertsModal = ({ isOpen, onClose }: ExpertsModalProps) => {
                 <div className="border border-gray-200 rounded-xl overflow-hidden">
                   <button
                     onClick={() => toggleSection('experts')}
-                    className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
+                    className="w-full flex items-center justify-between px-6 py-4 bg-gray-100 hover:bg-gray-200 transition-colors"
                   >
-                    <span className={`${TYPOGRAPHY.heading.h4} text-gray-900`}>
+                    <span className="text-xl font-semibold text-gray-700">
                       For Experts
                     </span>
                     {expandedSection === 'experts' ? (
