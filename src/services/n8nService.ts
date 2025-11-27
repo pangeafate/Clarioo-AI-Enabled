@@ -21,15 +21,19 @@ import type {
 
 import type { CriterionScoreDetail } from '@/types/comparison.types';
 import { collectDeviceMetadata } from '@/utils/deviceMetadata';
+import {
+  getProjectCreationUrl,
+  getCriteriaChatUrl,
+  getFindVendorsUrl,
+  getCompareVendorsUrl,
+  getExecutiveSummaryUrl,
+  getEmailCollectionUrl,
+} from '@/config/webhooks';
 
 // ===========================================
 // Configuration
 // ===========================================
 
-const N8N_PROJECT_CREATION_URL = 'https://n8n.lakestrom.com/webhook/clarioo-project-creation';
-const N8N_CRITERIA_CHAT_URL = 'https://n8n.lakestrom.com/webhook/clarioo-criteria-chat';
-const N8N_FIND_VENDORS_URL = 'https://n8n.lakestrom.com/webhook/clarioo-find-vendors';
-const N8N_EMAIL_COLLECTION_URL = 'https://n8n.lakestrom.com/webhook/clarioo-email-collection';
 const TIMEOUT_MS = 120000; // 2 minutes for project creation and criteria chat
 const VENDOR_SEARCH_TIMEOUT_MS = 180000; // 3 minutes for vendor search
 
@@ -196,10 +200,11 @@ export const createProjectWithAI = async (
       timestamp: new Date().toISOString(),
     };
 
-    console.log('[n8n] Sending request to:', N8N_PROJECT_CREATION_URL);
+    const url = getProjectCreationUrl();
+    console.log('[n8n] Sending request to:', url);
     console.log('[n8n] Request body:', JSON.stringify(requestBody, null, 2));
 
-    const response = await fetch(N8N_PROJECT_CREATION_URL, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -302,9 +307,10 @@ export const sendCriteriaChat = async (
       timestamp: new Date().toISOString(),
     };
 
-    console.log('[n8n-chat] Sending request to:', N8N_CRITERIA_CHAT_URL);
+    const url = getCriteriaChatUrl();
+    console.log('[n8n-chat] Sending request to:', url);
 
-    const response = await fetch(N8N_CRITERIA_CHAT_URL, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -442,9 +448,10 @@ export const findVendors = async (
       timestamp: new Date().toISOString(),
     };
 
-    console.log('[n8n-vendors] Sending request to:', N8N_FIND_VENDORS_URL);
+    const url = getFindVendorsUrl();
+    console.log('[n8n-vendors] Sending request to:', url);
 
-    const response = await fetch(N8N_FIND_VENDORS_URL, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -498,8 +505,6 @@ export const findVendors = async (
 // Vendor Comparison Types
 // ===========================================
 
-const N8N_COMPARE_VENDORS_URL = 'https://n8n.lakestrom.com/webhook/clarioo-compare-vendors';
-const N8N_EXECUTIVE_SUMMARY_URL = 'https://n8n.lakestrom.com/webhook/clarioo-executive-summary';
 const COMPARE_VENDOR_TIMEOUT_MS = 180000; // 3 minutes per vendor comparison
 
 export interface VendorForComparison {
@@ -576,9 +581,10 @@ export const compareVendor = async (
       timestamp: new Date().toISOString(),
     };
 
-    console.log('[n8n-compare] Sending request for:', vendor.name);
+    const url = getCompareVendorsUrl();
+    console.log('[n8n-compare] Sending request for:', vendor.name, 'to:', url);
 
-    const response = await fetch(N8N_COMPARE_VENDORS_URL, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -898,9 +904,10 @@ export const generateExecutiveSummary = async (
       vendors: vendorsPayload
     };
 
-    console.log('[n8n-summary] Sending request to:', N8N_EXECUTIVE_SUMMARY_URL);
+    const url = getExecutiveSummaryUrl();
+    console.log('[n8n-summary] Sending request to:', url);
 
-    const response = await fetch(N8N_EXECUTIVE_SUMMARY_URL, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1127,10 +1134,11 @@ export const collectEmail = async (email: string): Promise<EmailCollectionRespon
       device_metadata: deviceMetadata,
     };
 
-    console.log('[email] Sending request to:', N8N_EMAIL_COLLECTION_URL);
+    const url = getEmailCollectionUrl();
+    console.log('[email] Sending request to:', url);
     console.log('[email] Request body:', JSON.stringify(requestBody, null, 2));
 
-    const response = await fetch(N8N_EMAIL_COLLECTION_URL, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

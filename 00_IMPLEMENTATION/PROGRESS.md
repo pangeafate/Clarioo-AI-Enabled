@@ -187,14 +187,30 @@ Sprint 16 successfully integrated the n8n AI workflow for project creation, repl
 **Status**: 📋 Planned
 **Sprint Goal**: Replace mock vendor comparison with n8n AI workflow to generate match scores and executive summary
 
-### Sprint 15: Vendor Comparison Matrix with Wave Charts (SP_015)
-**Duration**: November 16, 2024 - TBD (32-40 hours estimated)
-**Status**: 📋 Planning Complete
-**Sprint Goal**: Implement mobile-first vendor comparison screen with wave chart visualizations showing match levels across evaluation criteria
-
 ---
 
 ## 📋 Completed Sprints
+
+### Sprint 15: Vendor Comparison Matrix with Wave Charts (SP_015)
+**Duration**: November 18, 2024 (estimated)
+**Status**: ✅ Complete (Core Implementation)
+**Sprint Goal**: Implement mobile-first vendor comparison screen with wave chart visualizations
+
+#### Key Deliverables
+- ✅ VendorComparison main component (200+ lines)
+- ✅ Wave chart visualization with spline interpolation (Catmull-Rom curves)
+- ✅ Mobile-first layout with vertical stacking
+- ✅ Independent vendor navigation with cycling queue
+- ✅ Match percentage calculation with weighted algorithm
+- ✅ n8n integration for vendor comparison scoring
+- ✅ Progressive loading of vendor scores with retry logic
+- ✅ localStorage persistence per project
+- ✅ VerticalBarChart component
+- ✅ ExecutiveSummaryDialog component
+
+**Sprint Plan**: [SP_015_Vendor_Comparison_Matrix.md](./SPRINTS/SP_015_Vendor_Comparison_Matrix.md)
+
+---
 
 ### Sprint 14: Swipe-to-Adjust Importance Gestures & Share Dialog (SP_014)
 **Duration**: November 15, 2024 (1 day)
@@ -266,6 +282,35 @@ Sprint 16 successfully integrated the n8n AI workflow for project creation, repl
 Sprint 14 successfully implemented a mobile-first swipe gesture system for intuitive criterion importance adjustment. Users can now swipe right to increase importance (Low → Medium → High) with pink edge glows, or swipe left to decrease importance (High → Medium → Low) with orange edge glows. A second left swipe on Low importance archives the criterion with grey styling and an "Archived" badge. Cards automatically reorder by importance level with smooth Framer Motion animations. Added comprehensive team collaboration through ShareDialog component with two sharing options: download criteria as Excel file (with auto-sized columns and proper formatting) or copy shareable link to clipboard. The share functionality replaced the previous standalone "Download Criteria List" button with a more comprehensive "Share with your Team" button. Visual refinements include making the SignalAntenna icon more subtle at 60% opacity and fixing the spacing issue between criterion cards and the Add button for better visual balance.
 
 **Sprint Plan**: [SP_014_Criteria_Swipe_Importance.md](./SPRINTS/SP_014_Criteria_Swipe_Importance.md)
+
+---
+
+### Sprint 13: Component Reusability & Code Deduplication (SP_013)
+**Duration**: November 11, 2024 (estimated)
+**Status**: ✅ Complete
+**Sprint Goal**: Extract duplicate code into reusable shared components, establish component library patterns, and improve code maintainability
+
+#### Key Deliverables
+- ✅ **LoadingState component** (`/src/components/shared/loading/`) - Replaces 5 identical implementations
+- ✅ **EmptyState component** (`/src/components/shared/empty/`) - Replaces 3 identical implementations
+- ✅ **StatsCard component** (`/src/components/shared/stats/`) - Replaces 4 identical structures
+- ✅ **AddVendorForm component** (`/src/components/shared/forms/`) - Eliminates 100% duplicate code
+- ✅ **Chat Components** (`/src/components/shared/chat/`):
+  - ChatInterface, ChatMessage, ChatInput, TypingIndicator
+  - All with comprehensive test coverage
+- ✅ **useChat hook** (`/src/hooks/useChat.ts`) - Base chat functionality
+- ✅ **useCriteriaChat hook** (`/src/hooks/useCriteriaChat.ts`) - Specialized criterion chat
+- ✅ Test coverage: 8 test files created (.test.tsx)
+- ✅ Documentation: README.md files in each component folder
+- ✅ Central export: `/src/components/shared/index.ts` barrel file
+
+#### Expected Outcomes
+- ✅ Reduced code duplication by 800-1000 lines
+- ✅ Achieved 85%+ test coverage for all shared components
+- ✅ Established component library patterns for future development
+- ✅ Single source of truth for common UI patterns
+
+**Sprint Plan**: [SP_013_Component_Reusability_Code_Deduplication.md](./SPRINTS/SP_013_Component_Reusability_Code_Deduplication.md)
 
 ---
 
@@ -365,126 +410,17 @@ Sprint 14 successfully implemented a mobile-first swipe gesture system for intui
 
 ## 📋 Planned Sprints
 
-### Sprint 15: Vendor Comparison Matrix with Wave Charts (SP_015)
-**Duration**: TBD (32-40 hours estimated)
-**Status**: 📋 Planning Complete
-**Sprint Goal**: Implement mobile-first vendor comparison screen with wave chart visualizations
-
-**Sprint Plan**: [SP_015_Vendor_Comparison_Matrix.md](./SPRINTS/SP_015_Vendor_Comparison_Matrix.md)
+### Sprint 18: n8n Vendor Selection Integration (SP_018)
+**Duration**: TBD
+**Status**: 📋 Planned
+**Sprint Goal**: Replace mock vendor selection with real AI recommendations based on criteria via n8n
 
 ---
 
-### Sprint 13: Component Reusability & Code Deduplication (SP_013)
-**Duration**: 5-7 days (Planned)
+### Sprint 19: n8n Vendor Comparison Integration (SP_019)
+**Duration**: TBD
 **Status**: 📋 Planned
-**Sprint Goal**: Extract duplicate code into reusable shared components, establish component library patterns, and improve code maintainability
-
-#### Sprint Objectives
-1. 📋 Extract duplicate code into reusable shared components
-2. 📋 Create base chat architecture with specialized wrappers
-3. 📋 Implement hybrid organization approach (/components/shared/ + existing structure)
-4. 📋 Follow TDD principles: Write failing tests first for all extracted components
-5. 📋 Maintain backward compatibility by updating all component usages
-6. 📋 Improve code maintainability through single source of truth
-7. 📋 Achieve 85%+ test coverage for all new shared components
-
-#### Key Deliverables
-- **Phase 1 - Quick Wins (Days 1-2)**:
-  - LoadingState component → Replaces 5 identical implementations (ProjectDashboard, VendorSelection, VendorTable, ExecutiveSummary, CriteriaBuilder)
-  - EmptyState component → Replaces 3 identical implementations (ProjectDashboard, VendorSelection, CriteriaBuilder)
-  - StatsCard component → Replaces 4 identical structures (VendorDiscovery, VendorTable, ExecutiveSummary, VendorInvite)
-  - AddVendorForm component → Eliminates 100% duplicate code (VendorSelection, VendorTable)
-
-- **Phase 2 - Chat Consolidation (Days 3-4)**:
-  - ChatInterface base component (scrollable container with auto-scroll)
-  - ChatMessage component (user/assistant message bubbles)
-  - ChatInput component (textarea + send button)
-  - TypingIndicator component (animated dots)
-  - useChat base hook (message management, AI integration)
-  - useCriterionChat specialized hook (criterion-specific context)
-  - Connect CriterionEditSidebar chat to AI service
-
-- **Phase 3 - Form Standardization (Days 5-6)**:
-  - FormDialog reusable modal component
-  - FormFieldGroup label + input wrapper component
-  - Standardized validation patterns across forms
-
-- **Phase 4 - Testing & Documentation (Day 7)**:
-  - Unit tests for all shared components (target 85%+ coverage)
-  - Integration tests for component interactions
-  - README documentation for each component folder
-  - Update FEATURE_LIST.md and USER_STORIES.md
-
-#### Expected Outcomes
-- 🎯 Reduce code duplication by 800-1000 lines
-- 🎯 Achieve 85%+ test coverage for all shared components
-- 🎯 Improve bundle size by 5-10%
-- 🎯 Establish component library patterns for future development
-- 🎯 Enable faster feature development through reusable components
-- 🎯 Single source of truth for common UI patterns
-
-#### File Structure
-```
-/src/components/shared/
-  ├── loading/
-  │   ├── LoadingState.tsx
-  │   ├── LoadingState.test.tsx
-  │   └── README.md
-  ├── empty/
-  │   ├── EmptyState.tsx
-  │   ├── EmptyState.test.tsx
-  │   └── README.md
-  ├── stats/
-  │   ├── StatsCard.tsx
-  │   ├── StatsCard.test.tsx
-  │   └── README.md
-  ├── chat/
-  │   ├── ChatInterface.tsx
-  │   ├── ChatMessage.tsx
-  │   ├── ChatInput.tsx
-  │   ├── TypingIndicator.tsx
-  │   ├── types.ts
-  │   ├── chat.test.tsx
-  │   └── README.md
-  ├── forms/
-  │   ├── FormDialog.tsx
-  │   ├── FormFieldGroup.tsx
-  │   ├── AddVendorForm.tsx
-  │   ├── forms.test.tsx
-  │   └── README.md
-  └── README.md
-
-/src/hooks/
-  ├── useChat.ts
-  ├── useChat.test.ts
-  ├── useCriterionChat.ts
-  └── useCriterionChat.test.ts
-```
-
-#### Migration Plan
-**Files to Update** (18 total):
-1. src/components/ProjectDashboard.tsx (LoadingState, EmptyState)
-2. src/components/vendor-discovery/VendorSelection.tsx (LoadingState, EmptyState, AddVendorForm)
-3. src/components/vendor-discovery/VendorTable.tsx (LoadingState, StatsCard, AddVendorForm)
-4. src/components/vendor-discovery/ExecutiveSummary.tsx (LoadingState, StatsCard)
-5. src/components/vendor-discovery/CriteriaBuilder.tsx (LoadingState, EmptyState)
-6. src/components/VendorDiscovery.tsx (StatsCard)
-7. src/components/vendor-discovery/VendorInvite.tsx (StatsCard)
-8. src/components/vendor-discovery/CriterionEditSidebar.tsx (Chat components)
-9. 00_PLAN/FEATURE_LIST.md
-10. 00_PLAN/USER_STORIES.md
-11. 00_IMPLEMENTATION/PROGRESS.md
-12. 00_IMPLEMENTATION/PROJECT_ROADMAP.md
-
-**Technical Approach**: Test-Driven Development (GL-TDD.md)
-- Write failing tests FIRST for each component
-- Implement component to pass tests
-- Update all existing usages
-- Verify no regressions with full test suite
-
-**Brief Description**: Sprint 13 addresses code duplication accumulated through 12 previous sprints by extracting common UI patterns into a reusable shared component library. This sprint creates 13 new components across 5 categories (loading, empty states, statistics, chat, forms), establishes TDD patterns with 85%+ test coverage, and reduces the codebase by 800-1000 lines while improving maintainability and enabling faster future development. The hybrid organization approach maintains existing feature-based structure while introducing /components/shared/ for cross-cutting concerns.
-
-**Sprint Plan**: [SP_013_Component_Reusability_Code_Deduplication.md](./SPRINTS/SP_013_Component_Reusability_Code_Deduplication.md)
+**Sprint Goal**: Replace mock comparison with AI-generated match scores and executive summary via n8n
 
 ---
 
@@ -796,12 +732,14 @@ For detailed sprint information including objectives, deliverables, and technica
 | 2.0.0 | 2024-11-12 | System | Updated for prototype conversion (Sprint 6) |
 | 3.0.0 | 2024-11-15 | System | SP_014 Complete, reorganized structure |
 | 3.1.0 | 2024-11-23 | System | Documentation alignment, removed duplicates |
+| 3.8.0 | 2024-11-27 | System | Phase boundary clarification, SP_018/SP_019 creation, architecture updates |
 
 ---
 
-*This document tracks progress for the **visual prototype** phase. Functional implementation tracking will resume when backend integration begins.*
+*This document tracks progress for both Phase 0 (Visual Prototype - Complete) and Phase 1 (n8n AI Integration - Active).*
 
-**Phase**: Phase 1 - n8n AI Integration (SP_017 Complete)
+**Phase 0 (Complete)**: Visual Prototype (SP_006-SP_015) - Mock services with visual demonstration
+**Phase 1 (Active)**: n8n AI Integration (SP_016-SP_017 Complete) - Real AI backend
 **Next Sprint**: SP_018 - n8n Vendor Selection Integration
-**Last Updated**: November 25, 2024
+**Last Updated**: November 27, 2024
 

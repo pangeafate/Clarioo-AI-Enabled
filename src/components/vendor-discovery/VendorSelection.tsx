@@ -37,6 +37,8 @@ interface VendorSelectionProps {
 const MAX_VENDORS = 15;
 
 const VendorSelection = ({ criteria, techRequest, onComplete, projectId, projectName, projectDescription }: VendorSelectionProps) => {
+  console.log('[VendorSelection] 🔵 COMPONENT RENDER - projectId:', projectId);
+
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [selectedVendorIds, setSelectedVendorIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
@@ -54,6 +56,8 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
   const isClearingRef = useRef(false);
   // Track previous projectId to detect actual changes (not initial mount)
   const prevProjectIdRef = useRef(projectId);
+  // Track if discovery has already been initiated (prevents double discovery on re-render)
+  const discoveryStartedRef = useRef(false);
 
   // Storage key for vendor persistence
   const vendorStorageKey = `vendors_${projectId}`;
@@ -72,6 +76,7 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
     if (prevProjectIdRef.current !== projectId) {
       console.log('[VendorSelection] Project changed, clearing vendors:', projectId);
       isClearingRef.current = true;
+      discoveryStartedRef.current = false; // Reset discovery flag on project change
       setVendors([]);
       setSelectedVendorIds(new Set());
       setIsLoading(true);
@@ -88,10 +93,16 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
 
   // Load vendors from localStorage on mount
   useEffect(() => {
+    console.log('[VendorSelection] 🟢 LOAD EFFECT RUNNING - projectId:', projectId);
+    console.log('[VendorSelection] 🟢 discoveryStartedRef.current:', discoveryStartedRef.current);
+    console.log('[VendorSelection] 🟢 Effect stack trace:', new Error().stack);
+
     const loadSavedVendors = () => {
       try {
         const savedVendors = localStorage.getItem(vendorStorageKey);
         const savedSelection = localStorage.getItem(selectionStorageKey);
+
+        console.log('[VendorSelection] 🟢 Checking localStorage - savedVendors exists:', !!savedVendors);
 
         if (savedVendors) {
           const parsed = JSON.parse(savedVendors);
@@ -105,14 +116,25 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
           }
 
           setIsLoading(false);
-          console.log('[VendorSelection] Loaded saved vendors:', parsed.length);
-        } else {
-          // No saved vendors, trigger initial discovery
+          console.log('[VendorSelection] ✅ Loaded saved vendors:', parsed.length);
+        } else if (!discoveryStartedRef.current) {
+          // Only trigger discovery if not already started (prevents double discovery on re-render)
+          console.log('[VendorSelection] 🔴 NO SAVED VENDORS - Calling handleInitialDiscovery()');
+          console.log('[VendorSelection] 🔴 Setting discoveryStartedRef.current = true');
+          discoveryStartedRef.current = true; // Set flag BEFORE async call
           handleInitialDiscovery();
+        } else {
+          console.log('[VendorSelection] ⏭️ SKIPPING - Discovery already in progress (discoveryStartedRef.current =', discoveryStartedRef.current, ')');
         }
       } catch (error) {
         console.error('[VendorSelection] Failed to load saved vendors:', error);
-        handleInitialDiscovery();
+        if (!discoveryStartedRef.current) {
+          console.log('[VendorSelection] 🔴 ERROR - Calling handleInitialDiscovery()');
+          discoveryStartedRef.current = true; // Set flag BEFORE async call
+          handleInitialDiscovery();
+        } else {
+          console.log('[VendorSelection] ⏭️ SKIPPING - Discovery already in progress');
+        }
       }
     };
 
@@ -142,6 +164,8 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
    * Handle initial vendor discovery (when no saved vendors exist)
    */
   const handleInitialDiscovery = async () => {
+    console.log('[VendorSelection] 🟡 handleInitialDiscovery CALLED - projectId:', projectId);
+    console.log('[VendorSelection] 🟡 Stack trace:', new Error().stack);
     setIsLoading(true);
 
     try {
@@ -155,6 +179,7 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
         isArchived: c.isArchived || false
       }));
 
+      console.log('[VendorSelection] 🟡 Calling discoverVendorsFromHook with maxVendors=10 (INITIAL DISCOVERY)');
       const discoveredVendors = await discoverVendorsFromHook(
         {
           id: projectId,
@@ -188,6 +213,7 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
    * Handle "Discover More" - adds new vendors to existing list
    */
   const handleDiscoverMore = async () => {
+    console.log('[VendorSelection] 🔵 handleDiscoverMore CALLED - projectId:', projectId, 'existing vendors:', vendors.length);
     if (vendors.length >= MAX_VENDORS) {
       toast({
         title: "Maximum vendors reached",
@@ -214,6 +240,7 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
       const remainingSlots = MAX_VENDORS - vendors.length;
       const requestCount = Math.min(5, remainingSlots); // Request up to 5 at a time
 
+      console.log('[VendorSelection] 🔵 Calling discoverVendorsFromHook with requestCount=', requestCount, '(DISCOVER MORE)');
       const discoveredVendors = await discoverVendorsFromHook(
         {
           id: projectId,

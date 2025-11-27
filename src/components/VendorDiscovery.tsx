@@ -326,7 +326,8 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
     };
 
     loadWorkflowState();
-  }, [project.id, storageKey, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project.id, storageKey]); // toast omitted - stable function, including it causes re-render loop
 
   /**
    * GAP-1 FIX: Auto-save workflow state on changes

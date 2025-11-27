@@ -747,6 +747,98 @@ This document contains comprehensive user stories for the Clarioo platform, orga
 **Implementation:** `src/components/ArtifactVisualization.tsx`, `src/pages/LandingPage.tsx`
 **Status:** 🔄 Planned
 
+---
+
+## Epic 12: Community & Viral Features
+
+### US-12.1: Interactive 5-Step Carousel
+**As** a first-time visitor
+**I want to** view an interactive carousel showing the 5 workflow steps
+**So that** I can quickly understand the platform's value proposition
+
+**Acceptance Criteria:**
+- Landing page displays interactive card carousel with 5 cards
+- Each card represents one workflow step with icon and description
+- Cards are swipeable on mobile devices
+- Smooth animations between carousel slides
+- Visual indicators show current position in carousel
+- Responsive design works on mobile (350px+) and desktop (1920px)
+
+**Implementation:** `src/components/landing/StepCarousel.tsx`
+**Status:** 📋 Planned
+
+---
+
+### US-12.2: iPod-Style Navigation
+**As** a user
+**I want to** navigate the landing page using circular/iPod-style controls
+**So that** I have an intuitive and delightful navigation experience
+
+**Acceptance Criteria:**
+- Circular selector component for landing page navigation
+- Touch-optimized for mobile interaction
+- Visual feedback on touch/click
+- Smooth transitions between sections
+
+**Implementation:** `src/components/landing/iPodNavigation.tsx`
+**Status:** 📋 Planned
+
+---
+
+### US-12.3: Community Templates Gallery
+**As** a user
+**I want to** browse example comparisons from the community
+**So that** I can see how others are using the platform and get inspiration
+
+**Acceptance Criteria:**
+- "From the Community" section visible on landing page
+- Gallery displays 3-6 example vendor comparisons
+- Each example shows: project name, category, criteria count
+- Examples are clickable to view full comparison details
+- Social proof indicators (views, likes) if available
+
+**Implementation:** `src/components/landing/CommunityTemplates.tsx`
+**Status:** 📋 Planned
+
+---
+
+### US-12.4: Share Project with Branding
+**As** a user
+**I want to** share my comparison as a beautifully formatted PDF
+**So that** I can present results to stakeholders while promoting the platform
+
+**Acceptance Criteria:**
+- Export comparison as PDF with professional branding
+- PDF includes Clarioo logo and "Created with Clarioo" footer
+- PDF contains complete comparison matrix with wave charts
+- Shareable link generates preview card with platform branding
+- Preview card displays on social media (LinkedIn, Twitter) with attractive formatting
+
+**Implementation:** `src/utils/exportPDF.ts`, `src/components/SharePreview.tsx`
+**Status:** 📋 Planned
+
+---
+
+### US-12.5: Visual Design System (Clearbit-Inspired)
+**As** a user
+**I want to** experience a visually sophisticated interface
+**So that** using enterprise software feels delightful and modern
+
+**Acceptance Criteria:**
+- Gradient backgrounds on hero sections (soft coral/peach to white)
+- Multi-layer card shadows for elevation (3-layer shadow system)
+- Bold typography (56px headlines desktop, 36px mobile)
+- Generous border radius (20px standard)
+- Warm near-blacks (#1A1A1A) instead of pure black
+- Gradient buttons (purple/indigo: #6366F1 → #8B5CF6)
+- Animated input states with subtle pulsing glow
+- Design system documented in style guide
+
+**Implementation:** `src/styles/design-system.ts`, `src/components/ui/`
+**Status:** 🔄 Partially Implemented (gradients and shadows done)
+
+---
+
 ## Story Mapping to Features
 
 | Feature | Related User Stories | Priority | Status |
@@ -766,6 +858,11 @@ This document contains comprehensive user stories for the Clarioo platform, orga
 | Vendor Portal | US-8.1, US-8.2 | P3 | 🔵 Future |
 | Integrations | US-10.1, US-10.2 | P3 | 🔵 Future |
 | Landing Page UX | US-11.1 | P0 | 🔄 Planned |
+| Interactive Carousel | US-12.1 | P1 | 📋 Planned |
+| iPod Navigation | US-12.2 | P2 | 📋 Planned |
+| Community Templates | US-12.3 | P1 | 📋 Planned |
+| Viral Sharing | US-12.4 | P1 | 📋 Planned |
+| Visual Design System | US-12.5 | P0 | 🔄 Partially Implemented |
 
 ## Legend
 
@@ -785,7 +882,7 @@ This document contains comprehensive user stories for the Clarioo platform, orga
 
 *Version: 1.7*
 *Last Updated: November 25, 2024*
-*Total User Stories: 38*
+*Total User Stories: 50*
 *Implemented: 17 (3 with real AI, 14 demo) | Planned: 11 | Future: 10*
 *Phase: Phase 1 - n8n AI Integration*
 *Personas: 2 (Technology Decision Maker, Vendor Representative)*

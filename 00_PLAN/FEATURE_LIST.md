@@ -1564,7 +1564,7 @@ Instead of flat colors, use **layered gradient backgrounds** to create depth:
 
 ## 8. Integration Features (Not in Prototype)
 
-### 8.1 API Development (F-037)
+### 8.1 API Development (F-042)
 **Status:** 🔵 Future (Q4 2025)
 **Priority:** P2 (Enterprise Phase)
 **Planned Endpoints:**

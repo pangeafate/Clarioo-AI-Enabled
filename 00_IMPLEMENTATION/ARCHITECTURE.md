@@ -1,8 +1,8 @@
 # Clarioo Application Architecture
 
-**Version**: 2.0
-**Last Updated**: November 23, 2024
-**Status**: Phase 1 - n8n AI Integration
+**Version**: 3.8.0
+**Last Updated**: November 25, 2024
+**Status**: Phase 1 - n8n AI Integration (SP_017 Complete)
 **Related Docs**: [CODEBASE_STRUCTURE.md](./CODEBASE_STRUCTURE.md), [PROJECT_ROADMAP.md](./PROJECT_ROADMAP.md)
 
 ---
@@ -122,24 +122,31 @@ graph LR
         Utils[Utilities<br/>Export, Validation,<br/>Formatting]
     end
 
+    subgraph "Configuration Layer"
+        Config[Webhook Config<br/>Environment Settings]
+    end
+
     subgraph "Service Layer"
-        Services[Mock Services<br/>Auth, Projects, Criteria,<br/>Vendors, Chat]
+        Services[n8n Service<br/>Mock Services<br/>Storage Service]
     end
 
     subgraph "Data Layer"
-        Data[JSON Files<br/>Static dummy data]
+        Data[localStorage<br/>sessionStorage<br/>JSON Files]
     end
 
     Pages --> Components
     Components --> Hooks
     Hooks --> Utils
+    Hooks --> Config
     Hooks --> Services
+    Services --> Config
     Services --> Data
 
     style Pages fill:#e1f5ff
     style Components fill:#e1f5ff
     style Hooks fill:#fff4e6
     style Utils fill:#fff4e6
+    style Config fill:#d1c4e9
     style Services fill:#f3e5f5
     style Data fill:#e8f5e9
 ```
@@ -148,10 +155,11 @@ graph LR
 
 | Layer | Purpose | Technologies | Files Location |
 |-------|---------|--------------|----------------|
-| **Presentation** | UI rendering, user interaction | React, shadcn/ui | `/src/pages/`, `/src/components/` |
+| **Presentation** | UI rendering, user interaction | React, shadcn/ui | `/src/components/` |
 | **Business Logic** | State management, data transformation | React Hooks, TypeScript | `/src/hooks/`, `/src/utils/` |
-| **Service** | Data fetching, API simulation | Mock services | `/src/services/mock/` |
-| **Data** | Static data storage | JSON files | `/src/data/api/` |
+| **Configuration** | Environment config, webhook URLs | TypeScript | `/src/config/` |
+| **Service** | Data fetching, API calls | n8n service, mock services | `/src/services/` |
+| **Data** | Persistence and static data | localStorage, JSON | `/src/data/`
 
 ---
 
@@ -303,13 +311,48 @@ As of Sprint 16 (November 23, 2024), Clarioo has transitioned from Phase 0 (Visu
 
 ### n8n Webhook Architecture
 
-**Primary Endpoint**:
-- URL: `https://n8n.lakestrom.com/webhook/clarioo-project-creation`
-- Method: POST
+**n8n Endpoints** (6 active webhooks):
+
+1. **Project Creation**:
+   - URL: `https://n8n.lakestrom.com/webhook/clarioo-project-creation`
+   - Method: POST
+   - Timeout: 120 seconds (2 minutes)
+   - Status: ✅ Implemented (SP_016)
+
+2. **Criteria Chat**:
+   - URL: `https://n8n.lakestrom.com/webhook/clarioo-criteria-chat`
+   - Method: POST
+   - Timeout: 120 seconds (2 minutes)
+   - Status: ✅ Implemented (SP_016)
+
+3. **Find Vendors**:
+   - URL: `https://n8n.lakestrom.com/webhook/clarioo-find-vendors`
+   - Method: POST
+   - Timeout: 180 seconds (3 minutes)
+   - Status: 📋 Planned (SP_018)
+
+4. **Compare Vendors**:
+   - URL: `https://n8n.lakestrom.com/webhook/clarioo-compare-vendors`
+   - Method: POST
+   - Timeout: 120 seconds (2 minutes)
+   - Status: 📋 Planned (SP_019)
+
+5. **Executive Summary**:
+   - URL: `https://n8n.lakestrom.com/webhook/clarioo-executive-summary`
+   - Method: POST
+   - Timeout: 120 seconds (2 minutes)
+   - Status: 📋 Planned (SP_019)
+
+6. **Email Collection**:
+   - URL: `https://n8n.lakestrom.com/webhook/clarioo-email-collection`
+   - Method: POST
+   - Timeout: 30 seconds
+   - Status: ✅ Implemented (SP_017)
+
+**AI Configuration** (set within n8n workflows):
 - AI Model: GPT-4o-mini
 - Temperature: 0.3
 - Max Tokens: 6000
-- Timeout: 45 seconds
 
 **Request Format**:
 ```json
@@ -346,15 +389,30 @@ As of Sprint 16 (November 23, 2024), Clarioo has transitioned from Phase 0 (Visu
 
 ### Integration Components
 
+**Configuration Layer** (`src/config/webhooks.ts`):
+- `getWebhookMode()` - Returns current mode (production | testing)
+- `setWebhookMode()` - Sets webhook mode in localStorage
+- `getProjectCreationUrl()` - Get project creation webhook URL
+- `getCriteriaChatUrl()` - Get criteria chat webhook URL
+- `getFindVendorsUrl()` - Get find vendors webhook URL
+- `getCompareVendorsUrl()` - Get compare vendors webhook URL
+- `getExecutiveSummaryUrl()` - Get executive summary webhook URL
+- `getEmailCollectionUrl()` - Get email collection webhook URL
+- **Dual Mode Support**: Production and testing webhook URLs for all endpoints
+- **Persistence**: Mode selection persists in localStorage (`clarioo_webhook_mode`)
+
 **Service Layer** (`src/services/n8nService.ts`):
 - `createProjectWithAI()` - Main API client function
 - `getUserId()` - Persistent user ID from localStorage
 - `getSessionId()` - Session ID from sessionStorage
 - `transformN8nCriterion()` - Maps n8n response to app format
 - `transformN8nProject()` - Maps n8n project to app format
+- `collectEmail()` - Email collection with device metadata
+- `retryEmailCollection()` - Silent retry for failed submissions
 
-**React Hook** (`src/hooks/useProjectCreation.ts`):
-- `createProject()` - Wrapper for n8n API call
+**React Hooks**:
+- `useProjectCreation.ts` - Wrapper for n8n project creation API
+- `useWebhookMode.ts` - Webhook mode state management
 - Loading states and error handling
 - localStorage persistence
 - Navigation integration
@@ -363,7 +421,15 @@ As of Sprint 16 (November 23, 2024), Clarioo has transitioned from Phase 0 (Visu
 - `N8nProjectCreationRequest` - Request interface
 - `N8nProjectCreationResponse` - Response interface
 - `N8nCriterion` - Criterion format from n8n
+- `EmailCollectionRequest` - Email collection interface
+- `DeviceMetadata` - Device information interface
 - Type mappings to existing app types
+
+**Utilities** (`src/utils/deviceMetadata.ts`):
+- `getDeviceMetadata()` - Collect browser, OS, device type, resolution, timezone
+- Browser detection (Chrome, Firefox, Safari, Edge, etc.)
+- OS detection (Windows, macOS, iOS, Android, Linux)
+- Device type classification (mobile, tablet, desktop)
 
 ### Data Flow
 
@@ -386,7 +452,7 @@ As of Sprint 16 (November 23, 2024), Clarioo has transitioned from Phase 0 (Visu
 | Error Type | Handling |
 |------------|----------|
 | Network failure | Toast notification, retry option |
-| Timeout (45s) | "AI processing took too long" message |
+| Timeout (120-180s) | "AI processing took too long" message |
 | Invalid input | Form validation (min 10 characters) |
 | AI processing error | User-friendly error message, retry |
 | Invalid response | Logged error, fallback to mock service |
@@ -398,6 +464,9 @@ As of Sprint 16 (November 23, 2024), Clarioo has transitioned from Phase 0 (Visu
 - `clarioo_projects` - Array of all user projects
 - `criteria_${projectId}` - Criteria for each project
 - `workflow_${projectId}` - Workflow state per project
+- `clarioo_webhook_mode` - Webhook mode (production | testing)
+- `email_submitted` - Flag to prevent duplicate email collection modal
+- `email_passed_to_n8n` - Flag for silent retry of failed email submissions
 
 **sessionStorage** (per browser tab):
 - `clarioo_session_id` - UUID for session tracking
@@ -453,11 +522,13 @@ graph LR
 - ✅ Stateful responses (localStorage integration)
 
 **Real Services (n8n Integration):**
-- `n8nService.ts` - Real AI via n8n webhooks (project creation, criteria generation)
-  - Endpoint: `https://n8n.lakestrom.com/webhook/clarioo-project-creation`
+- `n8nService.ts` - Real AI via n8n webhooks with 4 endpoints:
+  - Project Creation: `clarioo-project-creation` (120s timeout)
+  - Criteria Chat: `clarioo-criteria-chat` (120s timeout)
+  - Find Vendors: `clarioo-find-vendors` (180s timeout)
+  - Email Collection: `clarioo-email-collection` (30s timeout)
   - AI Model: GPT-4o-mini (temperature: 0.3, max tokens: 6000)
-  - Timeout: 45 seconds with AbortController
-  - Storage: localStorage persistence
+  - Storage: localStorage persistence with user_id and session_id tracking
 
 **Mock Services (remaining features):**
 - `authService.ts` - Authentication (login, signup, session) - mock

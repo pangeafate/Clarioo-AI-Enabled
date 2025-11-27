@@ -58,6 +58,21 @@ This document provides a comprehensive overview of the Clarioo codebase organiza
   - `CriterionEditSidebar.tsx` - Criterion editing interface
   - `ExecutiveSummary.tsx` - AI-generated summary display
   - `SignalAntenna.tsx` - Visual signal strength indicator
+- **`/vendor-comparison/`** - Vendor comparison visualization components
+  - `DesktopColumnHeader.tsx` - Desktop view column headers
+  - `ExecutiveSummaryDialog.tsx` - Executive summary modal
+  - `VendorCard.tsx` - Individual vendor card
+  - `VerticalBarChart.tsx` - Vertical bar chart visualization
+  - `wave-chart/` - Wave chart components for comparison
+  - `navigation/` - Comparison navigation components
+- **`/shared/`** - Shared components across features
+  - `chat/` - Chat interface components
+  - `empty/` - Empty state components
+  - `forms/` - Form components
+  - `loading/` - Loading state components
+  - `stats/` - Statistics display components
+- **`/email/`** - Email collection components
+  - `EmailCollectionModal.tsx` - Email collection modal with Lottie animation
 - **`/projects/`** - Project management components
   - `NewProjectDialog.tsx` - New project creation dialog
   - `ProjectCard.tsx` - Project card display
@@ -112,6 +127,9 @@ This document provides a comprehensive overview of the Clarioo codebase organiza
   - `criteria.json` - Mock evaluation criteria
   - `aiSummaries.json` - Mock AI-generated summaries
   - `techInput.json` - Mock technology input data
+  - `mockAIdata.json` - Large mock AI dataset (48KB)
+- **`/comparisons/`** - Comparison visualization data
+  - `wave-chart-data.json` - Wave chart comparison data
 - **`/templates/`** - Document templates
   - `email-templates.json` - Email invitation templates
 - `categories.ts` - Project category definitions
@@ -130,7 +148,12 @@ This document provides a comprehensive overview of the Clarioo codebase organiza
 - `useVendorComparison.ts` - Vendor comparison logic
 - `useCriteriaGeneration.ts` - AI criteria generation
 - `useCriteriaChat.ts` - Criteria refinement chat
+- `useCriteriaChat.test.ts` - Tests for criteria chat functionality
+- `useCriteriaOrder.ts` - Criteria ordering and sorting logic
 - `useExecutiveSummary.ts` - Executive summary generation
+- `useChat.ts` - Generic chat interface hook
+- `useChat.test.ts` - Tests for chat functionality
+- `useSwipeGesture.ts` - Mobile swipe gesture detection
 - `use-mobile.tsx` - Mobile viewport detection
 - `use-toast.ts` - Toast notification management
 
@@ -270,7 +293,8 @@ Every JSON data file should:
 2. **Update Types** → Modify TypeScript types if data shape changes
 3. **Update Mock Data** → Adjust JSON files to match new types
 4. **Update Components** → Modify UI components as needed
-5. **Test Visually** → Verify in browser (no automated tests in prototype phase)
+5. **Write Tests** → Automated tests required for Phase 1 n8n integration code (hooks, services)
+6. **Test Visually** → Verify in browser for UI/UX changes
 
 ## Key Architectural Decisions
 

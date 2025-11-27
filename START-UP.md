@@ -24,8 +24,10 @@ Read these documents to understand HOW it's built:
 
 1. **ARCHITECTURE.md** (`/00_IMPLEMENTATION/ARCHITECTURE.md`) - System architecture with visual diagrams
 2. **CODEBASE_STRUCTURE.md** (`/00_IMPLEMENTATION/CODEBASE_STRUCTURE.md`) - Detailed file organization and module boundaries
+3. **webhook_guidance.md** (`/00_IMPLEMENTATION/DIRECTIONS/webhook_guidance.md`) - n8n webhook URLs for production/testing mode
+4. **GL-N8N-INTEGRATION.md** (`/00_IMPLEMENTATION/GL-N8N-INTEGRATION.md`) - n8n integration patterns and best practices (Phase 1 active)
 
-**Goal**: Understand the technical architecture and codebase organization.
+**Goal**: Understand the technical architecture, codebase organization, and current n8n AI integration patterns.
 
 ---
 
@@ -116,7 +118,7 @@ Ensure these folders exist with correct organization:
 
 ### Always Follow These Principles
 
-1. ✅ **Test-Driven Development** - Write failing tests first (or visual verification for prototype)
+1. ✅ **Test-Driven Development** - Write automated tests for Phase 1 n8n integration code (services, hooks, API functions); visual verification acceptable for UI/UX
 2. ✅ **README-Driven Development** - Document before implementing
 3. ✅ **Use Appropriate Agents** - Leverage specialized agents for complex tasks
 4. ✅ **Run Agents in Parallel** - Use multiple agents simultaneously when possible
@@ -125,7 +127,7 @@ Ensure these folders exist with correct organization:
 ### Never Do These Things
 
 1. ❌ **Don't skip documentation** - Always update all affected documentation files
-2. ❌ **Don't write code before tests** - Except infrastructure and prototype phase
+2. ❌ **Don't write code before tests** - Automated tests required for n8n integration; UI/UX can use visual verification
 3. ❌ **Don't commit failing tests** - All tests must pass before commit
 4. ❌ **Don't use Docker** - Until project is production-ready (per CLAUDE.md)
 5. ❌ **Don't push to GitHub** - Unless explicitly requested by user
@@ -182,6 +184,6 @@ Ensure these folders exist with correct organization:
 
 ---
 
-*Last Updated: November 23, 2024*
-*Version: 2.1*
-*Phase: Phase 1 - n8n AI Integration*
+*Last Updated: November 25, 2024*
+*Version: 3.8.0*
+*Phase: Phase 1 - n8n AI Integration (SP_017 Complete)*
