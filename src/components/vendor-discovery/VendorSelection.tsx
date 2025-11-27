@@ -60,6 +60,15 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
     discoverVendors: discoverVendorsFromHook
   } = useVendorDiscovery();
 
+  // 🐛 CRITICAL FIX: Clear vendors when project changes to prevent cross-contamination
+  // This must run BEFORE the save effect to prevent old vendors from being saved to new project's storage
+  useEffect(() => {
+    console.log('[VendorSelection] Project changed, clearing vendors:', projectId);
+    setVendors([]);
+    setSelectedVendorIds(new Set());
+    setIsLoading(true);
+  }, [projectId]);
+
   // Load vendors from localStorage on mount
   useEffect(() => {
     const loadSavedVendors = () => {
