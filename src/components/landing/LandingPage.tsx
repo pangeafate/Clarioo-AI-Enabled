@@ -55,6 +55,7 @@ import { ArtifactVisualization } from './ArtifactVisualization';
 import { CardCarousel } from './CardCarousel';
 import { CriteriaCreationAnimation } from './CriteriaCreationAnimation';
 import { EmailCollectionModal } from '../email/EmailCollectionModal';
+import { WebhookModeToggle } from '../WebhookModeToggle';
 import ProjectDashboard from '../ProjectDashboard';
 import VendorDiscovery, { Project } from '../VendorDiscovery';
 import * as projectService from '@/services/mock/projectService';
@@ -551,6 +552,9 @@ export const LandingPage = () => {
         onSuccess={handleEmailSuccess}
         onClose={handleEmailModalClose}
       />
+
+      {/* Webhook Mode Toggle - Only show on landing page, not in projects view */}
+      {currentView === 'landing' && <WebhookModeToggle />}
     </motion.div>
   );
 };

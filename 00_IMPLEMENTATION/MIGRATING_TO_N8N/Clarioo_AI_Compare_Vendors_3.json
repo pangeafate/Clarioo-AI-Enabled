@@ -1,0 +1,474 @@
+{
+  "name": "Clarioo AI Compare Vendors",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "clarioo-compare-vendors",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "https://demo.clarioo.io"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "5b0e75fa-db8a-43b4-b8a8-1737dbe9949a",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -1248,
+        -32
+      ],
+      "webhookId": "clarioo-compare-vendors",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = items[0].json.body || {};\n\nconst user_id = body.user_id;\nconst session_id = body.session_id;\nconst project_id = body.project_id;\nconst project_name = body.project_name || '';\nconst project_description = body.project_description || '';\nconst project_category = body.project_category || '';\nconst vendor = body.vendor;\nconst criteria = body.criteria || [];\nconst timestamp = body.timestamp;\n\n// Validation\nconst errors = [];\n\nif (!user_id || user_id.trim() === '') {\n  errors.push('user_id is required');\n}\n\nif (!session_id || session_id.trim() === '') {\n  errors.push('session_id is required');\n}\n\nif (!project_id || project_id.trim() === '') {\n  errors.push('project_id is required');\n}\n\nif (!project_name || project_name.trim() === '') {\n  errors.push('project_name is required');\n}\n\nif (project_description.trim().length < 10) {\n  errors.push('project_description must be at least 10 characters');\n}\n\nif (!project_category || project_category.trim() === '') {\n  errors.push('project_category is required');\n}\n\nif (!vendor || typeof vendor !== 'object') {\n  errors.push('vendor object is required');\n} else {\n  if (!vendor.id) errors.push('vendor.id is required');\n  if (!vendor.name) errors.push('vendor.name is required');\n  if (!vendor.website) errors.push('vendor.website is required');\n}\n\nif (!Array.isArray(criteria) || criteria.length === 0) {\n  errors.push('criteria must be a non-empty array');\n}\n\nif (!timestamp) {\n  errors.push('timestamp is required');\n}\n\nif (errors.length > 0) {\n  return [{\n    json: {\n      validation_error: true,\n      vendor_id: vendor?.id || 'unknown',\n      error_code: 'INVALID_INPUT',\n      error_message: errors.join(', ')\n    }\n  }];\n}\n\n// Pass through validated data\nreturn [{\n  json: {\n    validation_error: false,\n    user_id,\n    session_id,\n    project_id,\n    project_name: project_name.trim(),\n    project_description: project_description.trim(),\n    project_category: project_category.trim(),\n    vendor,\n    criteria,\n    timestamp\n  }\n}];"
+      },
+      "id": "e9e3ddde-82a7-46a3-a2eb-98a1761d745d",
+      "name": "Input Validation",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -1024,
+        -32
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "validation-check",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "leftValue": "={{ $json.validation_error }}",
+              "rightValue": true
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3298dbe0-379d-4d03-b460-185b3d7cf289",
+      "name": "Check Validation",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -800,
+        -32
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  success: false,\n  vendor_id: $json.vendor_id,\n  error: {\n    code: $json.error_code,\n    message: $json.error_message\n  }\n} }}",
+        "options": {
+          "responseCode": 400,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "https://demo.clarioo.io"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "5bc7d788-609a-4cec-b344-1823d2d9c4d3",
+      "name": "Return Validation Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -512,
+        -176
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=VENDOR TO EVALUATE: {{ $json.vendor.name }}\nID: {{ $json.vendor.id }}\nWebsite: {{ $json.vendor.website }}\n\nPROJECT CONTEXT:\n{{ $json.project_description }}\n\nCOMPETITORS: Identify competing vendors from the project description above.\n\nCRITERIA ({{ $json.criteria.length }} total):\n\nHIGH IMPORTANCE:\n{{ $json.criteria.filter(c => c.importance === 'high').map(c => `${c.id}: ${c.name}`).join('\\n') }}\n\nMEDIUM IMPORTANCE:\n{{ $json.criteria.filter(c => c.importance === 'medium').map(c => `${c.id}: ${c.name}`).join('\\n') }}\n\nRESEARCH PROCESS :\n\nVENDOR VERIFICATION ({{ $json.criteria.length }} searches)\nFor each criterion, search vendor website/documentation to verify if feature is present.\n\nSearch pattern: \"Does {{ $json.vendor.name }} have anything about {{ $json.criteria.name }} mentioned anywhere\"\nPrioritize vendor’s documentation and website.\nRecord results as:\n- \"yes\" if feature confirmed on vendor site\n- \"unknown\" if no information found on vendor site or documentation\n- \"no\" if evidence shows feature is absent\n\nEXCEPTIONAL PERFORMANCE DISCOVERY (up to 10 searches)\nSearch for areas where {{ $json.vendor.name }} demonstrates exceptional performance vs competitors. Use third-party sources only.\n\nGenerate 10 strategic searches like:\n- \"{{ $json.vendor.name }} vs others mentioned in {{ $json. project_name }} \"\n- \"Where {{ $json.vendor.name }} is better than competitors mentioned in {{ $json.project_description }}\"\n- \"Where {{ $json.vendor.name }} is the best in terms of features reddit\"\n\nLook for evidence like:\n- \"Users prefer {{ $json.vendor. name }} for [criterion] over other solutions\"\n- \"Rated higher than [competitor] for this feature\"\n- \"Known for exceptional [criterion] compared to [competitors]\"\n- \"Switched from [competitor] due to better [criterion]\"\nInfer which criterion do the research results apply to. \nIdentify top 0-3 criteria where vendor shows clear competitive advantage.\n\nStar allocation rules:\n- Award maximum 3 stars total\n- Prioritize HIGH importance criteria\n- Evidence URL must be third-party (not vendor domain)\n- Comment must name specific competitor(s)\n\nPHASE 4: CONSOLIDATION\nCompile final results:\n- Transfer \"yes\" scores from Phase 1-2\n- Add \"star\" scores from Phase 3 (max 3)\n- Ensure star evidence URLs don't contain vendor domain\n\n\nSEARCH BUDGET MANAGEMENT:\n- Maximum 25 searches, all criteria should be covered.\n\nOUTPUT STRUCTURE:\n{\n  \"id\": \"{{ $json.vendor.id }}\",\n  \"name\": \"{{ $json.vendor.name }}\",\n  \"website\": \"{{ $json.vendor.website }}\",\n  \"description\": \"Brief positioning vs competitors\",\n  \"killerFeature\": \"Primary competitive advantage if found\",\n  \"executiveSummary\": \"What they do, target customer, competitive position\",\n  \"keyFeatures\": [\"Feature 1\", \"Feature 2\", \"Feature 3\"],\n  \"matchPercentage\": null,\n  \"scores\": {\n    \"criterion-id\": {\n      \"state\": \"yes|star|no|unknown\",\n      \"evidence\": \"URL (vendor site OK for yes, must be third-party for star)\",\n      \"comment\": \"For yes: brief confirmation. For star: [advantage] vs [competitor] per [source]\"\n    }\n  }\n}\n\nFINAL VALIDATION:\nBefore returning JSON, verify:\n□ Total stars ≤ 3\n□ All star evidence URLs are third-party (not vendor domain)\n□ HIGH importance criteria prioritized for stars\n\nReturn ONLY the JSON object.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a competitive intelligence analyst evaluating B2B software vendors through a structured research process.\n\nSCORING STATES:\n- \"no\" = Feature absent/limited\n- \"unknown\" = No evidence found after searching\n- \"yes\" = Feature present, standard capability\n- \"star\" = Exceptional performance vs competitors (MAX 3 total)\n\nSTAR REQUIREMENTS:\n- Maximum 3 stars per vendor across all criteria\n- Must use third-party evidence only (G2, Capterra, TrustRadius, Reddit, comparison sites)\n- Cannot use vendor website URLs as evidence for stars\n- Prioritize HIGH importance criteria for star allocation\n- Must demonstrate competitive advantage, not just feature presence\n\nSEARCH BUDGET: Maximum 25 searches total\n\nOUTPUT: Valid JSON only, no markdown."
+        }
+      },
+      "id": "db17559f-e75a-4c26-8164-2f0da76d101e",
+      "name": "AI Deep Research Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -576,
+        128
+      ],
+      "typeVersion": 2.2,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "maxTokens": 8000,
+          "temperature": 0.3
+        }
+      },
+      "id": "6baf3171-4138-439a-b33b-97598e0ba2a0",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        -656,
+        384
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "jKn3GZ9W5ZRgXc2d",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"id\": { \"type\": \"string\", \"description\": \"Vendor UUID - copy exactly from input\" },\n    \"name\": { \"type\": \"string\", \"description\": \"Vendor name\" },\n    \"website\": { \"type\": \"string\", \"description\": \"Vendor website URL\" },\n    \"description\": { \"type\": \"string\", \"description\": \"Updated description based on research\" },\n    \"killerFeature\": { \"type\": \"string\", \"description\": \"Main differentiator in 1 sentence\" },\n    \"executiveSummary\": { \"type\": \"string\", \"description\": \"2-3 sentence overview of vendor strengths\" },\n    \"keyFeatures\": {\n      \"type\": \"array\",\n      \"items\": { \"type\": \"string\" },\n      \"description\": \"5-7 key features\"\n    },\n    \"matchPercentage\": { \"type\": \"number\", \"description\": \"Overall match score 0-100\" },\n    \"scores\": {\n      \"type\": \"object\",\n      \"description\": \"Object where keys are criterion IDs and values are objects with state, evidence, and comment fields\"\n    }\n  },\n  \"required\": [\"id\", \"name\", \"matchPercentage\", \"scores\"]\n}"
+      },
+      "id": "4c1f78fc-3c36-4880-9a4f-315f7c22b786",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        -368,
+        384
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  const aiOutput = items[0].json.output;\n\n  // Validate output structure\n  if (!aiOutput || !aiOutput.id || !aiOutput.name) {\n    throw new Error('Invalid AI response: missing vendor data');\n  }\n\n  // Transform scores to simplified format + keep details\n  const simplifiedScores = {};\n  const scoreDetails = {};\n\n  for (const [criterionId, scoreData] of Object.entries(aiOutput.scores || {})) {\n    // Get the state\n    const state = scoreData.state || 'unknown';\n    simplifiedScores[criterionId] = state;\n    \n    // Store full details\n    scoreDetails[criterionId] = {\n      state: state,\n      evidence: scoreData.evidence || '',\n      comment: scoreData.comment || ''\n    };\n    \n    // Validate that yes/star have evidence\n    if ((state === 'yes' || state === 'star') && !scoreData.evidence) {\n      console.log(`Warning: ${criterionId} has ${state} but no evidence URL`);\n    }\n  }\n\n  // Ensure all required fields have defaults\n  const vendor = {\n    id: aiOutput.id,\n    name: aiOutput.name,\n    website: aiOutput.website,\n    description: aiOutput.description || '',\n    killerFeature: aiOutput.killerFeature || '',\n    executiveSummary: aiOutput.executiveSummary || '',\n    keyFeatures: Array.isArray(aiOutput.keyFeatures) ? aiOutput.keyFeatures : [],\n    matchPercentage: typeof aiOutput.matchPercentage === 'number' ? \n      Math.max(0, Math.min(100, aiOutput.matchPercentage)) : 0,\n    scores: simplifiedScores,\n    scoreDetails: scoreDetails\n  };\n\n  return [{\n    json: {\n      success: true,\n      vendor: vendor,\n      research_summary: `Completed deep research on ${vendor.name}`\n    }\n  }];\n\n} catch (error) {\n  // Try to get vendor_id from the original input\n  let vendorId = 'unknown';\n  try {\n    vendorId = $('Input Validation').first().json.vendor?.id || 'unknown';\n  } catch (e) {\n    // Ignore\n  }\n  \n  return [{\n    json: {\n      success: false,\n      vendor_id: vendorId,\n      error: {\n        code: 'AI_PROCESSING_ERROR',\n        message: `Vendor research failed: ${error.message}`\n      }\n    }\n  }];\n}"
+      },
+      "id": "544ea262-3a4a-4378-a62a-67cd2d7dccac",
+      "name": "Format Success Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -224,
+        32
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "success-check",
+              "operator": {
+                "type": "boolean",
+                "operation": "false"
+              },
+              "leftValue": "={{ $json.success }}",
+              "rightValue": false
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c925a90b-faf6-4de6-bd16-46ed093b71c1",
+      "name": "Check Success",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -16,
+        32
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "https://demo.clarioo.io"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "5a6c385a-0de1-4db0-a031-712b4254b213",
+      "name": "Return Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        224,
+        16
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// Check if we already have a formatted error from Format Success Response\nif (items[0].json.error && items[0].json.error.code) {\n  return [{\n    json: {\n      success: false,\n      vendor_id: items[0].json.vendor_id || 'unknown',\n      error: items[0].json.error\n    }\n  }];\n}\n\n// Otherwise, handle raw errors from AI agent\nconst errorMessage = items[0].json.error?.message || items[0].json.message || 'An unexpected error occurred during vendor research';\n\n// Try to get vendor_id from the original input\nlet vendorId = 'unknown';\ntry {\n  vendorId = $('Input Validation').first().json.vendor?.id || 'unknown';\n} catch (e) {\n  // Ignore\n}\n\nreturn [{\n  json: {\n    success: false,\n    vendor_id: vendorId,\n    error: {\n      code: 'INTERNAL_ERROR',\n      message: errorMessage\n    }\n  }\n}];"
+      },
+      "id": "c0850ca7-b1c0-48c8-9b22-7afbfd5036e5",
+      "name": "Handle Processing Error",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        224,
+        256
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 500,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "https://demo.clarioo.io"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "605ee76e-9901-4da3-9271-0adb08a11c0f",
+      "name": "Return Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        448,
+        256
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "messages": {
+          "message": [
+            {
+              "content": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('message0_Text', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.perplexityTool",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        400
+      ],
+      "id": "701881b0-3891-4f35-832e-c3c847cbf68c",
+      "name": "Message a model in Perplexity",
+      "credentials": {
+        "perplexityApi": {
+          "id": "r8zUmq6Bxb6qMTW3",
+          "name": "Perplexity account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Input Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Validation": {
+      "main": [
+        [
+          {
+            "node": "Check Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Validation": {
+      "main": [
+        [
+          {
+            "node": "Return Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Deep Research Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Deep Research Agent": {
+      "main": [
+        [
+          {
+            "node": "Format Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Processing Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Deep Research Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Deep Research Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Success Response": {
+      "main": [
+        [
+          {
+            "node": "Check Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Success": {
+      "main": [
+        [
+          {
+            "node": "Handle Processing Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Processing Error": {
+      "main": [
+        [
+          {
+            "node": "Return Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model in Perplexity": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Deep Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "98b97202-d9bb-4214-ad19-54351b2a8ba7",
+  "meta": {
+    "instanceId": "d8d0f3a1b5452865880018369d00dbc23f6a859a8ab8f3d9720659ce3799163c"
+  },
+  "id": "ItgvXRHT7hv80dr9",
+  "tags": []
+}

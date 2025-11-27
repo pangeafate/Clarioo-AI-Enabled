@@ -31,7 +31,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Play, Pause, ArrowRight, Search, FileCheck, Users, MessageSquare, Mail } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Pause, ArrowRight, Search, List, Settings, CheckSquare, MessagesSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TYPOGRAPHY } from '@/styles/typography-config';
 
@@ -39,7 +39,7 @@ const workflowCards = [
   {
     id: 1,
     step: 'Step 1',
-    title: 'Technology Exploration',
+    title: 'Understand your needs',
     icon: <Search className="h-6 w-6" />,
     description: 'Tell us about your company and what solution you\'re looking for. Our AI understands context and requirements.',
     processFlow: {
@@ -57,7 +57,7 @@ const workflowCards = [
     id: 2,
     step: 'Step 2',
     title: 'Criteria Building',
-    icon: <FileCheck className="h-6 w-6" />,
+    icon: <List className="h-6 w-6" />,
     description: 'AI generates comprehensive evaluation criteria tailored to your industry and needs. Review, refine, and prioritize.',
     processFlow: {
       input: 'Requirements',
@@ -74,7 +74,7 @@ const workflowCards = [
     id: 3,
     step: 'Step 3',
     title: 'Vendor Discovery',
-    icon: <Users className="h-6 w-6" />,
+    icon: <Settings className="h-6 w-6" />,
     description: 'Intelligent search across thousands of vendors. Get match scores, key features, and AI-powered recommendations.',
     processFlow: {
       input: 'Evaluation criteria',
@@ -91,8 +91,8 @@ const workflowCards = [
     id: 4,
     step: 'Step 4',
     title: 'Vendor Comparison',
-    icon: <MessageSquare className="h-6 w-6" />,
-    description: 'Compare vendors side-by-side with detailed matrices. See strengths, weaknesses, and get clear recommendations.',
+    icon: <CheckSquare className="h-6 w-6" />,
+    description: 'Compare vendors side-by-side, with evidence and against criteria list. See strengths, weaknesses and provide your input.',
     processFlow: {
       input: 'Selected vendors',
       aiProcessing: 'Comparison analysis',
@@ -107,9 +107,9 @@ const workflowCards = [
   {
     id: 5,
     step: 'Step 5',
-    title: 'Vendor Engagement',
-    icon: <Mail className="h-6 w-6" />,
-    description: 'Send professional outreach emails to vendors. Track responses and schedule demos - all in one place.',
+    title: 'External and Internal Engagement',
+    icon: <MessagesSquare className="h-6 w-6" />,
+    description: 'Collect additional evidence from vendors, collaborate with co-workers and/or let AI coordinate (and participate in) demo calls.',
     processFlow: {
       input: 'Vendor selection',
       aiProcessing: 'Email generation',
@@ -235,7 +235,7 @@ export const CardCarousel = () => {
                       `}
                     >
                       {/* Visual Mockup Area with Gradient Background */}
-                      <div className={`relative h-64 bg-gradient-to-br ${card.bgGradient} overflow-hidden`}>
+                      <div className={`relative h-32 bg-gradient-to-br ${card.bgGradient} overflow-hidden`}>
                         {/* Decorative background elements */}
                         <div className="absolute inset-0">
                           <div className={`absolute top-10 right-10 w-32 h-32 rounded-full ${card.iconBg} blur-3xl opacity-40`} />
@@ -288,20 +288,28 @@ export const CardCarousel = () => {
                         </div>
 
                         {/* Deliverable */}
-                        <div className="mb-6 pb-6 border-b border-gray-100">
+                        <div className={`mb-6 ${index === selectedIndex ? 'pb-6 border-b border-gray-100' : ''}`}>
                           <p className={`${TYPOGRAPHY.muted.small} mb-1`}>Deliverable:</p>
                           <p className={`${TYPOGRAPHY.label.default}`}>
                             📄 {card.artifact}
                           </p>
                         </div>
 
-                        {/* CTA Button */}
-                        <Button
-                          className={`w-full bg-gradient-to-r from-brand-blue to-brand-blueLight text-white hover:shadow-lg transition-all duration-300 rounded-xl h-12 ${TYPOGRAPHY.button.large}`}
-                        >
-                          {card.ctaText}
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </Button>
+                        {/* CTA Button - Only show on selected card */}
+                        {index === selectedIndex && (
+                          <Button
+                            onClick={() => {
+                              window.scrollTo({
+                                top: 0,
+                                behavior: 'smooth'
+                              });
+                            }}
+                            className={`w-full bg-gradient-to-r from-brand-blue to-brand-blueLight text-white hover:shadow-lg transition-all duration-300 rounded-xl h-12 ${TYPOGRAPHY.button.large}`}
+                          >
+                            Try Clarioo
+                            <ArrowRight className="h-4 w-4 ml-2" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </motion.div>

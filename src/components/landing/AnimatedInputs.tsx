@@ -107,7 +107,7 @@ export const AnimatedInputs = ({
         {/* Left Input: Company Information */}
         <div className="relative">
           <Label htmlFor="company-input" className={`${TYPOGRAPHY.label.large} text-gray-700 mb-3 block max-[420px]:text-sm`}>
-            Tell me more about your company
+            Tell me more about you and your company
           </Label>
 
           <div className="relative">
@@ -164,12 +164,12 @@ export const AnimatedInputs = ({
               {isCreating ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Creating with Clarioo...
+                  Exploring with Clarioo...
                 </>
               ) : (
                 <>
                   <Plus className="h-4 w-4" />
-                  Create with Clarioo
+                  Explore with Clarioo
                 </>
               )}
             </Button>

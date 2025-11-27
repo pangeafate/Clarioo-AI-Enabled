@@ -52,7 +52,7 @@ const artifacts = [
     id: 3,
     input: 'Selected Vendors',
     process: 'Comparison Analysis',
-    output: 'Decision Matrix',
+    output: 'Comparison Matrix',
     inputIcon: <FileText className="h-8 w-8" />,
     outputIcon: <CheckCircle2 className="h-8 w-8" />,
     description: 'Compare vendors side-by-side with clear recommendations'
@@ -85,7 +85,7 @@ export const ArtifactVisualization = () => {
             See Every Step of the Process
           </h2>
           <p className={TYPOGRAPHY.muted.large + ' max-w-2xl mx-auto'}>
-            Complete transparency from input to output. Watch how AI transforms your requirements into actionable insights.
+            AI is your personal expert and process-coordinator: forming a criteria list, finding vendors, building evidence-based scorecards, scheduling demo calls, and much more
           </p>
         </motion.div>
 

@@ -22,7 +22,10 @@
 
 import { motion } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
+import { useState } from 'react';
 import { ViewToggleButton } from './ViewToggleButton';
+import { ExpertsButton } from './ExpertsButton';
+import { ExpertsModal } from './ExpertsModal';
 import { TYPOGRAPHY } from '@/styles/typography-config';
 
 interface HeroSectionProps {
@@ -33,6 +36,8 @@ interface HeroSectionProps {
 }
 
 export const HeroSection = ({ children, currentView, onViewToggle }: HeroSectionProps) => {
+  const [isExpertsModalOpen, setIsExpertsModalOpen] = useState(false);
+
   return (
     <motion.section
       initial={{ opacity: 0 }}
@@ -43,10 +48,11 @@ export const HeroSection = ({ children, currentView, onViewToggle }: HeroSection
       {/* Subtle gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-blue-600/5 pointer-events-none" />
 
-      {/* SP_011: View Toggle Button - Upper left corner */}
+      {/* SP_011: View Toggle Button and Experts Button - Upper left corner, stacked vertically */}
       {currentView && onViewToggle && (
-        <div className="absolute top-4 left-4 z-10">
+        <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
           <ViewToggleButton currentView={currentView} onToggle={onViewToggle} />
+          <ExpertsButton onClick={() => setIsExpertsModalOpen(true)} />
         </div>
       )}
 
@@ -73,7 +79,7 @@ export const HeroSection = ({ children, currentView, onViewToggle }: HeroSection
           className={`${TYPOGRAPHY.heading.h1} text-gray-900 leading-[1.1]`}
           style={{ letterSpacing: '-0.03em' }}
         >
-          Software Selection Expert
+          Software Discovery & Selection Co-pilot
         </motion.h1>
 
         {/* Subtitle */}
@@ -83,7 +89,7 @@ export const HeroSection = ({ children, currentView, onViewToggle }: HeroSection
           transition={{ duration: 0.6, delay: 0.3 }}
           className={`${TYPOGRAPHY.special.subtitle} text-gray-500 max-w-3xl mx-auto`}
         >
-          Supercharge your software vendor's selection with AI assistant. Discover and evaluate software based on your business needs and company context.
+          Streamline "Needs-to-Decision" buying journey with expert AI and automate 90% of manual work
         </motion.p>
 
         {/* Explore Link with Text - HIDDEN */}
@@ -120,6 +126,12 @@ export const HeroSection = ({ children, currentView, onViewToggle }: HeroSection
           </motion.div>
         )}
       </div>
+
+      {/* Experts Modal */}
+      <ExpertsModal
+        isOpen={isExpertsModalOpen}
+        onClose={() => setIsExpertsModalOpen(false)}
+      />
     </motion.section>
   );
 };
