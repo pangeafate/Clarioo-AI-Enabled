@@ -130,6 +130,10 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
    */
   useEffect(() => {
     const loadWorkflowState = () => {
+      // 🔥 FIX: IMMEDIATELY reset to 'criteria' when project loads to prevent stale state
+      // This prevents VendorSelection from rendering with old project's 'vendor-selection' step
+      setCurrentStep('criteria');
+
       // Set loading to true when project changes to prevent showing stale state
       setIsLoading(true);
 
@@ -166,13 +170,18 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
             }
           }
 
+          // 🔥 FIX: For projects with n8n-generated criteria, ALWAYS start at 'criteria' step for review
+          // This prevents auto-triggering vendor discovery when user clicks "Explore with Clarioo"
+          const hasN8nCriteria = n8nCriteria.length > 0;
+
           // GAP-5: Handle legacy data with 'tech-input' step (removed in this update)
           // If currentStep is 'tech-input', default to 'criteria' instead
-          const validatedStep = state.currentStep === 'tech-input'
-            ? 'criteria'
-            : state.currentStep;
+          const validatedStep = hasN8nCriteria ? 'criteria' :  // Force criteria review for n8n projects
+            state.currentStep === 'tech-input' ? 'criteria' :
+            state.currentStep;
 
           // Restore workflow navigation state
+          console.log('[VendorDiscovery] 🔧 Setting currentStep:', validatedStep, '(hasN8nCriteria:', hasN8nCriteria, ')');
           setCurrentStep(validatedStep);
           setMaxStepReached(state.maxStepReached || 0); // Default to 0 if not set
           setTechRequest(state.techRequest);
