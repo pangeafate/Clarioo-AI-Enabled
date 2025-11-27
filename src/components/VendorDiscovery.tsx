@@ -599,6 +599,7 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
                 )}
                 {currentStep === 'vendor-selection' && criteria.length > 0 && (
                   <VendorSelection
+                    key={project.id} // Force remount on project change to reset all internal state
                     criteria={criteria}
                     techRequest={techRequest!}
                     onComplete={handleVendorSelectionComplete}

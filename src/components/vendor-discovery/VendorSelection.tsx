@@ -52,6 +52,8 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
 
   // Ref to track if we're clearing vendors (prevents saving during project switch)
   const isClearingRef = useRef(false);
+  // Track previous projectId to detect actual changes (not initial mount)
+  const prevProjectIdRef = useRef(projectId);
 
   // Storage key for vendor persistence
   const vendorStorageKey = `vendors_${projectId}`;
@@ -64,18 +66,24 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
   } = useVendorDiscovery();
 
   // 🐛 CRITICAL FIX: Clear vendors when project changes to prevent cross-contamination
-  // Set flag to prevent save effect from running with stale data
+  // Only run on actual project change, NOT on initial mount (prevents double discovery)
   useEffect(() => {
-    console.log('[VendorSelection] Project changed, clearing vendors:', projectId);
-    isClearingRef.current = true;
-    setVendors([]);
-    setSelectedVendorIds(new Set());
-    setIsLoading(true);
+    // Skip cleanup on initial mount - only clear when projectId actually changes
+    if (prevProjectIdRef.current !== projectId) {
+      console.log('[VendorSelection] Project changed, clearing vendors:', projectId);
+      isClearingRef.current = true;
+      setVendors([]);
+      setSelectedVendorIds(new Set());
+      setIsLoading(true);
 
-    // Reset flag after state updates complete
-    queueMicrotask(() => {
-      isClearingRef.current = false;
-    });
+      // Reset flag after state updates complete
+      queueMicrotask(() => {
+        isClearingRef.current = false;
+      });
+    }
+
+    // Update ref to current projectId
+    prevProjectIdRef.current = projectId;
   }, [projectId]);
 
   // Load vendors from localStorage on mount
