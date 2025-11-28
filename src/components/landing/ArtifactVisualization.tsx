@@ -55,7 +55,7 @@ const artifacts = [
     output: 'Comparison Matrix',
     inputIcon: <FileText className="h-8 w-8" />,
     outputIcon: <CheckCircle2 className="h-8 w-8" />,
-    description: 'Compare vendors side-by-side with clear recommendations'
+    description: 'Compare vendors side-by-side with evidence'
   }
 ];
 
