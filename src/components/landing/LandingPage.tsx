@@ -351,8 +351,18 @@ export const LandingPage = () => {
     try {
       console.log('[LandingPage] Calling n8n AI to create project...');
 
+      // FIX: Read from localStorage instead of state (state might be stale/cleared during re-renders)
+      // AnimatedInputs saves to localStorage on every keystroke, so data is always available there
+      const companyContext = localStorage.getItem('landing_company_info') || '';
+      const solutionRequirements = localStorage.getItem('landing_tech_needs') || '';
+
+      console.log('[LandingPage] Retrieved from localStorage:', {
+        companyLength: companyContext.length,
+        solutionLength: solutionRequirements.length
+      });
+
       // Call n8n AI to generate project and criteria
-      const result = await createProjectWithAI(companyInput.trim(), solutionInput.trim());
+      const result = await createProjectWithAI(companyContext.trim(), solutionRequirements.trim());
 
       console.log('[LandingPage] n8n API result:', result);
 

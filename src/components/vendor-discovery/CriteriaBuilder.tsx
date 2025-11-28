@@ -677,7 +677,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
             <CardContent className={`${SPACING.vendorDiscovery.chat.card} flex flex-col`}>
               {/* Robot Welcome Message - hidden after user sends first message */}
               {!chatMessages.some(msg => msg.role === 'user') && (
-                <div className="flex items-start gap-3 mb-4">
+                <div className="flex items-start gap-3 mb-4 md:mb-2">
                   <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                     <Bot className="h-5 w-5 text-primary" />
                   </div>
@@ -692,7 +692,7 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
               {/* Chat History - Dynamic Height Container */}
               <div
                 ref={chatContainerRef}
-                className="overflow-y-auto min-h-24 max-h-96 mb-4"
+                className="overflow-y-auto max-h-96 mb-4 md:mb-2"
                 style={{ scrollBehavior: 'smooth' }}
               >
                 <div className="space-y-4 pr-4">
@@ -741,15 +741,15 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
                 </div>
               </div>
 
-              <Separator className="my-4" />
+              <Separator className="my-4 md:my-2" />
 
               {/* Input Area - Fixed at bottom */}
-              <div className="space-y-2 flex-shrink-0">
+              <div className="space-y-2 md:space-y-1 flex-shrink-0">
                 <Label className={TYPOGRAPHY.label.default}>Would you like to add anything?</Label>
                 <div className="flex gap-2">
                   <Textarea
                     placeholder="Any additional context, requirements, or specific challenges..."
-                    className="min-h-[80px] resize-none flex-1"
+                    className="min-h-[80px] md:min-h-[32px] px-3 py-2 md:py-1 md:leading-tight resize-none flex-1"
                     disabled={isGenerating}
                     value={userMessage}
                     onChange={(e) => setUserMessage(e.target.value)}

@@ -35,8 +35,8 @@ export const SPACING = {
 
     // Chat section
     chat: {
-      // Chat card wrapper
-      card: 'pt-6 md:pt-6 pt-3 md:p-6 md:px-6 px-2 pb-6 md:pb-6 pb-3',
+      // Chat card wrapper - ultra-compact on desktop for 2-line initial display
+      card: 'pt-6 md:pt-3 pt-3 md:p-3 md:px-4 px-2 pb-6 md:pb-3 pb-3',
       // Individual message bubbles
       message: 'md:p-3 px-2 py-1.5',
       // Typing indicator
