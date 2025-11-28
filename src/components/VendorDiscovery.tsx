@@ -98,6 +98,7 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
   const [isLoading, setIsLoading] = useState(true);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [isComparisonGenerating, setIsComparisonGenerating] = useState(false);
+  const [shouldTriggerDiscovery, setShouldTriggerDiscovery] = useState(false); // Flag to trigger vendor discovery manually
 
   const storageKey = `workflow_${project.id}`;
 
@@ -429,6 +430,7 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
 
   const handleCriteriaComplete = async (newCriteria: Criteria[]) => {
     setCriteria(newCriteria);
+    setShouldTriggerDiscovery(true); // Set flag to trigger vendor discovery when Step 3 mounts
     setCurrentStep('vendor-selection');
     await saveProjectState('vendor-selection', {
       techRequest,
@@ -616,6 +618,8 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
                     projectId={project.id}
                     projectName={project.name}
                     projectDescription={project.description || ''}
+                    shouldTriggerDiscovery={shouldTriggerDiscovery}
+                    onDiscoveryComplete={() => setShouldTriggerDiscovery(false)}
                   />
                 )}
                 {currentStep === 'vendor-comparison' && selectedVendors.length > 0 && (

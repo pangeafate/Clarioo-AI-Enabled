@@ -105,38 +105,41 @@ export const VendorDiscoveryLoader: React.FC<VendorDiscoveryLoaderProps> = ({
           <motion.div
             animate={{
               scale: [1, 3],
-              opacity: [0.5, 0],
+              opacity: [0.3, 0],
             }}
             transition={{
-              duration: 2,
+              duration: 2.5,
               repeat: Infinity,
               ease: 'easeOut',
+              repeatDelay: 0.3,
             }}
             className="absolute w-10 h-10 rounded-full border border-primary/50"
           />
           <motion.div
             animate={{
               scale: [1, 3],
-              opacity: [0.5, 0],
+              opacity: [0.3, 0],
             }}
             transition={{
-              duration: 2,
+              duration: 2.5,
               repeat: Infinity,
               ease: 'easeOut',
-              delay: 0.7,
+              delay: 0.8,
+              repeatDelay: 0.3,
             }}
             className="absolute w-10 h-10 rounded-full border border-primary/50"
           />
           <motion.div
             animate={{
               scale: [1, 3],
-              opacity: [0.5, 0],
+              opacity: [0.3, 0],
             }}
             transition={{
-              duration: 2,
+              duration: 2.5,
               repeat: Infinity,
               ease: 'easeOut',
-              delay: 1.4,
+              delay: 1.6,
+              repeatDelay: 0.3,
             }}
             className="absolute w-10 h-10 rounded-full border border-primary/50"
           />

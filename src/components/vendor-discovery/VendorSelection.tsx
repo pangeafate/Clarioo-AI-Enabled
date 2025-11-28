@@ -32,11 +32,13 @@ interface VendorSelectionProps {
   projectId: string;
   projectName: string;
   projectDescription: string;
+  shouldTriggerDiscovery?: boolean; // Flag to trigger initial discovery from "Find Vendors" button
+  onDiscoveryComplete?: () => void; // Callback to reset flag after discovery completes
 }
 
 const MAX_VENDORS = 15;
 
-const VendorSelection = ({ criteria, techRequest, onComplete, projectId, projectName, projectDescription }: VendorSelectionProps) => {
+const VendorSelection = ({ criteria, techRequest, onComplete, projectId, projectName, projectDescription, shouldTriggerDiscovery, onDiscoveryComplete }: VendorSelectionProps) => {
   console.log('[VendorSelection] 🔵 COMPONENT RENDER - projectId:', projectId);
 
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -95,9 +97,9 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
   useEffect(() => {
     console.log('[VendorSelection] 🟢 LOAD EFFECT RUNNING - projectId:', projectId);
     console.log('[VendorSelection] 🟢 discoveryStartedRef.current:', discoveryStartedRef.current);
-    console.log('[VendorSelection] 🟢 Effect stack trace:', new Error().stack);
+    console.log('[VendorSelection] 🟢 shouldTriggerDiscovery:', shouldTriggerDiscovery);
 
-    const loadSavedVendors = () => {
+    const loadSavedVendors = async () => {
       try {
         const savedVendors = localStorage.getItem(vendorStorageKey);
         const savedSelection = localStorage.getItem(selectionStorageKey);
@@ -117,29 +119,33 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
 
           setIsLoading(false);
           console.log('[VendorSelection] ✅ Loaded saved vendors:', parsed.length);
-        } else if (!discoveryStartedRef.current) {
-          // Only trigger discovery if not already started (prevents double discovery on re-render)
-          console.log('[VendorSelection] 🔴 NO SAVED VENDORS - Calling handleInitialDiscovery()');
-          console.log('[VendorSelection] 🔴 Setting discoveryStartedRef.current = true');
+        } else if (shouldTriggerDiscovery && !discoveryStartedRef.current) {
+          // ✅ MANUAL TRIGGER - Discovery requested via "Find Vendors" button
+          console.log('[VendorSelection] 🟢 MANUAL TRIGGER - shouldTriggerDiscovery=true, calling handleInitialDiscovery()');
           discoveryStartedRef.current = true; // Set flag BEFORE async call
-          handleInitialDiscovery();
+          await handleInitialDiscovery();
+          onDiscoveryComplete?.(); // Reset parent flag after discovery completes
         } else {
-          console.log('[VendorSelection] ⏭️ SKIPPING - Discovery already in progress (discoveryStartedRef.current =', discoveryStartedRef.current, ')');
+          // No saved vendors and no manual trigger - show empty state
+          console.log('[VendorSelection] ⏭️ NO TRIGGER - Showing empty state (shouldTriggerDiscovery=', shouldTriggerDiscovery, ')');
+          setIsLoading(false);
         }
       } catch (error) {
         console.error('[VendorSelection] Failed to load saved vendors:', error);
-        if (!discoveryStartedRef.current) {
-          console.log('[VendorSelection] 🔴 ERROR - Calling handleInitialDiscovery()');
-          discoveryStartedRef.current = true; // Set flag BEFORE async call
-          handleInitialDiscovery();
+        if (shouldTriggerDiscovery && !discoveryStartedRef.current) {
+          // Retry discovery on error if manually triggered
+          console.log('[VendorSelection] 🔴 ERROR with manual trigger - Calling handleInitialDiscovery()');
+          discoveryStartedRef.current = true;
+          await handleInitialDiscovery();
+          onDiscoveryComplete?.();
         } else {
-          console.log('[VendorSelection] ⏭️ SKIPPING - Discovery already in progress');
+          setIsLoading(false);
         }
       }
     };
 
     loadSavedVendors();
-  }, [projectId]);
+  }, [projectId, shouldTriggerDiscovery]);
 
   // Save vendors to localStorage when they change
   // 🐛 FIX: Don't save if we're clearing due to project change
