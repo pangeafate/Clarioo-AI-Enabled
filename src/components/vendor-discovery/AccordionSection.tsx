@@ -32,12 +32,17 @@
 
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
-import { ChevronDown, Plus, GripVertical } from 'lucide-react';
+import { ChevronDown, Plus, GripVertical, SquarePen } from 'lucide-react';
 import { CriterionCard } from './CriterionCard';
 import type { Criteria } from '../VendorDiscovery';
 import { SPACING } from '@/styles/spacing-config';
 import { TYPOGRAPHY } from '@/styles/typography-config';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
 export interface AccordionSectionProps {
   title: string;
@@ -51,6 +56,10 @@ export interface AccordionSectionProps {
   isSortedByImportance?: boolean;
   getOrderedCriteria?: (criteria: Criteria[], category: string) => Criteria[];
   onOrderChange?: (orderedIds: string[]) => void;
+  // Category editing (only for custom categories)
+  onEditCategory?: (oldName: string, newName: string) => void;
+  onDeleteCategory?: (categoryName: string) => void;
+  isCustomCategory?: boolean;
 }
 
 export const AccordionSection: React.FC<AccordionSectionProps> = ({
@@ -63,10 +72,19 @@ export const AccordionSection: React.FC<AccordionSectionProps> = ({
   onImportanceChange,
   isSortedByImportance = true,
   getOrderedCriteria,
-  onOrderChange
+  onOrderChange,
+  onEditCategory,
+  onDeleteCategory,
+  isCustomCategory = false
 }) => {
   // Track which item is being dragged for visual feedback
   const [draggingId, setDraggingId] = useState<string | null>(null);
+
+  // State for category editing dialog
+  const [isEditingCategory, setIsEditingCategory] = useState(false);
+  const [editedCategoryName, setEditedCategoryName] = useState(title);
+
+  const { toast } = useToast();
 
   /**
    * SP_014: Get ordered criteria based on sorting mode
@@ -118,9 +136,7 @@ export const AccordionSection: React.FC<AccordionSectionProps> = ({
   const lowCount = activeCriteria.filter(c => c.importance === 'low').length;
   const totalCount = activeCriteria.length;
 
-  if (totalCount === 0) {
-    return null; // Don't render empty sections
-  }
+  // Allow empty sections to render (user can add criteria to them)
 
   // Get category color scheme (modern, subtle tones)
   const getCategoryColors = (category: string) => {
@@ -172,29 +188,94 @@ export const AccordionSection: React.FC<AccordionSectionProps> = ({
 
   const colors = getCategoryColors(title);
 
+  // Handle category rename
+  const handleRenameCategory = () => {
+    if (!editedCategoryName.trim()) {
+      toast({
+        title: "Invalid name",
+        description: "Category name cannot be empty.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (editedCategoryName.toLowerCase() === title.toLowerCase()) {
+      setIsEditingCategory(false);
+      return;
+    }
+
+    onEditCategory?.(title.toLowerCase(), editedCategoryName.toLowerCase());
+    setIsEditingCategory(false);
+
+    toast({
+      title: "Category renamed",
+      description: `"${title}" has been renamed to "${editedCategoryName}".`
+    });
+  };
+
+  // Handle category delete with confirmation
+  const handleDeleteCategory = () => {
+    if (!onDeleteCategory) return;
+
+    const criteriaCount = criteria.length;
+    const message = criteriaCount > 0
+      ? `This will delete "${title}" and all ${criteriaCount} criteria in it. This action cannot be undone.`
+      : `This will delete the "${title}" category.`;
+
+    if (window.confirm(message)) {
+      onDeleteCategory(title.toLowerCase());
+      setIsEditingCategory(false);
+
+      toast({
+        title: "Category deleted",
+        description: `"${title}" and all its criteria have been removed.`
+      });
+    }
+  };
+
   return (
     <div className={`border rounded-lg bg-white border-l-4 ${colors.border}`}>
       {/* Header - Always Visible */}
-      <button
-        onClick={onToggle}
-        className={`w-full ${SPACING.vendorDiscovery.accordion.header} flex items-center justify-between transition-colors ${colors.bg} hover:opacity-80`}
-      >
-        {/* Title and Count */}
-        <div className="flex items-center gap-1.5 xs:gap-2">
+      <div className={`w-full ${SPACING.vendorDiscovery.accordion.header} flex items-center justify-between transition-colors ${colors.bg}`}>
+        {/* Title and Count (clickable to toggle) */}
+        <button
+          onClick={onToggle}
+          className="flex items-center gap-1.5 xs:gap-2 flex-1 text-left hover:opacity-80"
+        >
           <h3 className={TYPOGRAPHY.heading.h6}>{title}</h3>
           <span className={TYPOGRAPHY.muted.small}>
             {totalCount} - {highCount} High, {mediumCount} Medium, {lowCount} Low
           </span>
-        </div>
+        </button>
 
-        {/* Expand/Collapse Icon */}
-        <motion.div
-          animate={{ rotate: isExpanded ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          <ChevronDown className="h-5 w-5 text-gray-500" />
-        </motion.div>
-      </button>
+        {/* Right side: Edit icon (custom categories only, when expanded) + Chevron */}
+        <div className="flex items-center gap-1">
+          {isCustomCategory && isExpanded && onEditCategory && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsEditingCategory(true);
+              }}
+              className={SPACING.vendorDiscovery.criterion.iconButton}
+              title="Edit category"
+            >
+              <SquarePen className={SPACING.vendorDiscovery.criterion.icon} />
+            </Button>
+          )}
+
+          {/* Expand/Collapse Icon */}
+          <button onClick={onToggle}>
+            <motion.div
+              animate={{ rotate: isExpanded ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronDown className="h-5 w-5 text-gray-500" />
+            </motion.div>
+          </button>
+        </div>
+      </div>
 
       {/* Content - Collapsible */}
       <AnimatePresence initial={false}>
@@ -299,6 +380,71 @@ export const AccordionSection: React.FC<AccordionSectionProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Edit Category Dialog */}
+      {isCustomCategory && (
+        <Dialog open={isEditingCategory} onOpenChange={setIsEditingCategory}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit Category</DialogTitle>
+              <DialogDescription>
+                Rename or delete this custom category
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="category-name">Category Name</Label>
+                <Input
+                  id="category-name"
+                  value={editedCategoryName}
+                  onChange={(e) => setEditedCategoryName(e.target.value)}
+                  placeholder="Enter category name"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleRenameCategory();
+                    }
+                  }}
+                />
+              </div>
+
+              {criteria.length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  This category contains {criteria.length} {criteria.length === 1 ? 'criterion' : 'criteria'}.
+                </p>
+              )}
+            </div>
+
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button
+                variant="destructive"
+                onClick={handleDeleteCategory}
+                className="w-full sm:w-auto"
+              >
+                Delete Category
+              </Button>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsEditingCategory(false);
+                    setEditedCategoryName(title);
+                  }}
+                  className="flex-1 sm:flex-none"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleRenameCategory}
+                  className="flex-1 sm:flex-none"
+                >
+                  Save
+                </Button>
+              </div>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

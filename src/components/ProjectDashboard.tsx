@@ -44,6 +44,7 @@ const ProjectDashboard = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
 
   // Get the currently selected project or default to first (most recent)
   const selectedProject = projects.find(p => p.id === selectedProjectId) || projects[0];
@@ -53,9 +54,37 @@ const ProjectDashboard = ({
     onSelectProject(project);
     setIsExpanded(false); // Auto-collapse after selection
   };
+
+  // Handle project card click - select if not selected, expand if already selected
+  const handleProjectCardClick = (project: Project) => {
+    if (selectedProject?.id === project.id) {
+      // Already selected - toggle expansion
+      setExpandedProjectId(expandedProjectId === project.id ? null : project.id);
+    } else {
+      // Not selected - select it and collapse any expansion
+      handleSelectProject(project);
+      setExpandedProjectId(null);
+    }
+  };
   useEffect(() => {
     fetchProjects();
   }, []);
+
+  // Click outside to collapse expanded project
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      // Collapse if clicking outside project cards (but not on edit buttons)
+      if (expandedProjectId && !target.closest('[data-project-card]')) {
+        setExpandedProjectId(null);
+      }
+    };
+
+    if (expandedProjectId) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [expandedProjectId]);
   // Load projects from n8n storage only
   const fetchProjects = async () => {
     try {
@@ -172,7 +201,8 @@ const ProjectDashboard = ({
       </div>
     );
   }
-  return <div className="bg-gradient-secondary">
+  return (
+    <div className="bg-gradient-secondary">
       <div className="container mx-auto px-4 py-8">
         {/* Collapsible Header - Shows selected project */}
         <div id="projects-section" className="scroll-mt-4">
@@ -299,20 +329,27 @@ const ProjectDashboard = ({
                   </p>
                 </CardContent>
               </Card> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {projects.map(project => <Card
-                  key={project.id}
-                  className={`cursor-pointer transition-all hover:shadow-medium group ${
-                    selectedProjectId === project.id ? 'ring-2 ring-primary shadow-large' : ''
-                  }`}
-                  onClick={() => handleSelectProject(project)}
-                >
+                {projects.map(project => {
+                  const isProjectExpanded = expandedProjectId === project.id;
+                  return <Card
+                    key={project.id}
+                    data-project-card
+                    className={`cursor-pointer transition-all hover:shadow-medium group ${
+                      selectedProjectId === project.id ? 'ring-2 ring-primary shadow-large' : ''
+                    }`}
+                    onClick={() => handleProjectCardClick(project)}
+                  >
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div className="flex-1 min-w-0">
-                          <CardTitle className="group-hover:text-primary transition-colors truncate">
+                          <CardTitle className={`group-hover:text-primary transition-colors ${
+                            isProjectExpanded ? '' : 'truncate'
+                          }`}>
                             {project.name}
                           </CardTitle>
-                          {project.description && <CardDescription className="truncate">{project.description}</CardDescription>}
+                          {project.description && <CardDescription className={isProjectExpanded ? '' : 'truncate'}>
+                            {project.description}
+                          </CardDescription>}
                         </div>
                         <Button variant="ghost" size="sm" onClick={e => startEditProject(project, e)} className="ml-2 flex-shrink-0">
                           <Edit className="h-4 w-4" />
@@ -330,11 +367,13 @@ const ProjectDashboard = ({
                         </div>
                       </div>
                     </CardContent>
-                  </Card>)}
+                  </Card>
+                })}
               </div>}
           </div>
         )}
       </div>
-    </div>;
+    </div>
+  );
 };
 export default ProjectDashboard;

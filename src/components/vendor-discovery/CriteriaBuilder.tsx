@@ -657,6 +657,45 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
     setNewCategoryName('');
   };
 
+  const handleEditCategory = (oldName: string, newName: string) => {
+    // Update customTypes array
+    const updatedCustomTypes = customTypes.map(type =>
+      type === oldName ? newName : type
+    );
+    setCustomTypes(updatedCustomTypes);
+    storageService.setItem('custom_criterion_types', updatedCustomTypes);
+
+    // Update all criteria with the old category type to the new one
+    const updatedCriteria = criteria.map(c =>
+      c.type === oldName ? { ...c, type: newName } : c
+    );
+    setCriteria(updatedCriteria);
+
+    // Update expanded sections
+    if (expandedSections.has(oldName)) {
+      const newExpanded = new Set(expandedSections);
+      newExpanded.delete(oldName);
+      newExpanded.add(newName);
+      setExpandedSections(newExpanded);
+    }
+  };
+
+  const handleDeleteCategory = (categoryName: string) => {
+    // Remove from customTypes
+    const updatedCustomTypes = customTypes.filter(type => type !== categoryName);
+    setCustomTypes(updatedCustomTypes);
+    storageService.setItem('custom_criterion_types', updatedCustomTypes);
+
+    // Remove all criteria with this type
+    const updatedCriteria = criteria.filter(c => c.type !== categoryName);
+    setCriteria(updatedCriteria);
+
+    // Remove from expanded sections
+    const newExpanded = new Set(expandedSections);
+    newExpanded.delete(categoryName);
+    setExpandedSections(newExpanded);
+  };
+
   /**
    * SP_014: Handle importance change from swipe gestures
    * Updates criteria state with new importance level and archived status
@@ -827,6 +866,9 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
               isSortedByImportance={isSortedByImportance}
               getOrderedCriteria={getOrderedCriteria}
               onOrderChange={(orderedIds) => updateOrder('feature', orderedIds)}
+              isCustomCategory={true}
+              onEditCategory={handleEditCategory}
+              onDeleteCategory={handleDeleteCategory}
             />
 
             {/* Technical Section */}
@@ -844,6 +886,9 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
               isSortedByImportance={isSortedByImportance}
               getOrderedCriteria={getOrderedCriteria}
               onOrderChange={(orderedIds) => updateOrder('technical', orderedIds)}
+              isCustomCategory={true}
+              onEditCategory={handleEditCategory}
+              onDeleteCategory={handleDeleteCategory}
             />
 
             {/* Business Section */}
@@ -861,6 +906,9 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
               isSortedByImportance={isSortedByImportance}
               getOrderedCriteria={getOrderedCriteria}
               onOrderChange={(orderedIds) => updateOrder('business', orderedIds)}
+              isCustomCategory={true}
+              onEditCategory={handleEditCategory}
+              onDeleteCategory={handleDeleteCategory}
             />
 
             {/* Compliance Section */}
@@ -878,6 +926,9 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
               isSortedByImportance={isSortedByImportance}
               getOrderedCriteria={getOrderedCriteria}
               onOrderChange={(orderedIds) => updateOrder('compliance', orderedIds)}
+              isCustomCategory={true}
+              onEditCategory={handleEditCategory}
+              onDeleteCategory={handleDeleteCategory}
             />
 
             {/* Other Types Section - Custom categories */}
@@ -897,6 +948,9 @@ const CriteriaBuilder = ({ techRequest, onComplete, initialCriteria, projectId, 
                 isSortedByImportance={isSortedByImportance}
                 getOrderedCriteria={getOrderedCriteria}
                 onOrderChange={(orderedIds) => updateOrder(type, orderedIds)}
+                isCustomCategory={true}
+                onEditCategory={handleEditCategory}
+                onDeleteCategory={handleDeleteCategory}
               />
             ))}
 
