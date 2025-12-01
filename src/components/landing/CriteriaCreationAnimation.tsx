@@ -287,6 +287,13 @@ export const CriteriaCreationAnimation = ({
                   exit={{ opacity: 0, scale: 0.8 }}
                   className="flex flex-col items-center gap-10"
                 >
+                  {/* Header Text */}
+                  <motion.p
+                    className="text-xl font-bold text-white text-center"
+                  >
+                    Researching, please wait a minute...
+                  </motion.p>
+
                   {/* SVG Grid - Use div grid instead of SVG for layout animations */}
                   <div
                     className="relative grid grid-cols-3 gap-3"

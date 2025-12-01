@@ -398,7 +398,7 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
         <CardContent className="py-8">
           <VendorDiscoveryLoader
             message="Discovering vendors..."
-            description={`AI is finding ${techRequest.category} vendors based on your requirements`}
+            description="I am looking for vendors that match your criteria list"
           />
         </CardContent>
       </Card>
