@@ -375,6 +375,31 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
 
+  // Check if comparison has incomplete data (needed before auto-generating)
+  const hasIncompleteData = useMemo(() => {
+    if (!workflowVendors || !workflowCriteria) return false;
+
+    // Check vendor-level status
+    for (const vendor of workflowVendors) {
+      const state = vendorComparisonStates[vendor.id];
+      if (state?.status === 'loading' || state?.status === 'pending') {
+        return true;
+      }
+    }
+
+    // Check cell-level status
+    for (const criterion of workflowCriteria.filter(c => !c.isArchived)) {
+      for (const vendor of workflowVendors) {
+        const cell = comparisonState.criteria[criterion.id]?.cells[vendor.id];
+        if (cell?.status === 'loading' || cell?.status === 'pending') {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }, [workflowVendors, workflowCriteria, vendorComparisonStates, comparisonState]);
+
   // Track if we've checked cache for this project
   const [cacheChecked, setCacheChecked] = useState(false);
 
@@ -382,15 +407,20 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
   const [isGuidePopupOpen, setIsGuidePopupOpen] = useState(false);
 
   // Load cached executive summary when dialog opens
+  // IMPORTANT: Only load cache if data is complete (hasIncompleteData = false)
+  // If data is incomplete, we should show the warning instead of cached data
   useEffect(() => {
     if (isExecutiveSummaryOpen && projectId && !cacheChecked) {
-      const cached = getExecutiveSummaryFromStorage(projectId);
-      if (cached) {
-        setExecutiveSummaryData(cached);
+      // Check completeness FIRST before loading cache
+      if (!hasIncompleteData) {
+        const cached = getExecutiveSummaryFromStorage(projectId);
+        if (cached) {
+          setExecutiveSummaryData(cached);
+        }
       }
       setCacheChecked(true);
     }
-  }, [isExecutiveSummaryOpen, projectId, cacheChecked]);
+  }, [isExecutiveSummaryOpen, projectId, cacheChecked, hasIncompleteData]);
 
   // Reset cache check when project changes
   useEffect(() => {
@@ -512,13 +542,16 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
         type: c.type || 'other'
       }));
 
-    // Get compared vendors - only include vendors that are in the current workflow
+    // Get compared vendors - include vendors with ANY data (not just completed)
     // Update matchPercentage with client-side calculated value
     const comparedVendors: ComparedVendor[] = [];
+
     if (workflowVendors) {
       for (const vendor of workflowVendors) {
         const state = vendorComparisonStates[vendor.id];
-        if (state?.status === 'completed' && state.comparedData) {
+
+        // Include vendors that have at least some comparison data
+        if (state?.comparedData) {
           // Calculate match percentage client-side
           const calculatedMatchPercentage = calculateMatchPercentage(
             state.comparedData.scores,
@@ -536,7 +569,7 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
     }
 
     if (comparedVendors.length === 0) {
-      setSummaryError('No compared vendors available. Please wait for comparison to complete.');
+      setSummaryError('No vendor data available. Please start the comparison first.');
       return;
     }
 
@@ -566,17 +599,14 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
       // This ensures executive summary uses the same percentages as vendor cards
       const syncedResult = {
         ...result,
-        vendorRecommendations: {
-          ...result.vendorRecommendations,
-          topPicks: result.vendorRecommendations.topPicks.map(pick => {
-            // Find the corresponding vendor's client-calculated percentage
-            const vendor = comparedVendors.find(v => v.name === pick.name);
-            return {
-              ...pick,
-              matchScore: vendor?.matchPercentage ?? pick.matchScore
-            };
-          })
-        }
+        vendorRecommendations: result.vendorRecommendations.map(pick => {
+          // Find the corresponding vendor's client-calculated percentage
+          const vendor = comparedVendors.find(v => v.name === pick.name);
+          return {
+            ...pick,
+            matchPercentage: vendor?.matchPercentage ?? pick.matchPercentage
+          };
+        })
       };
 
       setExecutiveSummaryData(syncedResult);
@@ -613,6 +643,14 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
   useEffect(() => {
     const handleRegenerateComparison = () => {
       resetComparison();
+
+      // Clear executive summary cache when regenerating comparison
+      if (projectId) {
+        clearExecutiveSummaryFromStorage(projectId);
+        setExecutiveSummaryData(null);
+        setCacheChecked(false);
+      }
+
       // Start comparison after a small delay to allow state to update
       setTimeout(() => {
         startComparison();
@@ -623,7 +661,7 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
     return () => {
       window.removeEventListener('regenerateComparison', handleRegenerateComparison);
     };
-  }, [resetComparison, startComparison]);
+  }, [resetComparison, startComparison, projectId]);
 
   // Listen for custom event from parent VendorDiscovery to continue comparison
   // Continue populates only pending cells, keeping completed/failed cells intact
@@ -845,6 +883,7 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
                 isShortlisted={shortlistedVendorIds.has(vendor1.id)}
                 onToggleShortlist={toggleShortlist}
                 onRetryVendor={retryVendor}
+                isLoadingSummary={isGeneratingVendorSummaries && !vendor1.executiveSummary && !vendor1.killerFeature}
               />
             )}
 
@@ -858,6 +897,7 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
                 isShortlisted={shortlistedVendorIds.has(vendor2.id)}
                 onToggleShortlist={toggleShortlist}
                 onRetryVendor={retryVendor}
+                isLoadingSummary={isGeneratingVendorSummaries && !vendor2.executiveSummary && !vendor2.killerFeature}
               />
             )}
 
@@ -871,6 +911,7 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
                 isShortlisted={shortlistedVendorIds.has(vendor3.id)}
                 onToggleShortlist={toggleShortlist}
                 onRetryVendor={retryVendor}
+                isLoadingSummary={isGeneratingVendorSummaries && !vendor3.executiveSummary && !vendor3.killerFeature}
               />
             )}
           </motion.div>
@@ -888,6 +929,7 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
               onScoreClick={handleScoreClick}
               onRetryVendor={retryVendor}
               comparisonState={comparisonState}
+              isGeneratingVendorSummaries={isGeneratingVendorSummaries}
             />
           </motion.div>
         </div>
@@ -920,6 +962,7 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
               onScoreClick={handleScoreClick}
               onRetryVendor={retryVendor}
               comparisonState={comparisonState}
+              isGeneratingVendorSummaries={isGeneratingVendorSummaries}
             />
           </motion.div>
         </div>
@@ -989,6 +1032,7 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
           error={summaryError}
           onGenerate={handleGenerateExecutiveSummary}
           cacheChecked={cacheChecked}
+          hasIncompleteData={hasIncompleteData}
         />
 
         {/* Vendor Comparison Guide Popup */}

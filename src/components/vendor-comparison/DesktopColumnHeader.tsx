@@ -11,7 +11,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Plus, Bot, Trash2, Info, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Bot, Trash2, Info, Star, Loader2 } from 'lucide-react';
 import { ComparisonVendor } from '../../types/comparison.types';
 import { Button } from '../ui/button';
 import { useToast } from '../../hooks/use-toast';
@@ -28,6 +28,7 @@ interface DesktopColumnHeaderProps {
   columnPosition?: number; // 0-4 for 5 columns, used for popover positioning
   isShortlisted?: boolean;
   onToggleShortlist?: (vendorId: string) => void;
+  isLoadingSummary?: boolean;
 }
 
 export const DesktopColumnHeader: React.FC<DesktopColumnHeaderProps> = ({
@@ -42,6 +43,7 @@ export const DesktopColumnHeader: React.FC<DesktopColumnHeaderProps> = ({
   columnPosition = 0,
   isShortlisted = false,
   onToggleShortlist,
+  isLoadingSummary = false,
 }) => {
   const { toast } = useToast();
   const hasPrevious = currentIndex > 0;
@@ -302,6 +304,14 @@ export const DesktopColumnHeader: React.FC<DesktopColumnHeaderProps> = ({
                   )}
                 </div>
               </div>
+
+              {/* Loading State for Vendor Summary */}
+              {isLoadingSummary && !vendor.executiveSummary && !vendor.killerFeature && (
+                <div className="flex flex-col items-center justify-center py-8 px-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-3" />
+                  <p className="text-sm text-gray-500 font-medium">Researching...</p>
+                </div>
+              )}
 
               {/* Executive Summary */}
               {vendor.executiveSummary && (

@@ -45,6 +45,8 @@ interface VerticalBarChartProps {
   onRetryVendor?: (vendorId: string) => void;
   // Two-stage comparison state (for cell-level loading status)
   comparisonState?: ComparisonState;
+  // Vendor summary loading state
+  isGeneratingVendorSummaries?: boolean;
 }
 
 /**
@@ -250,6 +252,8 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
   onRetryVendor,
   // Two-stage comparison state
   comparisonState,
+  // Vendor summary loading state
+  isGeneratingVendorSummaries = false,
 }) => {
   // ✅ Use criteria ordering hook to respect manual sorting from builder
   const { getOrderedCriteria } = useCriteriaOrder(projectId || 'comparison');
@@ -420,6 +424,7 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
                   columnPosition={idx}
                   isShortlisted={vendor ? shortlistedVendorIds?.has(vendor.id) : false}
                   onToggleShortlist={onToggleShortlist}
+                  isLoadingSummary={isGeneratingVendorSummaries && vendor ? !vendor.executiveSummary && !vendor.killerFeature : false}
                 />
               ))}
             </div>

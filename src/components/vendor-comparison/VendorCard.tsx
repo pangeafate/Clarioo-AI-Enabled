@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Info, Bot, Trash2, Star, RotateCcw, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Info, Bot, Trash2, Star, RotateCcw, AlertCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ComparisonVendor } from '../../types/comparison.types';
 import { Button } from '../ui/button';
@@ -24,6 +24,7 @@ interface VendorCardProps {
   isShortlisted?: boolean;
   onToggleShortlist?: (vendorId: string) => void;
   onRetryVendor?: (vendorId: string) => void;
+  isLoadingSummary?: boolean;
 }
 
 const colorClasses = {
@@ -60,6 +61,7 @@ export const VendorCard: React.FC<VendorCardProps> = ({
   isShortlisted = false,
   onToggleShortlist,
   onRetryVendor,
+  isLoadingSummary = false,
 }) => {
   const { toast } = useToast();
   const hasPrevious = currentIndex > 0;
@@ -397,6 +399,14 @@ export const VendorCard: React.FC<VendorCardProps> = ({
                   )}
                 </div>
               </div>
+
+              {/* Loading State for Vendor Summary */}
+              {isLoadingSummary && !vendor.executiveSummary && !vendor.killerFeature && (
+                <div className="flex flex-col items-center justify-center py-8 px-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-3" />
+                  <p className="text-sm text-gray-500 font-medium">Researching...</p>
+                </div>
+              )}
 
               {/* Executive Summary */}
               {vendor.executiveSummary && (

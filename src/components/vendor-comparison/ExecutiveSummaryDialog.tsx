@@ -62,6 +62,7 @@ interface ExecutiveSummaryDialogProps {
   error?: string | null;
   onGenerate?: () => void;
   cacheChecked?: boolean; // Whether cache has been checked
+  hasIncompleteData?: boolean; // Whether comparison has incomplete vendor data
 }
 
 export const ExecutiveSummaryDialog: React.FC<ExecutiveSummaryDialogProps> = ({
@@ -75,7 +76,8 @@ export const ExecutiveSummaryDialog: React.FC<ExecutiveSummaryDialogProps> = ({
   isLoading = false,
   error,
   onGenerate,
-  cacheChecked = false
+  cacheChecked = false,
+  hasIncompleteData = false
 }) => {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
@@ -85,48 +87,64 @@ export const ExecutiveSummaryDialog: React.FC<ExecutiveSummaryDialogProps> = ({
   const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
 
   // Transform n8n data to display format or use default
-  const summary = summaryData ? {
-    title: 'Executive Summary',
-    generatedAt: new Date().toISOString(),
-    sections: {
-      keyCriteria: {
-        title: 'Key Evaluation Criteria',
-        content: `Based on ${summaryData.keyCriteria.length} high-priority criteria.`,
-        highPriority: summaryData.keyCriteria.map(c => c.name)
-      },
-      vendorRecommendations: {
-        title: 'Vendor Recommendations',
-        topPicks: summaryData.vendorRecommendations.map(v => ({
-          rank: v.rank,
-          name: v.name,
-          matchScore: v.matchPercentage,
-          reasoning: v.overallAssessment
-        }))
-      },
-      keyDifferentiators: {
-        title: 'Key Differentiators',
-        differentiators: summaryData.keyDifferentiators.map(d => ({
-          category: d.category,
-          leader: d.leader,
-          details: d.details
-        }))
-      },
-      riskFactors: {
-        title: 'Risk Factors & Call Preparation',
-        description: `Questions to ask ${summaryData.riskFactors.vendorSpecific.length} vendors during evaluation calls.`,
-        questionsToAsk: summaryData.riskFactors.vendorSpecific,
-        generalConsiderations: summaryData.riskFactors.generalConsiderations
+  const summary = React.useMemo(() => {
+    console.log('[ExecutiveSummaryDialog] summaryData:', summaryData);
+    console.log('[ExecutiveSummaryDialog] isLoading:', isLoading);
+    console.log('[ExecutiveSummaryDialog] error:', error);
+    console.log('[ExecutiveSummaryDialog] hasIncompleteData:', hasIncompleteData);
+
+    if (!summaryData) return defaultExecutiveSummary;
+
+    // Safely access potentially undefined properties with defaults
+    const keyCriteria = Array.isArray(summaryData.keyCriteria) ? summaryData.keyCriteria : [];
+    const vendorRecommendations = Array.isArray(summaryData.vendorRecommendations) ? summaryData.vendorRecommendations : [];
+    const keyDifferentiators = Array.isArray(summaryData.keyDifferentiators) ? summaryData.keyDifferentiators : [];
+    const riskFactors = summaryData.riskFactors || { vendorSpecific: [], generalConsiderations: [] };
+
+    return {
+      title: 'Executive Summary',
+      generatedAt: new Date().toISOString(),
+      sections: {
+        keyCriteria: {
+          title: 'Key Evaluation Criteria',
+          content: `Based on ${keyCriteria.length} high-priority criteria.`,
+          highPriority: keyCriteria.map(c => c?.name || 'Unknown')
+        },
+        vendorRecommendations: {
+          title: 'Vendor Recommendations',
+          topPicks: vendorRecommendations.map(v => ({
+            rank: v?.rank || 0,
+            name: v?.name || 'Unknown',
+            matchScore: v?.matchPercentage || 0,
+            reasoning: v?.overallAssessment || ''
+          }))
+        },
+        keyDifferentiators: {
+          title: 'Key Differentiators',
+          differentiators: keyDifferentiators.map(d => ({
+            category: d?.category || '',
+            leader: d?.leader || '',
+            details: d?.details || ''
+          }))
+        },
+        riskFactors: {
+          title: 'Risk Factors & Call Preparation',
+          description: `Questions to ask ${riskFactors.vendorSpecific?.length || 0} vendors during evaluation calls.`,
+          questionsToAsk: Array.isArray(riskFactors.vendorSpecific) ? riskFactors.vendorSpecific : [],
+          generalConsiderations: Array.isArray(riskFactors.generalConsiderations) ? riskFactors.generalConsiderations : []
+        }
       }
-    }
-  } : defaultExecutiveSummary;
+    };
+  }, [summaryData, isLoading, error, hasIncompleteData]);
 
   // Auto-generate on open if no data and not loading
   // Wait for cache to be checked first before auto-generating
+  // Only auto-generate if data is complete (!hasIncompleteData)
   React.useEffect(() => {
-    if (isOpen && cacheChecked && !summaryData && !isLoading && !error && onGenerate) {
+    if (isOpen && cacheChecked && !summaryData && !isLoading && !error && !hasIncompleteData && onGenerate) {
       onGenerate();
     }
-  }, [isOpen, cacheChecked, summaryData, isLoading, error, onGenerate]);
+  }, [isOpen, cacheChecked, summaryData, isLoading, error, hasIncompleteData, onGenerate]);
 
   const handleOpenChat = () => {
     setIsChatOpen(true);
@@ -320,21 +338,39 @@ export const ExecutiveSummaryDialog: React.FC<ExecutiveSummaryDialogProps> = ({
                     </div>
                   )}
 
-                  {/* Error State */}
-                  {error && !isLoading && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-                      <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-3" />
-                      <p className={`${TYPOGRAPHY.body.default} text-red-700 mb-4`}>
-                        {error}
-                      </p>
-                      <Button onClick={onGenerate} variant="outline" className="text-red-600 border-red-300 hover:bg-red-50">
-                        Try Again
-                      </Button>
-                    </div>
-                  )}
+                  {/* Incomplete Data Warning or Error State */}
+                  {(() => {
+                    const shouldShowWarning = !isLoading && (error || hasIncompleteData) && !summaryData;
+                    console.log('[ExecutiveSummaryDialog] shouldShowWarning:', shouldShowWarning, {
+                      isLoading,
+                      error,
+                      hasIncompleteData,
+                      hasSummaryData: !!summaryData
+                    });
+                    return shouldShowWarning ? (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+                        <AlertCircle className="h-8 w-8 text-blue-500 mx-auto mb-3" />
+                        <p className={`${TYPOGRAPHY.body.default} text-blue-700 mb-4`}>
+                          {hasIncompleteData
+                            ? "The vendor research against your criteria is not done. Would you like to generate executive summary with incomplete data?"
+                            : error
+                          }
+                        </p>
+                        <Button onClick={onGenerate} variant="outline" className="text-blue-600 border-blue-300 hover:bg-blue-50">
+                          Generate
+                        </Button>
+                      </div>
+                    ) : null;
+                  })()}
 
-                  {/* Content - only show when we have data and not loading/error */}
-                  {!isLoading && !error && (
+                  {/* Content - show when we have data and not loading */}
+                  {(() => {
+                    const shouldShowContent = !isLoading && summaryData;
+                    console.log('[ExecutiveSummaryDialog] shouldShowContent:', shouldShowContent, {
+                      isLoading,
+                      hasSummaryData: !!summaryData
+                    });
+                    return shouldShowContent ? (
                     <>
                       {/* Title */}
                       <div className="text-center mb-8">
@@ -466,7 +502,8 @@ export const ExecutiveSummaryDialog: React.FC<ExecutiveSummaryDialogProps> = ({
                     </div>
                   </section>
                     </>
-                  )}
+                    ) : null;
+                  })()}
                 </div>
               </div>
 

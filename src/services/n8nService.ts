@@ -1296,7 +1296,16 @@ export const generateExecutiveSummary = async (
       throw new Error(`HTTP error: ${response.status} - ${errorText}`);
     }
 
-    const result: ExecutiveSummaryResponse = await response.json();
+    let result: ExecutiveSummaryResponse | ExecutiveSummaryResponse[] = await response.json();
+
+    // Handle array response (n8n sometimes wraps response in array)
+    if (Array.isArray(result)) {
+      console.log('[n8n-summary] Response is array, extracting first element');
+      if (result.length === 0) {
+        throw new Error('Empty response array from n8n');
+      }
+      result = result[0];
+    }
 
     if (!result.success || !result.data) {
       const errorMessage = result.error?.message || 'Failed to generate executive summary';
