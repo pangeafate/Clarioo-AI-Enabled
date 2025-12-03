@@ -482,6 +482,79 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
   };
 
   const handleVendorSelectionComplete = async (vendors: Vendor[]) => {
+    // IMPORTANT: Check localStorage BEFORE navigation to avoid race condition
+    // VendorComparisonNew will save empty state on mount, clearing our data
+    const hasActualComparisonResults = () => {
+      const stage1Key = `stage1_results_${project.id}`;
+      const stage2Key = `stage2_results_${project.id}`;
+
+      const stage1Data = localStorage.getItem(stage1Key);
+      const stage2Data = localStorage.getItem(stage2Key);
+
+      console.log('[VendorDiscovery] Checking for existing comparison data (BEFORE navigation):', {
+        stage1Key,
+        stage2Key,
+        hasStage1Data: !!stage1Data,
+        hasStage2Data: !!stage2Data
+      });
+
+      // If either Stage 1 or Stage 2 has completed cells, comparison has been run
+      if (stage1Data) {
+        try {
+          const parsed = JSON.parse(stage1Data);
+          // Stage1StorageData.results: Record<criterionId, Record<vendorId, CellState>>
+          // Check if there are any cells with status 'completed'
+          let completedCellCount = 0;
+          if (parsed.results) {
+            for (const criterionId in parsed.results) {
+              const criterionCells = parsed.results[criterionId];
+              for (const vendorId in criterionCells) {
+                const cell = criterionCells[vendorId];
+                if (cell.status === 'completed') {
+                  completedCellCount++;
+                }
+              }
+            }
+          }
+          console.log('[VendorDiscovery] Stage 1 data found:', {
+            criteriaCount: parsed.results ? Object.keys(parsed.results).length : 0,
+            completedCellCount,
+            hasCompletedCells: completedCellCount > 0
+          });
+          if (completedCellCount > 0) {
+            return true;
+          }
+        } catch (e) {
+          console.error('[VendorDiscovery] Error parsing stage1 data:', e);
+        }
+      }
+
+      if (stage2Data) {
+        try {
+          const parsed = JSON.parse(stage2Data);
+          // Stage2StorageData.results: Record<criterionId, { criterionInsight, starsAwarded, ... }>
+          // Check if there are any completed Stage 2 results
+          const stage2Count = parsed.results ? Object.keys(parsed.results).length : 0;
+          console.log('[VendorDiscovery] Stage 2 data found:', {
+            resultCount: stage2Count,
+            hasResults: stage2Count > 0
+          });
+          if (stage2Count > 0) {
+            return true;
+          }
+        } catch (e) {
+          console.error('[VendorDiscovery] Error parsing stage2 data:', e);
+        }
+      }
+
+      console.log('[VendorDiscovery] No existing comparison data found - will auto-start');
+      return false;
+    };
+
+    const shouldAutoStart = !hasActualComparisonResults();
+    console.log('[VendorDiscovery] Auto-start decision (BEFORE navigation):', shouldAutoStart);
+
+    // Now navigate to comparison page
     setSelectedVendors(vendors);
     setCurrentStep('vendor-comparison');
     await saveProjectState('vendor-comparison', {
@@ -490,6 +563,22 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
       selectedVendors: vendors
     });
     scrollToSectionTitle();
+
+    // Auto-start comparison if no existing data
+    if (shouldAutoStart) {
+      // Small delay to allow VendorComparisonNew to mount and set up event listeners
+      setTimeout(() => {
+        // Dispatch event to trigger comparison generation
+        window.dispatchEvent(new CustomEvent('regenerateComparison'));
+
+        // Show toast notification
+        toast({
+          title: "Starting comparison analysis",
+          description: "Analyzing all vendors against criteria...",
+          duration: 2000
+        });
+      }, 500);
+    }
   };
 
   const handleComparisonComplete = async () => {
