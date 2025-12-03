@@ -7,7 +7,7 @@
  * Categories: Feature, Technical, Business, Compliance, + Custom
  */
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, ChevronDown, ChevronRight, ChevronLeft, Star, HelpCircle, Check, Minus, Loader2, RotateCcw, AlertCircle } from 'lucide-react';
 import { ComparisonVendor, CriterionState } from '../../types/comparison.types';
@@ -17,12 +17,10 @@ import { Button } from '../ui/button';
 import { TYPOGRAPHY } from '../../styles/typography-config';
 import { DesktopColumnHeader } from './DesktopColumnHeader';
 import { ComparisonState } from '../../types/vendorComparison.types';
-import { useCriteriaOrder } from '../../hooks/useCriteriaOrder';
 
 interface VerticalBarChartProps {
   vendors: (ComparisonVendor | null)[];
   criteria: Criterion[];
-  projectId?: string; // ✅ Added to support manual criteria ordering
   onCriterionClick?: (criterionId: string) => void;
   className?: string;
   columnCount?: 3 | 5; // Number of columns (3 for mobile, 5 for desktop)
@@ -227,7 +225,6 @@ const getCategoryColors = (category: string) => {
 export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
   vendors,
   criteria,
-  projectId, // ✅ For manual criteria ordering
   onCriterionClick,
   className = '',
   columnCount = 3,
@@ -251,9 +248,6 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
   // Two-stage comparison state
   comparisonState,
 }) => {
-  // ✅ Use criteria ordering hook to respect manual sorting from builder
-  const { getOrderedCriteria } = useCriteriaOrder(projectId || 'comparison');
-
   // Check if desktop headers should be shown
   const showDesktopHeaders = columnCount === 5 && desktopVendors && desktopColumnIndices;
   // Filter out null vendors for display, but keep track of all slots
@@ -266,45 +260,6 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['Feature', 'Technical', 'Business', 'Compliance'])
   );
-
-  // Track criteria that just completed Stage 2 (for green pulse animation)
-  const [stage2CompletedCriteria, setStage2CompletedCriteria] = useState<Set<string>>(new Set());
-  const prevStage2StatusRef = useRef<Record<string, string>>({});
-
-  // Watch for Stage 2 completions and trigger green pulse animation
-  useEffect(() => {
-    if (!comparisonState) return;
-
-    const newCompletions = new Set<string>();
-
-    for (const [criterionId, row] of Object.entries(comparisonState.criteria)) {
-      const prevStatus = prevStage2StatusRef.current[criterionId];
-      const currentStatus = row.stage2Status;
-
-      // Detect transition from 'loading' to 'completed'
-      if (prevStatus === 'loading' && currentStatus === 'completed') {
-        newCompletions.add(criterionId);
-        console.log(`[VerticalBarChart] ✨ Stage 2 completed for criterion: ${criterionId}`);
-      }
-
-      // Update ref
-      prevStage2StatusRef.current[criterionId] = currentStatus;
-    }
-
-    // Add new completions to state
-    if (newCompletions.size > 0) {
-      setStage2CompletedCriteria(prev => new Set([...prev, ...newCompletions]));
-
-      // Auto-remove after 3 seconds
-      setTimeout(() => {
-        setStage2CompletedCriteria(prev => {
-          const updated = new Set(prev);
-          newCompletions.forEach(id => updated.delete(id));
-          return updated;
-        });
-      }, 3000);
-    }
-  }, [comparisonState]);
 
   // Group criteria by category (type field)
   const categorizedCriteria = useMemo(() => {
@@ -322,14 +277,16 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
       groups[category].push(criterion);
     });
 
-    // ✅ Use manual ordering from builder (respects toggle state)
-    // getOrderedCriteria handles both sorted by importance AND manual drag-drop order
+    // Sort criteria within each category by importance
     Object.keys(groups).forEach((category) => {
-      groups[category] = getOrderedCriteria(groups[category], category);
+      groups[category].sort((a, b) => {
+        const importanceOrder = { high: 3, medium: 2, low: 1 };
+        return importanceOrder[b.importance] - importanceOrder[a.importance];
+      });
     });
 
     return groups;
-  }, [criteria, getOrderedCriteria]);
+  }, [criteria]);
 
   // Standard categories in order
   const standardCategories = ['Feature', 'Technical', 'Business', 'Compliance'];
@@ -526,28 +483,9 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
                       </div>
                       {categoryCriteria.map((criterion, criterionIndex) => {
                         const importance = criterion.importance;
-                        const isStage2Completed = stage2CompletedCriteria.has(criterion.id);
 
                         return (
-                          <motion.div
-                            key={criterion.id}
-                            className="flex items-stretch gap-2 sm:gap-3 rounded-lg"
-                            animate={isStage2Completed ? {
-                              backgroundColor: [
-                                'rgba(255, 255, 255, 0)',      // transparent
-                                'rgba(34, 197, 94, 0.15)',     // green-500 at 15% opacity
-                                'rgba(34, 197, 94, 0.25)',     // green-500 at 25% opacity
-                                'rgba(34, 197, 94, 0.15)',     // green-500 at 15% opacity
-                                'rgba(255, 255, 255, 0)',      // transparent
-                              ],
-                            } : {
-                              backgroundColor: 'rgba(255, 255, 255, 0)',
-                            }}
-                            transition={{
-                              duration: 3,
-                              ease: 'easeInOut',
-                            }}
-                          >
+                          <div key={criterion.id} className="flex items-stretch gap-2 sm:gap-3">
                             {/* Criterion Card (Left Side) */}
                             <div
                               onClick={() => onCriterionClick?.(criterion.id)}
@@ -639,7 +577,7 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
 
                             {/* Right spacer matching header layout - only on desktop when headers are shown */}
                             {showDesktopHeaders && <div className="hidden lg:block w-10 flex-shrink-0" />}
-                          </motion.div>
+                          </div>
                         );
                       })}
                     </div>

@@ -1,12 +1,12 @@
 # Codebase Structure
 
-Version: 2.0.0
-Last Updated: 2024-11-23
-Status: Phase 1 - n8n AI Integration
+Version: 3.8.0
+Last Updated: December 2, 2024
+Status: Phase 1 - n8n AI Integration (SP_017 Complete)
 
 ## Overview
 
-This document provides a comprehensive overview of the Clarioo codebase organization. The project has transitioned from Visual Prototype (Phase 0) to **Phase 1 (n8n AI Integration)**. Project creation and criteria generation now use real AI via n8n webhooks with GPT-4o-mini. The structure follows a modular, feature-based organization optimized for React + TypeScript development with clear separation of concerns.
+This document provides a comprehensive overview of the Clarioo codebase organization. The project transitioned from Phase 0 (Visual Prototype, SP_006-SP_015) to **Phase 1 (n8n AI Integration, SP_016+)**. Core workflows now use 6 real n8n webhooks with GPT-4o-mini processing. All project data, criteria, and workflow state persist in localStorage. The structure follows a modular, feature-based organization optimized for React + TypeScript development with clear separation of concerns.
 
 ## Directory Structure
 
@@ -100,15 +100,20 @@ This document provides a comprehensive overview of the Clarioo codebase organiza
 **Purpose**: Business logic and data access abstraction
 
 **Structure**:
-- `n8nService.ts` - **Real AI** via n8n webhooks (project creation, criteria generation)
-  - Endpoint: `https://n8n.lakestrom.com/webhook/clarioo-project-creation`
-  - Functions: `createProjectWithAI()`, `getUserId()`, `getSessionId()`, storage functions
-  - Timeout: 45 seconds with AbortController
-- `storageService.ts` - Browser localStorage wrapper
-- **`/mock/`** - Mock service implementations for remaining features
+- `n8nService.ts` - **Real AI** via n8n webhooks (6 active endpoints)
+  - **Project Creation** (SP_016): `createProjectWithAI()`, 45s timeout
+  - **Criteria Chat** (SP_016): `sendCriteriaChat()`, conversational criterion management
+  - **Vendor Search** (SP_016+): `findVendors()`, discovers vendors matching criteria
+  - **Vendor Comparison** (SP_016+): `compareVendor()`, researches individual vendors
+  - **Executive Summary** (SP_016+): `generateExecutiveSummary()`, comprehensive analysis
+  - **Email Collection** (SP_017): `collectEmail()`, sends to Google Sheets with device metadata
+  - **Storage Functions**: `saveProjectToStorage()`, `getCriteriaFromStorage()`, `saveEmailToStorage()`, etc.
+  - **User/Session IDs**: `getUserId()` (localStorage), `getSessionId()` (sessionStorage)
+- `storageService.ts` - Browser localStorage abstraction layer with type safety
+- **`/mock/`** - Mock service implementations for authentication and fallback data
   - `authService.ts` - Mock authentication (login, signup, logout)
   - `projectService.ts` - Mock project CRUD operations
-  - `aiService.ts` - Mock AI for vendor discovery (until SP_017)
+  - `aiService.ts` - Mock AI fallback for development/testing
   - `dataService.ts` - Mock data fetching utilities
 
 **Service Patterns**:
@@ -165,7 +170,9 @@ This document provides a comprehensive overview of the Clarioo codebase organiza
 
 **Key Files**:
 - `index.ts` - Central type exports
-- `n8n.types.ts` - **n8n API types** (N8nProjectCreationRequest/Response, TransformedProject, TransformedCriterion)
+- `n8n.types.ts` - **n8n API types**
+  - Project Creation: N8nProjectCreationRequest/Response, TransformedProject, TransformedCriterion
+  - Email Collection: EmailCollectionRequest/Response, EmailCollectionStorage, DeviceMetadata (SP_017)
 - `auth.types.ts` - Authentication types (User, AuthState)
 - `project.types.ts` - Project types (Project, ProjectStatus)
 - `vendor.types.ts` - Vendor types (Vendor, VendorScore)
@@ -179,6 +186,7 @@ This document provides a comprehensive overview of the Clarioo codebase organiza
 **Purpose**: Pure utility functions
 
 **Key Files**:
+- `deviceMetadata.ts` - Device metadata collection (browser, OS, device type, screen resolution, timezone) (SP_017)
 - `mockHelpers.ts` - Mock data generation utilities
 - `dataTransformers.ts` - Data transformation functions
 - `exportHelpers.ts` - Export/download utilities

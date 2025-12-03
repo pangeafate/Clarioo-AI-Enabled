@@ -1,0 +1,180 @@
+IMPROVED STAGE 2 PROMPT
+=======================
+
+This prompt should replace the "text" field in the Stage 2 n8n workflow JSON
+(line 120 in "Clarioo TESTING AI Rank Criterion Results (Stage 2) (1).json")
+
+COPY EVERYTHING BELOW THIS LINE:
+================================================================================
+
+RESEARCH TASK: Stage 2 - Comparative Ranking Analysis
+
+CRITERION BEING EVALUATED:
+Name: {{ $json.criterion.name }}
+ID: {{ $json.criterion.id }}
+Importance: {{ $json.criterion.importance }}
+Description: {{ $json.criterion.description || 'N/A' }}
+
+PROJECT CONTEXT:
+{{ $json.project_description }}
+
+STAGE 1 RESULTS (Individual Vendor Research):
+{{ JSON.stringify($json.stage1_results, null, 2) }}
+
+Number of vendors: {{ $json.stage1_results.length }}
+
+RESEARCH PROCESS:
+
+1. REVIEW STAGE 1 EVIDENCE
+   Analyze the evidence collected for each vendor in Stage 1:
+   - "yes": Strong evidence of feature presence
+   - "unknown": Contradictory, vague information, or no clear evidence found
+   - "no": Evidence that feature is absent or explicitly not present
+
+   Identify vendors with "yes" evidence as primary candidates for further investigation and potential star awards.
+
+1a. EVIDENCE REUSE RULES (IMPORTANT)
+   Your job is NOT to re-research individual vendors. Stage 1 already did that.
+   Your job IS to conduct COMPARATIVE research to identify competitive advantages.
+
+   **For vendors with Stage 1 "yes":**
+   - ✅ REUSE: evidence_url, evidence_description, vendor_site_evidence, third_party_evidence from Stage 1
+   - ✅ ASSIGN: state = "yes" (default)
+   - 🔍 RESEARCH: Only to find competitive advantage for potential star
+   - Only UPDATE evidence if you find BETTER third-party comparative evidence
+
+   **For vendors with Stage 1 "no":**
+   - ✅ REUSE: Evidence from Stage 1
+   - ✅ ASSIGN: state = "no"
+   - ❌ DO NOT research again (Stage 1 already confirmed absence)
+
+   **For vendors with Stage 1 "unknown":**
+   - ⚠️ RETAIN: state = "unknown" (default)
+   - 🔍 OPTIONAL: If comparative search reveals new info, can update to "yes" or "no"
+   - Rarely becomes "star" unless strong new evidence found
+
+1b. SEARCH BUDGET LOGIC (Conditional)
+   BEFORE conducting any searches, count Stage 1 evidence:
+
+   ```
+   IF all stage1_results have evidence_strength = "no":
+     → search_count = 0 (no stars possible, skip all searches)
+     → Assign all vendors state = "no"
+     → Generate brief criterion_insight explaining no vendors have this feature
+
+   ELSE IF only 1 vendor has evidence_strength = "yes":
+     → search_count = 0 (can't compare, no competitive advantage possible)
+     → Assign "yes" vendor state = "yes"
+     → stars_awarded = 0
+
+   ELSE IF 2+ vendors have evidence_strength = "yes":
+     → Execute comparative searches (1-10 searches)
+     → Look for competitive advantages
+   ```
+
+2. COMPARATIVE RESEARCH (0-10 searches)
+   Only execute searches if 2+ vendors have Stage 1 "yes" (see Search Budget Logic above).
+
+   For vendors with positive evidence, conduct comparative research to identify which vendors have competitive advantages.
+
+   Search strategies:
+   - "[vendor A] vs [vendor B] {{ $json.criterion.name }}"
+   - "best [product category] for {{ $json.criterion.name }}"
+   - "{{ $json.criterion.name }} comparison [vendor A] [vendor B] [vendor C]"
+   - "[vendor A] {{ $json.criterion.name }} rated review reddit"
+   - "which is better for {{ $json.criterion.name }}: [vendor A] or [vendor B]"
+
+   Look for evidence of competitive advantages:
+   - Direct comparisons showing vendor superiority
+   - Awards or recognition for this specific criterion
+   - User testimonials preferring one vendor over others
+   - Expert reviews highlighting exceptional performance
+   - Benchmarks or metrics showing better results
+
+   REQUIREMENTS FOR COMPETITIVE ADVANTAGE:
+   - Must use THIRD-PARTY sources only (G2, Capterra, Reddit, review sites)
+   - Must explicitly compare vendors or rank them
+   - Must demonstrate clear advantage, not just feature presence
+   - Must provide specific competitor names in the evidence
+
+3. STAR ALLOCATION (Maximum 2 stars per criterion)
+   Based on comparative research, award up to 2 stars to vendors showing exceptional performance.
+
+   Star allocation rules:
+   - Award 0-2 stars total (NOT always exactly 2)
+   - Prioritize HIGH importance criterion if multiple vendors qualify
+   - Star evidence MUST be from third-party sources
+   - Star evidence MUST name specific competitors
+   - Comment MUST describe the competitive advantage
+
+   Star comment format:
+   "[Specific advantage] vs [Competitor names] per [Source type]"
+   Example: "Rated #1 for integrations vs Salesforce and HubSpot per G2 reviews"
+
+4. UPDATE EVIDENCE (Only if better evidence found)
+   During comparative research, you may find better evidence than Stage 1 provided.
+
+   ONLY update evidence fields if you find:
+   - More authoritative third-party URLs (especially for competitive comparisons)
+   - More specific feature descriptions with competitive context
+   - Better comparative evidence that supports star allocation
+
+   DO NOT update evidence just because you searched again. Stage 1 evidence should be preserved unless you found genuinely better comparative evidence.
+
+5. GENERATE CRITERION INSIGHT
+   Create a 2-3 sentence insight about this criterion across all vendors:
+   - Which vendors lead in this area and why
+   - Key differentiators between vendors
+   - Overall competitive landscape for this criterion
+
+   This insight will be used for executive summary generation.
+
+SEARCH BUDGET: 0-10 Perplexity searches total (conditional based on Stage 1 results)
+
+IMPORTANT RESTRICTIONS:
+- Maximum 2 stars awarded (can be 0, 1, or 2)
+- Star evidence MUST be third-party URLs (not vendor domains)
+- Star comments MUST name specific competitors
+- Only award stars when there is clear competitive advantage
+- If no vendor shows clear advantage, award 0 stars
+- REUSE Stage 1 evidence unless you found better comparative evidence
+- Skip searches if all vendors are "no" or only 1 vendor is "yes"
+
+OUTPUT STRUCTURE:
+{
+  "criterion_id": "{{ $json.criterion.id }}",
+  "criterion_name": "{{ $json.criterion.name }}",
+  "criterion_importance": "{{ $json.criterion.importance }}",
+  "vendor_rankings": [
+    {
+      "vendor_id": "UUID",
+      "vendor_name": "Name",
+      "state": "yes|star|no|unknown",
+      "evidence_url": "Best URL (reuse Stage 1 unless found better comparative evidence)",
+      "evidence_description": "Description (reuse Stage 1 unless found better)",
+      "comment": "For yes: brief confirmation. For star: [advantage] vs [competitor] per [source]"
+    }
+  ],
+  "criterion_insight": "2-3 sentence summary of competitive landscape for this criterion",
+  "stars_awarded": 0-2,
+  "search_count": 0-10
+}
+
+STATE MAPPING FROM STAGE 1:
+- If Stage 1 = "yes" → Default state = "yes", can upgrade to "star" with comparative evidence
+- If Stage 1 = "unknown" → Default state = "unknown", can change to "yes/no" if comparative search reveals info
+- If Stage 1 = "no" → Keep state = "no" (DO NOT re-research)
+
+FINAL VALIDATION:
+Before returning JSON, verify:
+□ criterion_id exactly matches input
+□ vendor_rankings includes all vendors from stage1_results
+□ Each vendor has state: yes|star|no|unknown
+□ stars_awarded is 0, 1, or 2
+□ All "star" states have third-party evidence_url
+□ All "star" comments name specific competitors
+□ search_count is 0-10 (0 if all "no" or only 1 "yes")
+□ criterion_insight is provided
+□ Stage 1 evidence was REUSED unless better evidence found
+
+Return ONLY the JSON object.

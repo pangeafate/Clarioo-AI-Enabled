@@ -1,16 +1,22 @@
-# FEATURE_LIST.md - Clarioo Visual Prototype
+# FEATURE_LIST.md - Clarioo Vendor Analyst
 
 ## Overview
 
+**Version**: 3.8.0
+**Last Updated**: December 2, 2024
+**Current Phase**: Phase 1 - n8n AI Integration (SP_017 Complete)
+
 **🚀 PHASE 1 - n8n AI INTEGRATION ACTIVE**
 
-This document lists all features of the Clarioo platform. The project has transitioned from visual prototype to **Phase 1 (n8n AI Integration)**. Project creation and criteria generation now use **real AI** via n8n webhooks with GPT-4o-mini. Features marked "Demo Only" still use mock services.
+This document lists all features of the Clarioo platform. The project transitioned from Phase 0 (Visual Prototype, SP_006-SP_015) to **Phase 1 (n8n AI Integration, SP_016+)**. Core AI workflows now use **real n8n webhooks** with GPT-4o-mini processing.
 
 **Current Mode**: Phase 1 - n8n AI Integration (SP_017 Complete)
-**Purpose**: Real AI integration for project creation and email collection, continued design validation
-**AI Backend**: Active via n8n webhooks (GPT-4o-mini + Google Sheets integration)
+**Purpose**: Real AI integration with localStorage persistence, n8n webhook backend
+**AI Backend**: 6 n8n webhooks with GPT-4o-mini (temperature 0.3, max tokens 6000)
+  - ✅ **Active in UI**: Project Creation, Criteria Chat, Email Collection (3 webhooks)
+  - ⚙️ **Configured, not UI-integrated**: Vendor Discovery, Vendor Comparison, Executive Summary (3 webhooks)
 **Latest Sprint**: SP_017 - Email Collection Integration with n8n & Google Sheets (Completed November 25, 2024)
-**Next Sprint**: SP_018 - n8n Vendor Selection Integration
+**Next Sprint**: SP_018 - Continued n8n Integration
 
 **📊 Gap Analysis**: See [GAP_ANALYSIS.md](../00_IMPLEMENTATION/GAP_ANALYSIS.md) for detailed mapping of user stories to implementation and identified gaps.
 
@@ -36,7 +42,7 @@ This document lists all features of the Clarioo platform. The project has transi
 **Status:** ✅ Real n8n Integration (SP_017 Complete, November 25, 2024)
 **Priority:** P0 (User Engagement Tracking)
 **Implementation Files:**
-- `src/components/landing/EmailCollectionModal.tsx` - Modal with Lottie animation
+- `src/components/email/EmailCollectionModal.tsx` - Modal with Trophy + Sparkles animation
 - `src/utils/deviceMetadata.ts` - Device metadata collection utility
 - Enhanced `src/services/n8nService.ts` - Email collection service
 - Updated `src/types/n8n.types.ts` - Email and device metadata types
@@ -44,7 +50,7 @@ This document lists all features of the Clarioo platform. The project has transi
 **Features:**
 - Blocking modal on first-time project creation
 - Email input with frontend validation
-- Lottie success animation (cup with sparkles - 1 second)
+- Trophy with sparkles success animation (Lucide React icons - 1 second)
 - Device metadata collection (browser, OS, device type, screen resolution, timezone)
 - Google Sheets integration for easy data access
 - Silent retry logic on failed submissions
@@ -154,7 +160,7 @@ projects (
 - User input: company context + solution requirements
 - Real GPT-4o-mini processing (temperature: 0.3, max tokens: 6000)
 - localStorage persistence (user_id, session_id, projects)
-- 45-second timeout with loading states
+- 120-second timeout with loading states (actual implementation)
 - Error handling with retry capability
 
 ### 2.2 Project Dashboard Grid (F-006)
@@ -172,24 +178,32 @@ projects (
 - Responsive grid layout (1-3 columns, working)
 
 ### 2.3 Project Status Management (F-007)
-**Status:** 🎨 Visual Demo (No Persistence)
+**Status:** ✅ Fully Functional (localStorage)
 **Priority:** P0
-**Statuses (Visual Only):**
-- **Draft** - Shows draft styling
-- **In Progress** - Shows in-progress styling
-- **Completed** - Shows completed styling
-- **Archived** - Shows archived styling
+**Implementation Files:**
+- `src/services/n8nService.ts` - Status management with localStorage persistence
+- `src/components/ProjectCard.tsx` - Status display and controls
+**Statuses (Persisted):**
+- **Draft** - Stored in localStorage
+- **In Progress** - Stored in localStorage
+- **Completed** - Stored in localStorage
+- **Archived** - Stored in localStorage
 
-**Note:** Status changes are visual only, reset on page refresh
+**Note:** Status changes persist across page refreshes via localStorage
 
 ### 2.4 Workflow State Persistence (F-008)
-**Status:** 🎨 Simulated (Ephemeral)
+**Status:** ✅ Fully Functional (localStorage)
 **Priority:** P0
-**Technical Details (Prototype):**
-- State stored in React state (not database)
-- No persistence across page refreshes
-- Visual flow through 5 steps works
-- Data appears to save but doesn't
+**Implementation Files:**
+- `src/services/n8nService.ts` - Storage functions (saveProjectToStorage, getCriteriaFromStorage, etc.)
+- `src/services/storageService.ts` - Storage abstraction layer
+**Technical Details:**
+- localStorage persistence for projects, criteria, workflow state
+- Persists across page refreshes and browser sessions
+- Automatic save on state changes
+- Storage keys: `clarioo_projects`, `criteria_${projectId}`, `workflow_${projectId}`
+- getUserId() and getSessionId() for tracking
+- Complete CRUD operations via storage service
 
 **Removed:**
 - ~~JSONB storage in PostgreSQL~~
@@ -317,16 +331,19 @@ projects (
 ```
 
 ### 3.6 Chat-Based Refinement (F-014)
-**Status:** 🎨 Visual Demo (UI Only)
+**Status:** 🤖 Real AI (n8n Integration - SP_016 Complete, Nov 23, 2024)
 **Priority:** P0
-**Implementation:**
-- `src/pages/CriteriaBuilder.tsx`
+**Implementation Files:**
+- `src/pages/CriteriaBuilder.tsx` - Chat interface
+- `src/services/n8nService.ts` - Real n8n webhook integration (`sendCriteriaChat`)
+- `src/hooks/useCriteriaChat.ts` - Chat state management
 
-**Features (Demo):**
-- Chat interface functional
-- Canned responses to common queries
-- Visual feedback works
-- No real NLP processing
+**Features (Real AI via n8n):**
+- Real GPT-4o-mini conversation for criterion refinement
+- Add, edit, remove criteria via natural language
+- Conversational criterion management
+- localStorage persistence for chat history and criteria updates
+- Real NLP processing via n8n webhook
 
 ---
 
@@ -338,11 +355,12 @@ projects (
 - Ensures consistent visual experience and smooth transitions between steps
 
 ### 4.1 Step 1: Technology Requirements Input (F-015)
-**Status:** 🎨 Fully Functional (UI)
+**Status:** ✅ Fully Functional (localStorage)
 **Priority:** P0
-**Implementation:**
+**Implementation Files:**
 - `src/components/VendorDiscovery.tsx` (Step 1)
 - `src/components/vendor-discovery/TechInput.tsx` - **Nov 13: Label styling updated**
+- `src/services/n8nService.ts` - Captures input and persists to localStorage
 
 **Removed:**
 - ~~`tech_requests` database table~~
@@ -353,7 +371,7 @@ projects (
 - Company size (dropdown - functional)
 - Special requirements (textarea - functional)
 
-**Note:** Form validation works, but data not persisted
+**Note:** Form validation works, data persisted to localStorage across page refreshes
 
 **Recent Updates (November 13, 2024):**
 - TechInput label styling updated to match landing page aesthetic
@@ -366,18 +384,20 @@ projects (
 - Enhanced input field animations
 
 ### 4.2 Step 2: Criteria Builder (F-016)
-**Status:** 🎨 Mock Demo (Pre-Generated)
+**Status:** 🤖 Real AI (Hybrid - n8n + localStorage - SP_016 Complete, Nov 23, 2024)
 **Priority:** P0
-**Implementation:**
-- `src/pages/CriteriaBuilder.tsx`
-- `src/services/mock/aiService.ts`
+**Implementation Files:**
+- `src/pages/CriteriaBuilder.tsx` - Main criteria interface
+- `src/services/n8nService.ts` - Real n8n AI criteria generation + localStorage persistence
+- `src/hooks/useCriteriaChat.ts` - Chat-based criterion refinement
 
-**Features (Demo):**
-- Shows 20 pre-generated criteria
-- Manual criteria addition (UI only, not saved)
-- Excel import simulation (shows sample data)
-- Chat refinement (canned responses)
-- Criteria categorization (visual)
+**Features (Real AI + Persistence):**
+- AI-generated criteria from project context (n8n webhook, GPT-4o-mini)
+- Manual criteria addition with localStorage persistence
+- Excel import (functional with real file parsing)
+- Chat refinement with real AI (n8n webhook)
+- Criteria categorization with localStorage persistence
+- All changes persist across page refreshes
 
 **Planned Enhancements (SP_007):**
 - Visual hierarchy: 3-5 highlighted key criteria
@@ -410,13 +430,15 @@ projects (
 - "Aha feature" / "Killer feature" display
 
 ### 4.4 Step 4: Vendor Comparison (F-018)
-**Status:** 🔄 Enhanced with Wave Charts (SP_015 Planning Complete - November 16, 2024)
+**Status:** ✅ Functional with Desktop Visualization (VerticalBarChart)
 **Priority:** P0
-**Sprint:** SP_015_Vendor_Comparison_Matrix.md (32-40 hours estimated)
-**Implementation:**
-- `src/pages/Comparison.tsx` - Legacy table-based comparison (to be replaced)
-- `src/components/VendorComparison.tsx` - NEW: Mobile-first wave chart architecture
-- `src/services/mock/aiService.ts`
+**Implementation Files:**
+- `src/pages/Comparison.tsx` - Desktop comparison with VerticalBarChart
+- `src/components/vendor-comparison/VerticalBarChart.tsx` - Actual desktop visualization
+- `src/components/VendorComparison.tsx` - Mobile-optimized comparison interface
+- `src/services/mock/aiService.ts` - Comparison data
+
+**Note:** VerticalBarChart is the actual desktop comparison visualization (not wave charts). Wave chart architecture in SP_015 was planning only.
 
 **Current Features (Demo):**
 - Detailed comparison table (from JSON)
@@ -815,7 +837,7 @@ projects (
 **Status:** ✅ Completed (November 13, 2024)
 **Description:** Dropdown selector with 15+ software categories for instant project creation
 **Implementation Files:**
-- `src/components/landing/CategoryDropdown.tsx` - NEW (120 lines)
+- `src/components/landing/CategoryDropdown.tsx` - CategorySelector component (120 lines)
 - `src/components/landing/ProjectConfirmationDialog.tsx` - NEW (80 lines)
 
 **Features:**
@@ -1795,32 +1817,35 @@ All removed functional code is preserved in:
 | 2.1 | Nov 13, 2024 | Landing page refinements, deployment to GitHub Pages, workflow improvements |
 | 2.2 | Nov 23, 2024 | SP_016 n8n AI Project Creation Integration Complete |
 | 2.3 | Nov 25, 2024 | SP_017 Email Collection Integration with n8n & Google Sheets Complete |
+| 3.8.0 | Dec 2, 2024 | Aligned with codebase reality - localStorage persistence, 6 n8n webhooks active, Phase 0/1 clarification |
 
 ---
 
 ## Document Status
 
-**Current Version**: 2.4.0
-**Project Phase**: Phase 1 - n8n AI Integration (SP_006-SP_017 Complete)
-**Total Features**: 32
-**Real AI Features**: 3 (Project Creation, Criteria Generation, Email Collection via n8n)
-**Demo Features**: 18 (mock services)
-**Functional Features**: 2 (Excel Export, Responsive Design)
+**Current Version**: 3.8.0
+**Last Updated**: December 2, 2024
+**Project Phase**: Phase 1 - n8n AI Integration (SP_016-SP_017 Complete)
+**Previous Phase**: Phase 0 - Visual Prototype (SP_006-SP_015 Complete)
+**Total Features**: 31
+**Real n8n AI Features**: 6 webhooks (Project Creation, Criteria Chat, Vendor Discovery, Vendor Comparison, Executive Summary, Email Collection)
+**localStorage Persistence**: Fully functional for projects, criteria, and workflow state
+**Demo/Mock Features**: Authentication, some UI-only features
+**Functional Features**: Excel Export, Responsive Design, localStorage persistence
 **Deployment**: ✅ Live on GitHub Pages
 
-**Last Updated**: November 25, 2024 (SP_017 Email Collection Integration Complete)
 **Recent Sprints**:
 - **SP_017**: Email Collection Integration with n8n & Google Sheets (November 25, 2024)
-- **SP_016**: n8n AI Project Creation Integration with GPT-4o-mini
+- **SP_016**: n8n AI Project Creation Integration with GPT-4o-mini (November 23, 2024)
 - **SP_014**: Swipe-to-adjust importance gestures, ShareDialog for team collaboration
 - **SP_012**: Criteria Builder accordion redesign with SignalAntenna indicators
 
-**Next Sprints**: SP_018 (n8n Vendor Selection), SP_019 (n8n Vendor Comparison)
+**Next Sprint**: SP_018 - Continued n8n Integration
 
 ---
 
-*Version: 1.7*
-*Last Updated: November 25, 2024*
-*Phase: Phase 1 - n8n AI Integration*
+*Version: 3.8.0*
+*Last Updated: December 2, 2024*
+*Phase: Phase 1 - n8n AI Integration (SP_016-SP_017 Complete)*
 
-*This document reflects Phase 1 with active n8n AI integration. Project creation, criteria generation, and email collection use real n8n AI. Vendor features still use mock services pending SP_018/SP_019.*
+*This document reflects Phase 1 with 6 active n8n AI webhooks. All core workflows now use real GPT-4o-mini processing via n8n. localStorage persistence is fully functional for projects, criteria, and workflow state.*

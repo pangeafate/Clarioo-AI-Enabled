@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { LandingPage } from "@/components/landing/LandingPage";
-import { VendorComparison } from "@/components/VendorComparison";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -35,9 +34,6 @@ const App = () => (
                 <Index />
               </ProtectedRoute>
             } />
-
-            {/* SP_015: Vendor Comparison Test Route - Wave Charts */}
-            <Route path="/comparison" element={<VendorComparison />} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

@@ -29,7 +29,6 @@ import {
   getCompareVendorCriterionUrl,
   getRankCriterionResultsUrl,
   getExecutiveSummaryUrl,
-  getVendorSummaryUrl,
   getEmailCollectionUrl,
 } from '@/config/webhooks';
 
@@ -698,7 +697,7 @@ export interface Stage1Request {
 export interface Stage1Result {
   vendor_id: string;
   criterion_id: string;
-  evidence_strength: 'yes' | 'unknown' | 'no';
+  evidence_strength: 'confirmed' | 'mentioned' | 'unclear' | 'not_found';
   evidence_url: string;
   evidence_description: string;
   vendor_site_evidence: string;
@@ -1373,231 +1372,6 @@ export const clearExecutiveSummaryFromStorage = (projectId: string): void => {
 };
 
 // ===========================================
-// Vendor Summary Types (for Vendor Cards)
-// ===========================================
-
-export interface VendorSummaryData {
-  vendor_name: string;
-  killerFeature: string;
-  executiveSummary: string;
-  keyFeatures: string[];
-}
-
-export interface VendorSummaryRequest {
-  vendor_name: string;
-  vendor_website: string;
-  project_id: string;
-  project_context?: string;
-}
-
-export interface VendorSummaryResponse {
-  success: boolean;
-  vendor_summary?: VendorSummaryData;
-  generated_at?: string;
-  error?: {
-    code: string;
-    message: string;
-  };
-}
-
-// ===========================================
-// Vendor Summary API
-// ===========================================
-
-/**
- * Generate vendor card summary via n8n AI workflow (Perplexity)
- * Generates killerFeature, executiveSummary, and keyFeatures for a single vendor
- */
-export const generateVendorSummary = async (
-  vendorName: string,
-  vendorWebsite: string,
-  projectId: string,
-  projectContext?: string
-): Promise<VendorSummaryData> => {
-  console.log('[n8n-vendor-summary] Generating vendor summary for:', vendorName);
-  console.log('[n8n-vendor-summary] Website:', vendorWebsite);
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-  try {
-    const requestBody: VendorSummaryRequest = {
-      vendor_name: vendorName,
-      vendor_website: vendorWebsite,
-      project_id: projectId,
-      project_context: projectContext
-    };
-
-    const url = getVendorSummaryUrl();
-    console.log('[n8n-vendor-summary] Sending request to:', url);
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-      signal: controller.signal
-    });
-
-    clearTimeout(timeoutId);
-
-    console.log('[n8n-vendor-summary] Response status:', response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[n8n-vendor-summary] HTTP error:', response.status, errorText);
-      throw new Error(`HTTP error: ${response.status} - ${errorText}`);
-    }
-
-    const result: VendorSummaryResponse = await response.json();
-
-    if (!result.success || !result.vendor_summary) {
-      const errorMessage = result.error?.message || 'Failed to generate vendor summary';
-      console.error('[n8n-vendor-summary] API error:', errorMessage);
-      throw new Error(errorMessage);
-    }
-
-    console.log('[n8n-vendor-summary] Summary generated successfully for:', vendorName);
-
-    // Cache the result
-    saveVendorSummaryToStorage(projectId, vendorName, result.vendor_summary);
-
-    return result.vendor_summary;
-  } catch (error) {
-    clearTimeout(timeoutId);
-
-    if (error instanceof Error) {
-      if (error.name === 'AbortError') {
-        console.error('[n8n-vendor-summary] Request timeout');
-        throw new Error('Vendor summary generation timed out (2 min limit)');
-      }
-      throw error;
-    }
-
-    throw new Error('An unexpected error occurred during vendor summary generation');
-  }
-};
-
-/**
- * Generate vendor summaries for multiple vendors in parallel
- * Returns a map of vendor names to their summaries
- */
-export const generateVendorSummaries = async (
-  vendors: Array<{ name: string; website: string }>,
-  projectId: string,
-  projectContext?: string,
-  concurrencyLimit: number = 3
-): Promise<Map<string, VendorSummaryData>> => {
-  console.log('[n8n-vendor-summary] Generating summaries for', vendors.length, 'vendors (max', concurrencyLimit, 'concurrent)');
-
-  const results = new Map<string, VendorSummaryData>();
-  const errors: Array<{ vendor: string; error: string }> = [];
-
-  // Process vendors in batches to respect concurrency limit
-  for (let i = 0; i < vendors.length; i += concurrencyLimit) {
-    const batch = vendors.slice(i, i + concurrencyLimit);
-    console.log(`[n8n-vendor-summary] Processing batch ${Math.floor(i / concurrencyLimit) + 1}/${Math.ceil(vendors.length / concurrencyLimit)}`);
-
-    const batchPromises = batch.map(async (vendor) => {
-      try {
-        const summary = await generateVendorSummary(
-          vendor.name,
-          vendor.website,
-          projectId,
-          projectContext
-        );
-        return { vendor: vendor.name, summary };
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        console.error(`[n8n-vendor-summary] Failed to generate summary for ${vendor.name}:`, errorMessage);
-        errors.push({ vendor: vendor.name, error: errorMessage });
-        return { vendor: vendor.name, summary: null };
-      }
-    });
-
-    const batchResults = await Promise.all(batchPromises);
-
-    batchResults.forEach(({ vendor, summary }) => {
-      if (summary) {
-        results.set(vendor, summary);
-      }
-    });
-  }
-
-  if (errors.length > 0) {
-    console.warn('[n8n-vendor-summary] Some vendors failed:', errors);
-  }
-
-  console.log('[n8n-vendor-summary] Generated summaries for', results.size, 'out of', vendors.length, 'vendors');
-  return results;
-};
-
-// ===========================================
-// Vendor Summary Storage
-// ===========================================
-
-const VENDOR_SUMMARY_PREFIX = 'clarioo_vendor_summary_';
-
-/**
- * Save vendor summary to localStorage
- */
-export const saveVendorSummaryToStorage = (
-  projectId: string,
-  vendorName: string,
-  data: VendorSummaryData
-): void => {
-  const key = `${VENDOR_SUMMARY_PREFIX}${projectId}_${vendorName}`;
-  const stored = {
-    data,
-    generated_at: new Date().toISOString()
-  };
-  localStorage.setItem(key, JSON.stringify(stored));
-  console.log('[n8n-vendor-summary] Vendor summary cached for:', vendorName);
-};
-
-/**
- * Get cached vendor summary from localStorage
- */
-export const getVendorSummaryFromStorage = (
-  projectId: string,
-  vendorName: string
-): VendorSummaryData | null => {
-  const key = `${VENDOR_SUMMARY_PREFIX}${projectId}_${vendorName}`;
-  const stored = localStorage.getItem(key);
-
-  if (!stored) {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(stored);
-    return parsed.data;
-  } catch {
-    return null;
-  }
-};
-
-/**
- * Clear cached vendor summary
- */
-export const clearVendorSummaryFromStorage = (projectId: string, vendorName: string): void => {
-  const key = `${VENDOR_SUMMARY_PREFIX}${projectId}_${vendorName}`;
-  localStorage.removeItem(key);
-  console.log('[n8n-vendor-summary] Vendor summary cache cleared for:', vendorName);
-};
-
-/**
- * Clear all vendor summaries for a project
- */
-export const clearAllVendorSummariesForProject = (projectId: string): void => {
-  const prefix = `${VENDOR_SUMMARY_PREFIX}${projectId}_`;
-  const keys = Object.keys(localStorage).filter(key => key.startsWith(prefix));
-  keys.forEach(key => localStorage.removeItem(key));
-  console.log('[n8n-vendor-summary] Cleared', keys.length, 'vendor summaries for project:', projectId);
-};
-
-// ===========================================
 // Email Collection (SP_017)
 // ===========================================
 
@@ -1762,30 +1536,8 @@ export const collectEmail = async (email: string): Promise<EmailCollectionRespon
       };
     }
 
-    // Handle empty response body (webhook may return 200 with no content)
-    const text = await response.text();
-    if (!text || text.trim() === '') {
-      console.log('[email] Empty response body - treating as success');
-      saveEmailToStorage(email, true);
-      return { success: true };
-    }
-
-    // Parse JSON response
-    let data: EmailCollectionResponse;
-    try {
-      data = JSON.parse(text);
-      console.log('[email] Response data:', JSON.stringify(data, null, 2));
-    } catch (parseError) {
-      console.error('[email] Failed to parse response as JSON:', text);
-      saveEmailToStorage(email, false);
-      return {
-        success: false,
-        error: {
-          code: 'INVALID_JSON',
-          message: 'Webhook returned invalid JSON response',
-        },
-      };
-    }
+    const data: EmailCollectionResponse = await response.json();
+    console.log('[email] Response data:', JSON.stringify(data, null, 2));
 
     if (data.success) {
       // Save to localStorage with success flag

@@ -6,7 +6,7 @@
  * Includes navigation arrows for cycling through vendors
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Info, Bot, Trash2, Star, RotateCcw, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ComparisonVendor } from '../../types/comparison.types';
@@ -74,10 +74,6 @@ export const VendorCard: React.FC<VendorCardProps> = ({
   // Star shine animation state
   const [isShining, setIsShining] = useState(false);
 
-  // Refs for click-outside detection
-  const cardRef = useRef<HTMLDivElement>(null);
-  const expandedRef = useRef<HTMLDivElement>(null);
-
   // Check if vendor has failed
   const isFailed = vendor?.comparisonStatus === 'failed';
   const isTimeout = vendor?.comparisonErrorCode === 'TIMEOUT';
@@ -126,26 +122,6 @@ export const VendorCard: React.FC<VendorCardProps> = ({
       return () => clearTimeout(timer);
     }
   }, [showCounters]);
-
-  // Click outside to close expanded content
-  useEffect(() => {
-    if (!isExpanded) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (
-        expandedRef.current &&
-        !expandedRef.current.contains(target) &&
-        cardRef.current &&
-        !cardRef.current.contains(target)
-      ) {
-        setIsExpanded(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isExpanded]);
 
   const handleNavigate = (direction: 'next' | 'previous') => {
     // Show both counters regardless of which arrow is clicked
@@ -201,7 +177,6 @@ export const VendorCard: React.FC<VendorCardProps> = ({
 
         {/* Vendor Card Content - Clickable to expand */}
         <motion.div
-          ref={cardRef}
           key={vendor?.id ?? 'empty'}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -309,7 +284,6 @@ export const VendorCard: React.FC<VendorCardProps> = ({
             className="overflow-hidden"
           >
             <div
-              ref={expandedRef}
               style={{
                 borderColor: vendor.color?.hex ?? '#d1d5db'
               }}

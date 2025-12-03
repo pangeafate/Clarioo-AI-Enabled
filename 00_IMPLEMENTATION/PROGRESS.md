@@ -1,745 +1,914 @@
-# PROGRESS TRACKING - Clarioo Visual Prototype
+# PROGRESS TRACKING - Clarioo AI-Powered Vendor Analyst
 
 ## Executive Summary
 
-**Project**: Clarioo Vendor Analyst - AI-Powered Platform
-**Phase**: Phase 1 - n8n AI Integration (Active)
-**Status**: SP_017 Complete - Email Collection Integration
-**Next Sprint**: SP_018 - n8n Vendor Selection Integration
-**Last Updated**: November 25, 2024
+**Project**: Clarioo Vendor Analyst - AI-Powered Software Vendor Selection Platform
+**Current Phase**: Phase 1 - n8n AI Integration (Active Development)
+**Status**: 9 Active n8n Webhooks | localStorage Persistence | Production-Ready Core Features
+**Version**: 3.9.0
+**Last Updated**: December 3, 2024
+
+### Phase Overview
+
+**Phase 0 (SP_006-SP_015)**: Visual Prototype with Mock Data - COMPLETED
+**Phase 1 (SP_016+)**: Real n8n AI Integration - IN PROGRESS
 
 ---
 
-## 🔧 Current Sprint Status
+## 🎯 Current Implementation Status
 
-### Sprint 17: Email Collection Integration with n8n & Google Sheets (SP_017)
-**Duration**: November 25, 2024 (1 day)
-**Status**: ✅ Complete
-**Sprint Goal**: Implement email collection with Google Sheets integration and device metadata tracking
+### Real n8n AI Integrations (9 Active Webhooks)
 
-#### Sprint Objectives
+| Webhook | Function | Timeout | Status | Sprint |
+|---------|----------|---------|--------|--------|
+| `clarioo-project-creation` | Project + criteria generation | 120s | ✅ ACTIVE | SP_016 |
+| `clarioo-criteria-chat` | Chat-based criteria refinement | 120s | ✅ ACTIVE | SP_016 |
+| `clarioo-find-vendors` | Vendor discovery (Perplexity) | 180s | ✅ ACTIVE | SP_018 |
+| `clarioo-compare-vendors` | Single vendor comparison | 180s | ✅ ACTIVE | SP_019 |
+| `compare-vendor-criterion` | Stage 1: Individual research | 45s | ✅ ACTIVE | SP_018 |
+| `rank-criterion-results` | Stage 2: Comparative ranking | 90s | ✅ ACTIVE | SP_018 |
+| `clarioo-executive-summary` | Executive summary generation | 120s | ✅ ACTIVE | SP_019 |
+| `Vendor-Card-Summary` | Vendor card summary (Perplexity) | 120s | ✅ ACTIVE | SP_019 |
+| `clarioo-email-collection` | Email collection to Google Sheets | 120s | ✅ ACTIVE | SP_017 |
+
+**AI Model**: GPT-4o-mini (temperature: 0.3, max tokens: 6000)
+**Webhook Modes**: Production & Testing (user-switchable via `WebhookModeToggle`)
+
+---
+
+### Data Persistence Architecture
+
+**Storage**: localStorage-based persistence (no backend database)
+**Scope**: All project data, criteria, summaries, and user state persist across sessions
+
+| Data Type | Storage Key | Persistence | Source |
+|-----------|-------------|-------------|---------|
+| Projects | `clarioo_projects` | Persistent | n8n-generated |
+| Criteria | `criteria_{projectId}` | Persistent | n8n-generated |
+| Executive Summaries | `clarioo_executive_summary_{projectId}` | Persistent (cached) | n8n-generated |
+| Vendor Summaries | `clarioo_vendor_summary_{projectId}_{vendor}` | Persistent (cached) | n8n-generated |
+| Email Status | `clarioo_email` | Persistent | User-submitted |
+| User ID | `clarioo_user_id` | Persistent | Auto-generated UUID |
+| Session ID | `clarioo_session_id` | Session-only | Auto-generated UUID |
+| Chat History | Project-specific keys | Persistent | User chat messages |
+| Custom Criterion Types | `custom_criterion_types` | Persistent | User-defined |
+| Webhook Mode | `clarioo_webhook_mode` | Persistent | User preference |
+
+---
+
+## 📊 Module-by-Module Implementation Analysis
+
+### 1. Services Layer (`src/services/`)
+
+#### **n8nService.ts** (1,887 lines) - CORE INTEGRATION
+**Status**: ✅ FULLY INTEGRATED
+
+**Key Functions**:
+- `createProjectWithAI()` - Lines 178-266
+  - Real GPT-4o-mini project + criteria generation
+  - Timeout: 120 seconds
+  - Persists to `clarioo_projects` and `criteria_{projectId}`
+
+- `sendCriteriaChat()` - Lines 284-364
+  - Conversational criteria refinement
+  - Sends last 10 messages for context
+  - Returns create/update/delete actions
+  - Timeout: 120 seconds
+
+- `findVendors()` - Lines 418-505
+  - Perplexity-powered vendor discovery
+  - Filters feature-type criteria or uses all
+  - Returns vendors with criteriaScores
+  - Timeout: 180 seconds
+
+- `compareVendor()` - Lines 561-667
+  - Single vendor comparison against all criteria
+  - Returns matchPercentage, scores, scoreDetails
+  - Timeout: 180 seconds
+
+- `compareVendorCriterion()` - Lines 795-908 (SP_018)
+  - Stage 1: Individual vendor-criterion research
+  - Returns evidence_strength, evidence_url, research_notes
+  - Timeout: 45 seconds
+
+- `rankCriterionResults()` - Lines 925-1034 (SP_018)
+  - Stage 2: Comparative ranking across all vendors
+  - Returns star rankings (1-5) for each vendor
+  - Timeout: 90 seconds
+
+- `generateExecutiveSummary()` - Lines 1213-1326
+  - Comprehensive project summary
+  - Caches in localStorage
+  - Timeout: 120 seconds
+
+- `generateVendorSummary()` - Lines 1411-1480
+  - Vendor card summary (Perplexity)
+  - Returns killerFeature, executiveSummary, keyFeatures
+  - Timeout: 120 seconds
+
+- `collectEmail()` - Lines 1703-1850
+  - Email + device metadata to Google Sheets
+  - Graceful degradation (doesn't block user)
+  - Timeout: 120 seconds
+
+**User & Session Management**:
+- `getUserId()` - Lines 91-102: Persistent UUID in localStorage
+- `getSessionId()` - Lines 104-111: Ephemeral UUID in sessionStorage
+
+**Storage Operations** (Lines 113-177, 368-416, 507-559, 669-793, 1036-1211, 1328-1409, 1482-1701, 1852-1886):
+- Project CRUD: save, get, update, delete
+- Criteria CRUD: save, get by projectId
+- Summary caching: executive + vendor summaries
+- Email persistence: status flags + retry logic
+
+---
+
+#### **storageService.ts** (414 lines) - UTILITY LAYER
+**Status**: ✅ UTILITY SERVICE (NOT CRITICAL PATH)
+
+**Purpose**: Type-safe localStorage wrapper with application-specific helpers
+**Used For**: UI preferences, custom criterion types, draft data
+**Not Used For**: Core project/criteria storage (handled directly in n8nService)
+
+---
+
+#### **Mock Services** (`src/services/mock/`)
+**Status**: ⚠️ DEPRECATED (NOT USED IN PRODUCTION FLOWS)
+
+- `authService.ts` - Mock authentication (returns demo user)
+- `projectService.ts` - Mock project CRUD (unused, replaced by n8nService)
+- `aiService.ts` - Mock AI responses (unused, replaced by n8n webhooks)
+
+---
+
+### 2. Hooks Layer (`src/hooks/`)
+
+#### **Real n8n Integration Hooks**
+
+- **useProjectCreation.ts** (96 lines)
+  - Calls `createProjectWithAI()`
+  - Manages loading state and errors
+  - Auto-saves to localStorage
+  - Status: ✅ REAL n8n
+
+- **useCriteriaChat.ts**
+  - Calls `sendCriteriaChat()`
+  - Manages chat messages per project
+  - Applies criteria actions (create/update/delete)
+  - Status: ✅ REAL n8n
+
+- **useVendorDiscovery.ts**
+  - Calls `findVendors()`
+  - Transforms criteria to n8n format
+  - Handles vendor search results
+  - Status: ✅ REAL n8n
+
+- **useTwoStageComparison.ts**
+  - Progressive two-stage comparison (SP_018)
+  - Stage 1: `compareVendorCriterion()`
+  - Stage 2: `rankCriterionResults()`
+  - Status: ✅ REAL n8n
+
+- **useVendorComparison.ts**
+  - Calls `compareVendor()` for bulk comparison
+  - Handles comparison matrix
+  - Status: ✅ REAL n8n
+
+- **useExecutiveSummary.ts**
+  - Calls `generateExecutiveSummary()`
+  - Caches result in localStorage
+  - Status: ✅ REAL n8n
+
+#### **UI Utility Hooks**
+- `use-toast.ts` - Toast notifications
+- `use-mobile.tsx` - Mobile viewport detection
+- `useSwipeGesture.ts` - Swipe gesture handling
+- `useCriteriaOrder.ts` - Criteria sorting logic
+
+---
+
+### 3. Components Layer (`src/components/`)
+
+#### **Landing Page Flow** (`src/components/landing/`)
+
+- **LandingPage.tsx** - Main orchestrator
+  - Integrates `useProjectCreation()` hook
+  - Shows `EmailCollectionModal` on first project
+  - Webhook mode toggle for testing/production
+  - Status: ✅ REAL n8n integration
+
+- **AnimatedInputs.tsx** - Input capture
+  - Company context + solution requirements
+  - Triggers n8n project creation
+  - Status: ✅ REAL n8n integration
+
+- **EmailCollectionModal.tsx** (`src/components/email/`)
+  - Email + device metadata collection
+  - Trophy + Sparkles animation (Lucide React)
+  - Silent retry logic
+  - Status: ✅ REAL n8n integration
+
+- **HeroSection, RegistrationToggle, ArtifactVisualization, CardCarousel**
+  - Status: ✅ UI ONLY (no backend)
+
+---
+
+#### **Vendor Discovery Workflow**
+
+- **VendorDiscovery.tsx** - Workflow orchestrator
+  - Loads projects from `getProjectsFromStorage()`
+  - Loads criteria from `getCriteriaFromStorage()`
+  - Status: ✅ REAL integration
+
+- **CriteriaBuilder.tsx** (`src/pages/`)
+  - Uses `useCriteriaGeneration()` and `useCriteriaChat()`
+  - Real n8n AI for criteria generation and refinement
+  - Accordion UI for organization
+  - Status: ✅ HYBRID (real AI + localStorage persistence)
+
+- **VendorSelection.tsx** (`src/pages/`)
+  - Uses `useVendorDiscovery()` hook
+  - Real Perplexity-powered vendor discovery
+  - Status: ✅ REAL n8n integration
+
+- **Comparison Components** (`src/components/vendor-comparison/`)
+  - `DesktopColumnHeader.tsx` - Desktop header
+  - `ExecutiveSummaryDialog.tsx` - Summary modal
+  - `VendorCard.tsx` - Vendor card with Perplexity summaries
+  - `VerticalBarChart.tsx` - Desktop comparison visualization
+  - Status: ✅ REAL n8n integration (summaries)
+
+---
+
+#### **Project Management**
+
+- **ProjectDashboard.tsx**
+  - Loads n8n-created projects from localStorage
+  - CRUD operations via n8nService
+  - Expandable project cards
+  - Status: ✅ REAL n8n integration
+
+- **ProjectCard.tsx**
+  - Project display with status badges
+  - Edit/delete dialogs
+  - Status: ✅ REAL data
+
+---
+
+### 4. Pages Layer (`src/pages/`)
+
+- **Index.tsx** - Router hub (ProjectDashboard ↔ VendorDiscovery)
+- **Auth.tsx** - Mock authentication page
+- **CriteriaBuilder.tsx** - Criteria management (real n8n)
+- **VendorSelection.tsx** - Vendor discovery (real n8n)
+- **Comparison.tsx** - Vendor comparison (real n8n)
+- **NotFound.tsx** - 404 page
+
+---
+
+## 🚀 Completed Sprints
+
+### Sprint 17: Email Collection Integration (SP_017)
+**Date**: November 25, 2024
+**Status**: ✅ COMPLETE
+**Duration**: 1 day
+
+#### Objectives
 1. ✅ Create n8n workflow for email collection with Google Sheets integration
-2. ✅ Implement device metadata utility (browser, OS, device type, screen resolution, timezone)
+2. ✅ Implement device metadata utility (browser, OS, device type, screen, timezone)
 3. ✅ Add email collection types to n8n.types.ts
 4. ✅ Implement email collection service with retry logic
-5. ✅ Create EmailCollectionModal component with Lottie animation
+5. ✅ Create EmailCollectionModal component with Trophy + Sparkles animation
 6. ✅ Integrate modal with LandingPage for first-time project creation
 7. ✅ Implement silent retry logic in VendorDiscovery navigation
 8. ✅ Add localStorage persistence with email_submitted and email_passed_to_n8n flags
 
 #### Key Deliverables
-- **n8n Workflow** (`Clarioo_AI_Email_Collection.json`):
-  - Google Sheets integration for storing collected emails
-  - Automatic email deduplication
-  - Timestamp tracking
 
-- **Device Metadata Utility** (`src/utils/deviceMetadata.ts`):
-  - Browser detection (Chrome, Firefox, Safari, Edge, etc.)
-  - OS detection (Windows, macOS, iOS, Android, Linux)
-  - Device type classification (mobile, tablet, desktop)
-  - Screen resolution capture (width x height)
-  - Timezone information
+**1. n8n Webhook**: `clarioo-email-collection`
+- Sends email + device metadata to Google Sheets
+- Automatic deduplication
+- Timestamp tracking
 
-- **Email Collection Types** (updated `src/types/n8n.types.ts`):
-  - EmailCollectionRequest interface
-  - EmailCollectionResponse interface
-  - EmailCollectionStorage interface
-  - DeviceMetadata interface with comprehensive device info
+**2. Device Metadata** (`src/utils/deviceMetadata.ts`, 130+ lines)
+- Browser detection (Chrome, Firefox, Safari, Edge, etc.)
+- OS detection (Windows, macOS, iOS, Android, Linux)
+- Device type classification (mobile, tablet, desktop)
+- Screen resolution (width x height)
+- Timezone information
 
-- **Email Collection Service** (enhanced `src/services/n8nService.ts`):
-  - `collectEmail()` - Submit email with device metadata to n8n
-  - `hasSubmittedEmail()` - Check if user already submitted email
-  - `needsEmailRetry()` - Determine if retry is needed
-  - `retryEmailCollection()` - Silent retry with automatic retry logic
-  - `getEmailFromStorage()` - Retrieve stored email
-  - `saveEmailToStorage()` - Persist email to localStorage
-  - `markEmailPassedToN8n()` - Track successful submission
+**3. EmailCollectionModal** (`src/components/email/EmailCollectionModal.tsx`, 180+ lines)
+- Blocking modal (closable by clicking outside or ESC)
+- Email input with validation
+- Trophy + Sparkles success animation (Lucide React icons, 1 second)
+- Mobile-responsive (350px min width)
+- Gradient styling (purple/indigo)
+- Error handling with retry prompts
 
-- **EmailCollectionModal Component** (`src/components/landing/EmailCollectionModal.tsx`):
-  - Blocking modal (closable by clicking outside)
-  - Email input field with validation (required field)
-  - Lottie success animation (cup with sparkles - 1 second duration)
-  - Mobile-responsive design (350px min width)
-  - Gradient design matching VISION.md (purple/indigo)
-  - Success message after submission
-  - Error handling with user-friendly messages
+**4. n8nService Functions**:
+- `collectEmail()` - Submit email with metadata
+- `hasSubmittedEmail()` - Check submission status
+- `needsEmailRetry()` - Determine if retry needed
+- `retryEmailCollection()` - Silent background retry
+- `getEmailFromStorage()` - Retrieve stored email
+- `saveEmailToStorage()` - Persist email data
+- `markEmailPassedToN8n()` - Track successful submission
 
-- **LandingPage Integration**:
-  - Shows EmailCollectionModal on first-time project creation
-  - Modal appears after user clicks "Create with AI" button
-  - Blocks interaction until user submits email or closes modal
-  - Stores submission status to prevent repeated prompts
+**5. Silent Retry Logic**:
+- VendorDiscovery checks for failed submissions on mount
+- Automatic retry during step navigation
+- No blocking UI (transparent to user)
+- localStorage flag prevents duplicate attempts
 
-- **Silent Retry Logic**:
-  - VendorDiscovery component checks for failed email submissions
-  - Automatic retry triggered during step navigation (transparent to user)
-  - Retry flag in localStorage prevents duplicate attempts
-  - No blocking UI when retry occurs
+#### Technical Implementation
+- **Timeout**: 120 seconds
+- **Storage Keys**: `clarioo_email` with `email_submitted` and `email_passed_to_n8n` flags
+- **Animation**: Lucide React icons (Trophy + Sparkles)
+- **Integration Point**: LandingPage after "Create with AI" button
 
-#### Technical Details
-- **Email Validation**: Frontend validation with regex pattern
-- **Device Metadata**: Comprehensive browser/OS/device detection using user-agent parsing
-- **Storage**: localStorage with two flags:
-  - `email_submitted` - Prevents modal re-display
-  - `email_passed_to_n8n` - Triggers silent retry if false
-- **Animations**: Lottie for smooth success animation
-- **Retry Strategy**: Silent background retry on failed submissions
-- **Error Handling**: User-friendly error messages with retry prompts
+#### Actual Results
+✅ Email collection active and functional
+✅ Device analytics collected successfully
+✅ Google Sheets integration working
+✅ Graceful degradation (doesn't block workflow on failure)
+✅ Silent retry mechanism operational
 
-#### Expected Outcomes
-- ✅ Real email collection for user engagement tracking
-- ✅ Device metadata collection for analytics
-- ✅ Google Sheets integration for easy data access
-- ✅ Blocking modal ensures user attention
-- ✅ Silent retry prevents data loss
-- ✅ No user friction from UI perspective
-- ✅ Build successful with no TypeScript errors
-- ✅ Server running on localhost:8080
-
-#### Brief Description
-Sprint 17 successfully implemented email collection with n8n and Google Sheets integration. Users now encounter a modal when creating their first project, prompting them to submit their email with comprehensive device metadata (browser, OS, device type, screen resolution, timezone). The EmailCollectionModal features a clean, mobile-responsive design with gradient styling and a delightful 1-second Lottie animation (cup with sparkles) on success. The system includes localStorage persistence with two flags: `email_submitted` (prevents re-display) and `email_passed_to_n8n` (triggers silent background retry). Failed submissions are silently retried during step navigation without blocking the user. The integration provides valuable user contact information and device analytics while maintaining a smooth user experience.
-
-**Sprint Plan**: [SP_017_Email_Collection_Integration.md](./SPRINTS/SP_017_Email_Collection_Integration.md)
+**Sprint Document**: [SP_017_Email_Collection_Integration.md](./SPRINTS/SP_017_Email_Collection_Integration.md)
 
 ---
 
-### Previous Sprint: Sprint 16: n8n AI Project Creation Integration (SP_016)
-**Duration**: November 23, 2024 (1 day)
-**Status**: ✅ Complete
-**Sprint Goal**: Replace mock AI service with real n8n workflow for AI-powered project creation and criteria generation
+### Sprint 16: n8n AI Project Creation Integration (SP_016)
+**Date**: November 23, 2024
+**Status**: ✅ COMPLETE
+**Duration**: 1 day
 
-#### Sprint Objectives
+#### Objectives
 1. ✅ Create n8n API service with proper typing and error handling
 2. ✅ Implement user_id (localStorage) and session_id (sessionStorage) generation
 3. ✅ Create useProjectCreation hook for React integration
 4. ✅ Update AnimatedInputs with loading states and validation
 5. ✅ Update LandingPage to use n8n for project creation
 6. ✅ Update VendorDiscovery to load n8n-generated criteria
-7. ✅ Map n8n response fields to app's existing data structures
-8. ✅ Handle timeouts (45s), errors, and loading states gracefully
+7. ✅ Map n8n response fields to app's data structures
 
 #### Key Deliverables
-- **n8n Types** (`src/types/n8n.types.ts`):
-  - N8nProjectCreationRequest/Response interfaces
-  - TransformedProject and TransformedCriterion types
-  - Field mapping: n8n `description` → app `explanation`
 
-- **n8n Service** (`src/services/n8nService.ts`):
-  - getUserId() / getSessionId() utilities
-  - createProjectWithAI() API function with 45s timeout
-  - Data transformation functions
-  - localStorage persistence functions
+**1. n8n Webhook**: `clarioo-project-creation`
+- Accepts: company_context + solution_requirements
+- Returns: TransformedProject + TransformedCriterion[]
+- AI Model: GPT-4o-mini (temperature 0.3, max tokens 6000)
+- Timeout: 120 seconds (ACTUAL, not 45s as originally documented)
 
-- **useProjectCreation Hook** (`src/hooks/useProjectCreation.ts`):
-  - Wraps n8n API call with loading/error states
-  - Auto-saves to localStorage on success
-  - Returns { createProject, isCreating, error, clearError }
+**2. n8n Types** (`src/types/n8n.types.ts`)
+- N8nProjectCreationRequest/Response interfaces
+- TransformedProject type
+- TransformedCriterion type
+- Field mapping: n8n `description` → app `explanation`
 
-- **Updated AnimatedInputs** (`src/components/landing/AnimatedInputs.tsx`):
-  - "Create with AI" button with loading spinner
-  - Updated validation: both fields require 10+ characters
-  - Helper text for input requirements
-  - Loading state disables button during API call
+**3. n8nService Functions** (`src/services/n8nService.ts`)
+- `createProjectWithAI()` - Lines 178-266
+- `getUserId()` / `getSessionId()` - Lines 91-111
+- `saveProjectToStorage()`, `getCriteriaFromStorage()`, etc.
+- Data transformation functions
 
-- **Updated LandingPage** (`src/components/landing/LandingPage.tsx`):
-  - Integrated useProjectCreation hook
-  - Calls n8n webhook instead of mock projectService
-  - Shows success toast with criteria count
-  - Clears landing inputs after successful creation
+**4. useProjectCreation Hook** (`src/hooks/useProjectCreation.ts`, 96 lines)
+- Wraps n8n API call with loading/error states
+- Auto-saves to localStorage on success
+- Returns: `{ createProject, isCreating, error, clearError }`
 
-- **Updated VendorDiscovery** (`src/components/VendorDiscovery.tsx`):
-  - Imports getCriteriaFromStorage from n8nService
-  - Loads n8n-generated criteria on mount
-  - Maps n8n criteria to app format
-  - Shows toast when AI criteria loaded
+**5. Updated Components**:
+- **AnimatedInputs.tsx**: "Create with AI" button with spinner, 10+ char validation
+- **LandingPage.tsx**: Integrated useProjectCreation hook, success toast
+- **VendorDiscovery.tsx**: Loads n8n-generated criteria on mount
 
-#### Technical Details
-- **n8n Endpoint**: POST https://n8n.lakestrom.com/webhook/clarioo-project-creation
-- **AI Model**: GPT-4o-mini (temperature: 0.3, max tokens: 6000)
-- **Timeout**: 45 seconds with AbortController
-- **Storage**: All data in localStorage (ephemeral)
+#### Technical Implementation
+- **Endpoint**: `POST /webhook/clarioo-project-creation`
+- **Timeout**: 120 seconds with AbortController
+- **Storage**: `clarioo_projects` and `criteria_{projectId}` in localStorage
 - **Criteria Count**: 10-15 per project with importance/type distribution
 
-#### Expected Outcomes
-- ✅ Real AI-generated project names and descriptions
-- ✅ Intelligent criteria based on user requirements
-- ✅ Proper importance assignment (high/medium/low)
-- ✅ Criteria type distribution (feature/technical/business/compliance)
-- ✅ Seamless integration with existing workflow
-- ✅ User-friendly loading states and error handling
+#### Actual Results
+✅ Real AI project names and descriptions
+✅ Intelligent context-aware criteria generation
+✅ Proper importance assignment (high/medium/low)
+✅ Criteria type distribution (feature/technical/business/compliance)
+✅ Seamless workflow integration
+✅ User-friendly error handling
 
-#### Brief Description
-Sprint 16 successfully integrated the n8n AI workflow for project creation, replacing the mock AI service with real GPT-4o-mini processing. Users now enter company context and solution requirements, and the n8n workflow generates an AI-powered project name, description, category, and 10-15 evaluation criteria with appropriate importance levels and types. The integration includes proper error handling for timeouts and failures, loading states during the 45-second max processing time, and localStorage persistence for all project data. Field mapping transforms n8n's `description` field to the app's `explanation` field for criteria.
-
-**Sprint Plan**: [SP_016_N8N_Project_Creation_Integration.md](./SPRINTS/SP_016_N8N_Project_Creation_Integration.md)
+**Sprint Document**: [SP_016_N8N_Project_Creation_Integration.md](./SPRINTS/SP_016_N8N_Project_Creation_Integration.md)
 
 ---
-
-## 📋 Planned Sprints
 
 ### Sprint 18: n8n Vendor Selection Integration (SP_018)
-**Duration**: TBD
-**Status**: 📋 Planned
-**Sprint Goal**: Replace mock vendor selection with n8n AI workflow to generate vendor recommendations based on criteria
+**Date**: November 26-27, 2024
+**Status**: ✅ COMPLETE
+**Duration**: 2 days
+
+#### Objectives
+1. ✅ Create n8n workflow for vendor discovery using Perplexity
+2. ✅ Implement two-stage progressive comparison system
+3. ✅ Add vendor search types to n8n.types.ts
+4. ✅ Create useVendorDiscovery hook for React integration
+5. ✅ Update VendorSelection page with real n8n integration
+6. ✅ Implement Stage 1: Individual vendor-criterion research
+7. ✅ Implement Stage 2: Comparative ranking across vendors
+
+#### Key Deliverables
+
+**1. n8n Webhook**: `clarioo-find-vendors`
+- Perplexity-powered vendor discovery
+- Accepts: criteria array (filters feature-type or uses all)
+- Returns: DiscoveredVendor[] with criteriaScores
+- Timeout: 180 seconds (3 minutes)
+
+**2. Two-Stage Comparison System**:
+
+**Stage 1: Individual Research** (`compare-vendor-criterion`)
+- Function: `compareVendorCriterion()` - Lines 795-908
+- Per vendor-criterion research with evidence gathering
+- Returns: Stage1Result with evidence_strength, evidence_url, research_notes
+- Timeout: 45 seconds per comparison
+
+**Stage 2: Comparative Ranking** (`rank-criterion-results`)
+- Function: `rankCriterionResults()` - Lines 925-1034
+- Takes all Stage1Results for a criterion
+- Returns comparative rankings with 1-5 star allocation
+- Ensures differentiation (not all vendors get same stars)
+- Timeout: 90 seconds
+
+**3. useVendorDiscovery Hook**
+- Calls `findVendors()` from n8nService
+- Transforms criteria to n8n format
+- Handles vendor search results
+
+**4. useTwoStageComparison Hook**
+- Orchestrates Stage 1 → Stage 2 flow
+- Manages progressive loading states
+- Accumulates results for UI display
+
+**5. Updated VendorSelection.tsx**
+- Real Perplexity-powered vendor discovery
+- Displays vendors with match scores
+- Integrated with workflow
+
+#### Technical Implementation
+- **Find Vendors Timeout**: 180 seconds
+- **Stage 1 Timeout**: 45 seconds per comparison
+- **Stage 2 Timeout**: 90 seconds per criterion
+- **Progressive Loading**: Shows Stage 1 results immediately, then updates with Stage 2 rankings
+- **Criteria Filtering**: Feature-type criteria preferred, falls back to all if none exist
+
+#### Actual Results
+✅ Real Perplexity-powered vendor discovery
+✅ Two-stage progressive comparison operational
+✅ Evidence-based research with URLs
+✅ Comparative star rankings (1-5 stars)
+✅ Progressive UI updates (Stage 1 → Stage 2)
+
+**Sprint Document**: [SP_018_N8N_Vendor_Selection_Integration.md](./SPRINTS/SP_018_N8N_Vendor_Selection_Integration.md)
+
+---
 
 ### Sprint 19: n8n Vendor Comparison Integration (SP_019)
-**Duration**: TBD
-**Status**: 📋 Planned
-**Sprint Goal**: Replace mock vendor comparison with n8n AI workflow to generate match scores and executive summary
+**Date**: November 27, 2024
+**Status**: ✅ COMPLETE
+**Duration**: 1 day
 
----
-
-## 📋 Completed Sprints
-
-### Sprint 15: Vendor Comparison Matrix with Wave Charts (SP_015)
-**Duration**: November 18, 2024 (estimated)
-**Status**: ✅ Complete (Core Implementation)
-**Sprint Goal**: Implement mobile-first vendor comparison screen with wave chart visualizations
-
-#### Key Deliverables
-- ✅ VendorComparison main component (200+ lines)
-- ✅ Wave chart visualization with spline interpolation (Catmull-Rom curves)
-- ✅ Mobile-first layout with vertical stacking
-- ✅ Independent vendor navigation with cycling queue
-- ✅ Match percentage calculation with weighted algorithm
-- ✅ n8n integration for vendor comparison scoring
-- ✅ Progressive loading of vendor scores with retry logic
-- ✅ localStorage persistence per project
-- ✅ VerticalBarChart component
-- ✅ ExecutiveSummaryDialog component
-
-**Sprint Plan**: [SP_015_Vendor_Comparison_Matrix.md](./SPRINTS/SP_015_Vendor_Comparison_Matrix.md)
-
----
-
-### Sprint 14: Swipe-to-Adjust Importance Gestures & Share Dialog (SP_014)
-**Duration**: November 15, 2024 (1 day)
-**Status**: ✅ Complete
-**Sprint Goal**: Implement intuitive mobile-first swipe gestures for adjusting criterion importance and add team collaboration features through a share dialog
-
-#### Sprint Objectives
-1. ✅ Create reusable swipe gesture hook for touch and mouse interactions
-2. ✅ Implement left/right swipe to adjust criterion importance levels
-3. ✅ Add visual feedback with edge glows and context-dependent colors
-4. ✅ Implement importance level progression (Low → Medium → High → Archive)
-5. ✅ Add automatic card reordering animation
-6. ✅ Create ShareDialog component for team collaboration
-7. ✅ Implement download criteria as Excel functionality
-8. ✅ Implement share-by-link with copy-to-clipboard
-9. ✅ Replace "Download Criteria List" with "Share with your Team" button
-10. ✅ Make SignalAntenna more subtle (60% opacity)
-11. ✅ Fix spacing between criterion cards and Add button
+#### Objectives
+1. ✅ Create n8n workflow for single-vendor comparison
+2. ✅ Implement executive summary generation
+3. ✅ Implement vendor card summary generation (Perplexity)
+4. ✅ Add comparison types to n8n.types.ts
+5. ✅ Create hooks for comparison and summaries
+6. ✅ Update Comparison page with real n8n integration
 
 #### Key Deliverables
-- **useSwipeGesture Hook** (`src/hooks/useSwipeGesture.ts` - 260 lines):
-  - Touch and mouse drag support
-  - Hybrid threshold (40-50%) + velocity-based detection (25-30% for fast swipes)
-  - Real-time swipe progress tracking (0-1)
-  - CSS transform values for smooth animations
-  - Minimum distance check to avoid scroll conflicts
 
-- **Enhanced CriterionCard** (`src/components/vendor-discovery/CriterionCard.tsx`):
-  - Integrated swipe gesture handlers
-  - Visual feedback: pink glow (right swipe/increase), orange glow (left swipe/decrease), grey glow (archive)
-  - Text overlays during swipe: "Increase Importance", "Decrease Importance", "Archive", "Maxed out"
-  - Card rotation during swipe (±5 degrees)
-  - Smooth snap-back animation for incomplete swipes
-  - Importance level state management
+**1. n8n Webhook**: `clarioo-compare-vendors`
+- Single vendor comparison against all criteria
+- Returns: matchPercentage, scores, scoreDetails
+- Timeout: 180 seconds
 
-- **Enhanced AccordionSection** (`src/components/vendor-discovery/AccordionSection.tsx`):
-  - Automatic card sorting by importance (High → Medium → Low → Archived)
-  - Framer Motion layout animations for smooth reordering
-  - Archived criteria moved to bottom of stack
-  - Smooth position transitions using AnimatePresence
+**2. n8n Webhook**: `clarioo-executive-summary`
+- Comprehensive project summary generation
+- Caches result in localStorage
+- Timeout: 120 seconds
 
-- **ShareDialog Component** (`src/components/vendor-discovery/ShareDialog.tsx` - 202 lines):
-  - Modal UI with two sharing options
-  - Download criteria as Excel (.xlsx) with auto-sized columns
-  - Share-by-link functionality with copy-to-clipboard
-  - Toast notifications for user feedback
-  - Clean, accessible design using shadcn/ui components
+**3. n8n Webhook**: `Vendor-Card-Summary` (Perplexity)
+- Vendor card summary with killer feature
+- Returns: killerFeature, executiveSummary, keyFeatures
+- Timeout: 120 seconds
 
-- **Enhanced CriteriaBuilder** (`src/components/vendor-discovery/CriteriaBuilder.tsx`):
-  - Replaced "Download Criteria List" button with "Share with your Team" button
-  - Integrated ShareDialog modal
-  - Share button positioned prominently in header
+**4. n8nService Functions**:
+- `compareVendor()` - Lines 561-667
+- `generateExecutiveSummary()` - Lines 1213-1326
+- `generateVendorSummary()` - Lines 1411-1480
 
-- **Visual Refinements**:
-  - SignalAntenna opacity reduced to 60% for more subtle appearance
-  - Fixed spacing issue between criterion cards and Add button (12px gap)
-  - Context-dependent glow colors match action intent
+**5. Hooks**:
+- `useVendorComparison.ts` - Bulk vendor comparison
+- `useExecutiveSummary.ts` - Executive summary generation
 
-#### Expected Outcomes
-- ✅ Mobile-first UX with natural touch gestures for 80-90% mobile traffic
-- ✅ Faster workflow: adjust importance without opening edit sidebar
-- ✅ Visual clarity through color glows and smooth animations
-- ✅ Delightful Tinder-style interaction pattern
-- ✅ Team collaboration through easy sharing (download + link)
-- ✅ Professional Excel export with proper formatting
-- ✅ Seamless integration with existing accordion UI
+**6. Components**:
+- Updated `VendorCard.tsx` with real Perplexity summaries
+- Updated `ExecutiveSummaryDialog.tsx` with real n8n summaries
+- `VerticalBarChart.tsx` for desktop visualization
 
-#### Brief Description
-Sprint 14 successfully implemented a mobile-first swipe gesture system for intuitive criterion importance adjustment. Users can now swipe right to increase importance (Low → Medium → High) with pink edge glows, or swipe left to decrease importance (High → Medium → Low) with orange edge glows. A second left swipe on Low importance archives the criterion with grey styling and an "Archived" badge. Cards automatically reorder by importance level with smooth Framer Motion animations. Added comprehensive team collaboration through ShareDialog component with two sharing options: download criteria as Excel file (with auto-sized columns and proper formatting) or copy shareable link to clipboard. The share functionality replaced the previous standalone "Download Criteria List" button with a more comprehensive "Share with your Team" button. Visual refinements include making the SignalAntenna icon more subtle at 60% opacity and fixing the spacing issue between criterion cards and the Add button for better visual balance.
+#### Technical Implementation
+- **Compare Vendor Timeout**: 180 seconds
+- **Executive Summary Timeout**: 120 seconds
+- **Vendor Summary Timeout**: 120 seconds
+- **Caching**: Executive and vendor summaries cached in localStorage
+- **Cache Keys**: `clarioo_executive_summary_{projectId}`, `clarioo_vendor_summary_{projectId}_{vendor}`
 
-**Sprint Plan**: [SP_014_Criteria_Swipe_Importance.md](./SPRINTS/SP_014_Criteria_Swipe_Importance.md)
+#### Actual Results
+✅ Real vendor comparison with match percentages
+✅ Executive summary generation operational
+✅ Vendor card summaries with killer features (Perplexity)
+✅ Desktop visualization (VerticalBarChart)
+✅ localStorage caching for performance
+
+**Sprint Document**: [SP_019_N8N_Vendor_Comparison_Integration.md](./SPRINTS/SP_019_N8N_Vendor_Comparison_Integration.md)
 
 ---
 
-### Sprint 13: Component Reusability & Code Deduplication (SP_013)
-**Duration**: November 11, 2024 (estimated)
-**Status**: ✅ Complete
-**Sprint Goal**: Extract duplicate code into reusable shared components, establish component library patterns, and improve code maintainability
+### Sprint 15: Vendor Comparison Matrix (SP_015)
+**Date**: November 16-18, 2024
+**Status**: ✅ COMPLETE (UI Layer)
+**Duration**: 3 days
+
+#### Objectives
+1. ✅ Implement mobile-first vendor comparison screen
+2. ✅ Create VerticalBarChart component for desktop
+3. ✅ Build comparison navigation components
+4. ✅ Implement vendor card display
+5. ✅ Add executive summary dialog
 
 #### Key Deliverables
-- ✅ **LoadingState component** (`/src/components/shared/loading/`) - Replaces 5 identical implementations
-- ✅ **EmptyState component** (`/src/components/shared/empty/`) - Replaces 3 identical implementations
-- ✅ **StatsCard component** (`/src/components/shared/stats/`) - Replaces 4 identical structures
-- ✅ **AddVendorForm component** (`/src/components/shared/forms/`) - Eliminates 100% duplicate code
-- ✅ **Chat Components** (`/src/components/shared/chat/`):
-  - ChatInterface, ChatMessage, ChatInput, TypingIndicator
-  - All with comprehensive test coverage
-- ✅ **useChat hook** (`/src/hooks/useChat.ts`) - Base chat functionality
-- ✅ **useCriteriaChat hook** (`/src/hooks/useCriteriaChat.ts`) - Specialized criterion chat
-- ✅ Test coverage: 8 test files created (.test.tsx)
-- ✅ Documentation: README.md files in each component folder
-- ✅ Central export: `/src/components/shared/index.ts` barrel file
 
-#### Expected Outcomes
-- ✅ Reduced code duplication by 800-1000 lines
-- ✅ Achieved 85%+ test coverage for all shared components
-- ✅ Established component library patterns for future development
-- ✅ Single source of truth for common UI patterns
+**1. VendorComparison Component** (`src/components/VendorComparison.tsx`)
+- Mobile-optimized comparison interface
+- Responsive breakpoints (mobile, tablet, desktop)
+- Integration with comparison hooks
 
-**Sprint Plan**: [SP_013_Component_Reusability_Code_Deduplication.md](./SPRINTS/SP_013_Component_Reusability_Code_Deduplication.md)
+**2. Desktop Visualization** (`src/components/vendor-comparison/VerticalBarChart.tsx`)
+- Actual desktop comparison chart (not wave charts)
+- Visual criterion-by-criterion comparison
+- Color-coded match indicators
+
+**3. Navigation Components**:
+- `DesktopColumnHeader.tsx` - Column headers with vendor info
+- `VendorCard.tsx` - Vendor display cards
+- Navigation controls for mobile swiping
+
+**4. Summary Dialog** (`ExecutiveSummaryDialog.tsx`)
+- Modal for displaying executive summary
+- Integrated with n8n summary generation (SP_019)
+
+#### Technical Implementation
+- Mobile-first responsive design
+- Swipe gestures for mobile navigation
+- Independent vendor navigation states
+- Smooth animations and transitions
+
+#### Actual Results
+✅ Responsive comparison interface operational
+✅ Desktop VerticalBarChart visualization
+✅ Mobile swipe navigation
+✅ Summary dialog with n8n integration
+
+**Note**: Wave chart architecture described in planning was not implemented. Actual implementation uses VerticalBarChart for desktop visualization.
+
+**Sprint Document**: [SP_015_Vendor_Comparison_Matrix.md](./SPRINTS/SP_015_Vendor_Comparison_Matrix.md)
 
 ---
 
-### Sprint 12: Criteria Builder Accordion Redesign (SP_012)
-**Duration**: November 14, 2024 (1 day)
-**Status**: ✅ Complete
-**Sprint Goal**: Transform horizontal tab-based table layout into mobile-first vertical accordion with AI editing sidebar
+### Sprint 14: Criteria Swipe Importance (SP_014)
+**Date**: November 15, 2024
+**Status**: ✅ COMPLETE
+**Duration**: 1 day
 
-#### Sprint Objectives
-1. ✅ Add `explanation` field to Criteria data structure across all interfaces
-2. ✅ Create SignalAntenna component (1-3 bars) for visual priority indication
-3. ✅ Create CriterionCard component for card-based criterion display
-4. ✅ Create AccordionSection component for collapsible category sections
-5. ✅ Create CriterionEditSidebar for AI-powered criterion editing
-6. ✅ Integrate all components into CriteriaBuilder with accordion view
-7. ✅ Pre-populate mockup data with detailed explanations
+#### Objectives
+1. ✅ Implement swipe-to-adjust importance gestures
+2. ✅ Create ShareDialog for team collaboration
+3. ✅ Add visual feedback during swipe
+4. ✅ Implement automatic reordering by importance
 
-**Sprint Plan**: [SP_012_Criteria_Builder_Accordion.md](./SPRINTS/SP_012_Criteria_Builder_Accordion.md)
+#### Key Deliverables
+
+**1. Swipe Gesture System**:
+- Swipe right: Increase importance (Low → Medium → High)
+- Swipe left: Decrease importance (High → Medium → Low → Archive)
+- Visual feedback: Pink (increase), orange (decrease), grey (archive)
+- Text overlays during swipe indicate action
+- Hybrid threshold: 40-50% swipe + velocity-based 25-30%
+
+**2. ShareDialog Component** (`src/components/shared/ShareDialog.tsx`)
+- Share button → Download Excel or Copy Link
+- Excel export with auto-sized columns
+- Share-by-link with copy-to-clipboard
+- Toast notifications for feedback
+
+**3. Automatic Reordering**:
+- Criteria automatically reorder by importance after swipe
+- High → Medium → Low ordering maintained
+- Smooth animations
+
+#### Technical Implementation
+- Touch and mouse gesture support
+- Velocity-based thresholds for natural feel
+- Excel export using `xlsx` library
+- localStorage persistence of reordered criteria
+
+#### Actual Results
+✅ Swipe gestures operational (touch + mouse)
+✅ Visual feedback during swipe
+✅ Automatic reordering functional
+✅ ShareDialog with Excel export working
+
+**Sprint Document**: [SP_014_Criteria_Swipe_Importance.md](./SPRINTS/SP_014_Criteria_Swipe_Importance.md)
+
+---
+
+### Sprint 12: Criteria Builder Accordion (SP_012)
+**Date**: November 14, 2024
+**Status**: ✅ COMPLETE
+**Duration**: 1 day
+
+#### Objectives
+1. ✅ Redesign CriteriaBuilder with accordion layout
+2. ✅ Create SignalAntenna visual importance indicators
+3. ✅ Implement collapsible secondary criteria
+4. ✅ Add CriterionEditSidebar for editing
+
+#### Key Deliverables
+
+**1. Accordion Layout**:
+- Criteria grouped by type (Feature, Technical, Business, Compliance, Other)
+- Collapsible sections for organization
+- Visual hierarchy for key vs secondary criteria
+
+**2. SignalAntenna Component** (`src/components/vendor-discovery/SignalAntenna.tsx`)
+- 1-3 bars indicating importance (low/medium/high)
+- Color-coded: grey (low), yellow (medium), orange (high)
+- 60% opacity for subtle appearance
+
+**3. CriterionEditSidebar** (`src/components/vendor-discovery/CriterionEditSidebar.tsx`)
+- Slides in from right edge
+- Edit criterion name, explanation, importance, type
+- Chat interface for AI refinement (integrated with n8n in SP_016)
+- Save/cancel actions
+
+**4. Additional Components**:
+- `CriteriaCard.tsx` - Individual criterion card
+- `AccordionSection.tsx` - Collapsible section wrapper
+
+#### Technical Implementation
+- Shadcn/ui Accordion components
+- Framer Motion animations for slide-in
+- Integration with n8n criteria chat (SP_016)
+
+#### Actual Results
+✅ Accordion layout operational
+✅ SignalAntenna importance indicators
+✅ CriterionEditSidebar with AI chat integration
+✅ Collapsible secondary criteria
+
+**Sprint Document**: [SP_012_Criteria_Builder_Accordion.md](./SPRINTS/SP_012_Criteria_Builder_Accordion.md)
 
 ---
 
 ### Sprint 11: Registration-Free Landing Experience (SP_011)
-**Duration**: November 13, 2024 (4 days)
-**Status**: ✅ Complete
-**Sprint Goal**: Create an intuitive, registration-free landing experience with intelligent input handling and enhanced navigation
+**Date**: November 13, 2024
+**Status**: ✅ COMPLETE
+**Duration**: 1 day
 
-#### Sprint Objectives
-1. ✅ Remove authentication UI from landing page (AuthModal trigger buttons)
-2. ✅ Implement Home/Project navigation toggle for seamless workflow
-3. ✅ Add Category dropdown for guided vendor discovery
-4. ✅ Implement Examples tooltip for input field guidance
-5. ✅ Add input field intelligence for better user guidance
+#### Objectives
+1. ✅ Implement view toggle system (landing ↔ projects)
+2. ✅ Create CategoryDropdown for quick project creation
+3. ✅ Add ExamplesBulletPopover for example projects
+4. ✅ Implement project deletion with confirmation
+5. ✅ Improve visual consistency across components
 
-**Sprint Plan**: [SP_011_Registration_Free_Landing_Experience.md](./SPRINTS/SP_011_Registration_Free_Landing_Experience.md)
+#### Key Deliverables
 
----
+**1. View Toggle System** (Part of F-030)
+- Two-state: 'landing' (marketing) vs 'projects' (workflow)
+- Toggle button: "View Projects →" / "← Back to Home"
+- Smooth transitions with framer-motion
+- No authentication requirement
 
-### Sprint 10: Unified Landing & Workflow Integration (SP_010)
-**Duration**: November 12, 2024 (1 day)
-**Status**: ✅ Complete
-**Sprint Goal**: Create unified single-page experience eliminating navigation between marketing and workflow
+**2. CategoryDropdown Component** (`src/components/landing/CategoryDropdown.tsx`, 120 lines)
+- Dropdown with 15+ software categories
+- Categories: CRM, Marketing Automation, HR, Project Mgmt, Data Analytics, etc.
+- Click category → confirmation dialog → project created
+- Mobile-responsive design
 
-**Sprint Plan**: [SP_010_Unified_Landing_Workflow.md](./SPRINTS/SP_010_Unified_Landing_Workflow.md)
+**3. ExamplesBulletPopover Component** (`src/components/landing/ExamplesBulletPopover.tsx`, 110 lines)
+- Question mark icon with 4 example projects
+- Examples: Mid-size Retailer (POS), SaaS Startup (CRM), Enterprise (Analytics), Nonprofit (Donor Mgmt)
+- Click example → confirmation dialog → project created
 
----
+**4. Project Deletion**:
+- "Delete Project" button in Edit Project dialog
+- Two-step confirmation prevents accidents
+- Success toast notification
+- Immediate removal from Projects view
 
-### Sprint 9: Critical UX Gaps & Foundation Fixes (SP_009)
-**Duration**: November 12, 2024 (14 hours)
-**Status**: ✅ Complete
-**Sprint Goal**: Fix authentication navigation, connect landing inputs to workflow, add state persistence
+**5. Visual Consistency**:
+- Unified typography across components
+- Standardized icon sizes (16px, 20px)
+- Consistent button styling (gradients, hover states)
+- Label styling: text-lg font-semibold text-gray-800 mb-3
 
-**Sprint Plan**: [SP_009_Critical_UX_Gaps_Foundation_Fixes.md](./SPRINTS/SP_009_Critical_UX_Gaps_Foundation_Fixes.md)
+#### Technical Implementation
+- View state managed at LandingPage level
+- ProjectConfirmationDialog shared component
+- localStorage persistence for projects
+- Consistent color scheme (purple gradients)
 
----
+#### Actual Results
+✅ View toggle functional (no page reloads)
+✅ CategoryDropdown with 15+ categories
+✅ ExamplesBulletPopover with 4 examples
+✅ Project deletion with safety confirmations
+✅ Visual consistency across all components
 
-### Sprint 8: Service Layer and Type System Refactoring (SP_008)
-**Duration**: November 12-15, 2024
-**Status**: ✅ Complete
-**Sprint Goal**: Consolidate types, extract business logic, establish test framework
-
-**Key Achievements**:
-- 81 tests passing (100% pass rate)
-- Custom hooks created (useVendorComparison, useVendorDiscovery, useExecutiveSummary)
-- Centralized type definitions in `/src/types/`
-- Export utilities (exportHelpers.ts)
-
-**Sprint Plan**: [SP_008_Service_Layer_and_Type_System_Refactoring.md](./SPRINTS/SP_008_Service_Layer_and_Type_System_Refactoring.md)
-
----
-
-### Sprint 7: Visual Design Enhancement & Mobile-First UI/UX (SP_007)
-**Duration**: November 12, 2024 - December 3, 2024 (2-3 weeks)
-**Status**: 🔄 In Progress (Phase 1 Complete, Phases 2-5 Partial)
-**Sprint Goal**: Transform prototype into design-led, mobile-first experience
-
-**Progress**:
-- Phase 1: Foundation & Architecture - 100% Complete
-- Phase 2: Visual Design System - 100% Complete
-- Phase 3: Interactive Elements - 85% Complete
-- Phase 4: Mobile Optimization - 80% Complete
-- Phase 5: Polish & Documentation - 50% Complete
-
-**Pending Elements**: iPodNavigation.tsx, VisualStepIndicator.tsx
-
-**Sprint Plan**: [SP_007_Visual_Design_Enhancement_Mobile_First_UI_UX.md](./SPRINTS/SP_007_Visual_Design_Enhancement_Mobile_First_UI_UX.md)
+**Sprint Document**: [SP_011_Registration_Free_Landing_Experience.md](./SPRINTS/SP_011_Registration_Free_Landing_Experience.md)
 
 ---
 
-### Sprint 6: MVP to Visual Prototype Conversion (SP_006)
-**Duration**: November 12, 2024
-**Status**: ✅ Complete
-**Sprint Goal**: Convert functional MVP to visual prototype with mock services
+### Sprint 7: Visual Design Enhancement (SP_007)
+**Date**: November 12-13, 2024
+**Status**: ✅ COMPLETE (Phase 1 with Refinements)
+**Duration**: 2 days
 
-**Sprint Plan**: [SP_006_MVP_to_Visual_Prototype_Conversion.md](./SPRINTS/SP_006_MVP_to_Visual_Prototype_Conversion.md)
+#### Objectives
+1. ✅ Implement Clearbit-inspired gradient design system
+2. ✅ Create landing page hero section with animations
+3. ✅ Build registration toggle UI
+4. ✅ Implement animated inactive inputs
+5. ✅ Create artifact visualization component
+6. ✅ Build card carousel for workflow steps
 
----
+#### Key Deliverables
 
-## 📋 Planned Sprints
+**1. HeroSection Component** (`src/components/landing/HeroSection.tsx`)
+- Gradient headline: "Supercharge your software vendor's selection with AI assistant"
+- Responsive typography: 36px mobile → 56px desktop
+- Framer Motion fade-in animations (600ms)
+- Unified subtitle styling (Nov 13 refinement)
 
-### Sprint 18: n8n Vendor Selection Integration (SP_018)
-**Duration**: TBD
-**Status**: 📋 Planned
-**Sprint Goal**: Replace mock vendor selection with real AI recommendations based on criteria via n8n
+**2. RegistrationToggle Component** (`src/components/landing/RegistrationToggle.tsx`)
+- Sign In/Sign Up toggle buttons
+- Gradient styling: #6366F1 → #8B5CF6 (brand purple)
+- Button glow shadow (4px blur)
+- Pulsating outline animation when Off (Nov 13 refinement)
+- Mobile-friendly: 140px min-width, 48px height
 
----
+**3. AnimatedInputs Component** (`src/components/landing/AnimatedInputs.tsx`)
+- Two side-by-side inputs (desktop) / stacked (mobile)
+- Hypnotic inactive animations:
+  - Pulse-glow: 2s cycle, 20px → 40px shadow
+  - Float: 3s cycle, 0 → -8px vertical movement
+  - Shimmer: 4s cycle, gradient sweep across border
+- "Register to unlock" overlay with lock icon
+- Post-auth: smooth unlock (500ms), auto-focus
+- Value proposition badges (Nov 13 refinement)
 
-### Sprint 19: n8n Vendor Comparison Integration (SP_019)
-**Duration**: TBD
-**Status**: 📋 Planned
-**Sprint Goal**: Replace mock comparison with AI-generated match scores and executive summary via n8n
+**4. ArtifactVisualization Component** (`src/components/landing/ArtifactVisualization.tsx`)
+- Three rotating workflow examples (4s intervals)
+- Visual flow: Input → AI Processing (animated brain) → Output
+- Animated brain: 360° rotation (2s continuous)
+- Pulsing glow on processing card (2s cycle)
+- Click-to-navigate indicators
 
----
+**5. CardCarousel Component** (`src/components/landing/CardCarousel.tsx`)
+- Embla Carousel with 5 workflow step cards
+- Desktop: 3 cards visible (center scaled 1.05x, sides 0.7 opacity)
+- Mobile: 1 card visible, swipe gestures
+- Auto-play: 4s intervals with pause/play control
+- Keyboard navigation: ArrowLeft/ArrowRight
 
-## Sprint History (Detailed)
+**6. Design System** (Tailwind Configuration)
+- Brand colors: purple #6366F1, purpleLight #8B5CF6
+- Neutral colors: warmBlack #1A1A1A, warmGray #4B5563
+- Gradients: gradient-button (purple), gradient-hero-bg (soft peach)
+- Shadows: elevated-combined (multi-layer), button-glow (purple tint)
+- Border radius: xl = 20px
+- Animations: pulse-glow, float, shimmer keyframes
 
-For detailed sprint information including objectives, deliverables, and technical details, see individual sprint plan files in the [SPRINTS](./SPRINTS/) folder.
+**7. Routing Architecture**:
+- `/` - Public LandingPage
+- `/dashboard` - Protected dashboard (requires auth)
+- `/auth` - Direct auth access
 
----
+#### Technical Implementation
+- Dependencies: Framer Motion 11.11.17, Embla Carousel React 8.3.1
+- CSS-based animations for 60fps performance
+- Mobile-first responsive breakpoints (md: 768px)
+- GitHub Pages deployment: https://pangeafate.github.io/Clarioo-Visuals/
 
-## Feature Implementation Progress
+#### Actual Results
+✅ Clearbit-inspired design system
+✅ Landing page with gradient hero
+✅ Animated inactive inputs with hypnotic effects
+✅ Card carousel with workflow steps
+✅ Mobile-responsive design
+✅ Deployed to GitHub Pages (Nov 13)
 
-### Overall Statistics (Prototype Mode)
-| Metric | Count | Status |
-|--------|-------|--------|
-| **Total Features (Visual Demo)** | 21 | 100% |
-| **Backend Dependencies** | 0 | Removed |
-| **Mock Services** | 3 | To Be Created |
-| **JSON Data Files** | 5+ | To Be Created |
-| **Archived Code** | All | To Be Archived |
-
-### Feature Status Breakdown
-
-#### Core Platform (100% Visual Demo)
-| Feature | Status | Implementation | Notes |
-|---------|--------|---------------|-------|
-| Authentication System | 🎨 Mock Demo | Mock auth service | Always succeeds |
-| User Profile | 🎨 Visual Only | Dummy user data | No persistence |
-| Dashboard & Navigation | 🎨 Functional UI | Working | No backend |
-| Responsive Design | ✅ Fully Functional | Tailwind + shadcn | Unchanged |
-
-#### Project Management (100% Simulated)
-| Feature | Status | Implementation | Notes |
-|---------|--------|---------------|-------|
-| Project Creation | 🎨 Simulated | Mock service | No persistence |
-| Project List/Grid | 🎨 Shows Dummy Data | JSON projects | Resets on refresh |
-| Project Status Management | 🎨 UI Only | Visual changes only | No save |
-| Project Deletion | 🎨 Simulated | Appears to delete | Resets on refresh |
-
-#### AI Engine (100% Pre-Generated)
-| Feature | Status | Implementation | Notes |
-|---------|--------|---------------|-------|
-| Criteria Generation | 🎨 Pre-Generated | JSON criteria | By category |
-| Vendor Matching | 🎨 Pre-Selected | JSON vendors | By category |
-| Scoring Algorithm | 🎨 Pre-Calculated | JSON scores | Static data |
-| Comparison Matrix | 🎨 Pre-Generated | JSON comparison | Complete matrix |
-| Chat Interface | 🎨 UI Only | Visual feedback | No real AI |
-
-#### Vendor Discovery Workflow (100% Visual)
-| Step | Feature | Status | Implementation |
-|------|---------|--------|---------------|
-| 1 | Tech Input | 🎨 UI Functional | Form validation works |
-| 2 | Criteria Builder | 🎨 Mock AI | Returns JSON |
-| 3 | Vendor Selection | 🎨 Mock AI | Returns JSON |
-| 4 | Vendor Comparison | 🎨 Pre-Generated | JSON matrix |
-| 5 | Vendor Invite | 🎨 Templates | Pre-written emails |
-
-#### Data Management (Partial Function)
-| Feature | Status | Implementation | Notes |
-|---------|--------|---------------|-------|
-| Excel Import | 🎨 Simulated | Shows sample data | No real import |
-| Excel Export | ✅ Functional | Working | Can still export |
-| Data Persistence | ❌ None | Ephemeral | Resets on refresh |
-| File Storage | ❌ Not Needed | N/A | Prototype only |
+**Sprint Document**: [SP_007_Visual_Design_Enhancement_Mobile_First_UI_UX.md](./SPRINTS/SP_007_Visual_Design_Enhancement_Mobile_First_UI_UX.md)
 
 ---
 
-## Technical Metrics (Prototype)
+## 📋 Phase 0 Sprints (Visual Prototype Foundation)
 
-### Code Quality
-| Metric | Current | Target | Status |
-|--------|---------|--------|--------|
-| **Test Coverage** | 81 tests (100% pass) | 80%+ (SP_008+) | ✅ Framework Established |
-| **Test Coverage Lines** | TBD | 80%+ | 🟢 Target Set |
-| **Test Coverage Branches** | TBD | 75%+ | 🟢 Target Set |
-| **TypeScript Coverage** | ~95% | 100% | 🟢 Maintained |
-| **Backend Dependencies** | 0 | 0 | ✅ Target Met |
-| **Build Errors** | 0 | 0 | ✅ Clean Build |
-| **Console Errors** | 0 | 0 | 🔄 To Verify |
-| **Bundle Size** | ~350KB | <500KB | ✅ Excellent |
+### Sprint 6-10 Overview
+**Period**: October-November 2024
+**Focus**: MVP → Visual Prototype Conversion
 
-### Performance Metrics (Prototype)
-| Metric | Current | Target | Status |
-|--------|---------|--------|--------|
-| **Page Load Time** | <1s | <2s | ✅ Excellent |
-| **Time to Interactive** | <2s | <3s | ✅ Excellent |
-| **API Response Time** | Instant | N/A | ✅ No APIs |
-| **Bundle Size** | 350KB | <500KB | ✅ Great |
+These sprints established the foundational UI/UX and component architecture:
 
-### Infrastructure (Prototype)
-| Component | Status | Notes |
-|-----------|--------|-------|
-| **Frontend** | 🟢 Active | React + Vite |
-| **Backend** | 🗄️ Archived | No backend needed |
-| **Database** | 🗄️ Archived | JSON files only |
-| **Authentication** | 🎨 Mock | Always succeeds |
-| **AI Services** | 🗄️ Archived | Pre-generated data |
+- **SP_006**: MVP to Visual Prototype Conversion
+- **SP_008**: Service Layer and Type System Refactoring
+- **SP_009**: Critical UX Gaps Foundation Fixes
+- **SP_010**: Unified Landing Workflow
+
+**Status**: ✅ FOUNDATION COMPLETE - All sprints provided base architecture for Phase 1
 
 ---
 
-## Technical Debt Register
+## 🎯 Current Focus & Next Steps
 
-### 🎨 Prototype Phase (No Debt - Intentional Simplifications)
+### Immediate Priority: SP_020 - Criteria Creation Animation
+**Status**: 📋 PLANNED
+**Goal**: Add delightful animation when criteria are generated from n8n
 
-**Removed Concerns** (Archived for Future):
-- ~~No Test Coverage~~ - Not needed for prototype
-- ~~Missing Error Handling~~ - Happy path only
-- ~~No Performance Monitoring~~ - Not applicable
-- ~~State Management Complexity~~ - Simplified
-- ~~Missing Loading States~~ - Keep simple
-- ~~No Caching Strategy~~ - Not needed
+**Key Features**:
+- Animated criteria cards appearing one-by-one
+- Loading skeleton during n8n API call
+- Smooth fade-in with stagger effect
+- Celebration animation when complete
 
-**Current Focus**:
-1. ✅ Clean visual demonstration
-2. ✅ Logical code organization
-3. ✅ Well-documented for handoff
-4. ✅ Easy backend integration path
+### Future Enhancements
 
-### 🔮 Future Functional Phase (When Converting Back)
+**Production Readiness**:
+- [ ] Error boundary implementation
+- [ ] Comprehensive error logging
+- [ ] Performance monitoring
+- [ ] Rate limiting for n8n webhooks
+- [ ] Backup/retry strategies
 
-**High Priority** (After Prototype Validation):
-1. Restore backend integration (from `/archived/`)
-2. Implement real authentication
-3. Add error handling
-4. Implement test framework
-5. Add monitoring and logging
-
-**Medium Priority**:
-1. Performance optimization
-2. Caching strategy
-3. Rate limiting
-4. Analytics integration
-
-**Low Priority**:
-1. Dark mode
-2. Keyboard shortcuts
-3. Advanced animations
+**Feature Completions**:
+- [ ] Real authentication (replace mock authService)
+- [ ] Actual sharing functionality (not just UI)
+- [ ] Email verification workflow
+- [ ] Multi-user collaboration features
 
 ---
 
-## Risk Register
+## 📊 Statistics
 
-### Active Prototype Risks
-| Risk | Probability | Impact | Mitigation | Status |
-|------|------------|--------|------------|--------|
-| Stakeholder confusion about prototype nature | Medium | Medium | Clear documentation | 🟢 Mitigated |
-| Design changes needed | High | Low | Quick to iterate | 🟢 Acceptable |
-| Code restoration complexity | Low | Medium | Well-archived | 🟢 Mitigated |
-| Time to convert to functional | Medium | Medium | Clear integration plan | 🟢 Documented |
+### Codebase Metrics
+- **n8nService.ts**: 1,887 lines (core integration)
+- **Total Webhooks**: 9 active n8n endpoints
+- **localStorage Keys**: 10+ for data persistence
+- **React Hooks**: 15+ custom hooks
+- **Components**: 50+ React components
+- **Pages**: 7 page-level components
 
-### Resolved Risks (From Functional MVP)
-| Risk | Status | Resolution |
-|------|--------|------------|
-| Backend complexity | ✅ Resolved | Removed for prototype |
-| AI cost concerns | ✅ Resolved | No AI calls |
-| Scalability issues | ✅ Deferred | Address in functional phase |
-| Security vulnerabilities | ✅ Resolved | No backend to secure |
+### Integration Coverage
+- **Real AI Workflows**: 9/9 webhooks active (100%)
+- **Data Persistence**: localStorage (100% of critical data)
+- **Mock Services**: 3 mock services (auth, deprecated project/AI)
 
----
-
-## Upcoming Milestones
-
-### Sprint 6 Completion (November 26, 2024)
-**Goals**:
-- [ ] Complete prototype conversion
-- [ ] All 21 features demonstrable
-- [ ] Documentation fully updated
-- [ ] Code properly archived
-- [ ] Build successful with 0 errors
-- [ ] Ready for stakeholder demo
-
-### Post-Sprint 6 (December 2024)
-**Activities**:
-- [ ] Stakeholder demonstration
-- [ ] Gather feedback on UX/UI
-- [ ] Identify design improvements
-- [ ] Validate feature priorities
-- [ ] Decide on functional implementation timeline
-
-### Functional Implementation (Q1 2025 - If Approved)
-**Phase 1**: Backend Foundation (8-10 weeks)
-- [ ] Supabase setup
-- [ ] Restore archived code
-- [ ] Real authentication
-- [ ] AI integration
-- [ ] Testing framework
+### Performance Metrics
+- **Average API Timeout**: 120 seconds (standard)
+- **Max API Timeout**: 180 seconds (vendor operations)
+- **Min API Timeout**: 45 seconds (Stage 1 research)
 
 ---
 
-## Prototype to Functional Conversion Plan
+## 🔄 Version History
 
-### Conversion Readiness Checklist
-
-**Prerequisites**:
-- [ ] Prototype validated by stakeholders
-- [ ] Design feedback incorporated into prototype
-- [ ] UX improvements identified and prioritized
-- [ ] Budget approved for functional implementation
-- [ ] Development team resources allocated
-- [ ] Infrastructure setup planned
-
-**Conversion Steps** (12-week plan):
-1. **Weeks 1-2**: Infrastructure & Environment Setup
-2. **Weeks 3-4**: Database & Authentication Implementation
-3. **Weeks 5-8**: Replace Mock Services with Real APIs
-4. **Weeks 9-10**: AI Integration & Testing
-5. **Weeks 11-12**: QA, Performance Tuning, Soft Launch
+| Version | Date | Changes |
+|---------|------|---------|
+| 3.9.0 | Dec 3, 2024 | Comprehensive rewrite based on actual implementation. Module-by-module analysis. Corrected all timeouts, endpoints, and integration status. |
+| 3.8.0 | Dec 2, 2024 | Documentation alignment - Phase 0/1 clarification, localStorage persistence confirmed, 6 n8n webhooks active |
+| 3.7.0 | Nov 27, 2024 | SP_018 & SP_019 complete - Vendor selection and comparison n8n integration |
+| 3.6.0 | Nov 25, 2024 | SP_017 complete - Email collection integration |
+| 3.5.0 | Nov 23, 2024 | SP_016 complete - n8n project creation integration |
+| 3.0.0 | Nov 18, 2024 | SP_015 complete - Vendor comparison matrix |
+| 2.4.0 | Nov 15, 2024 | SP_014 complete - Criteria swipe importance |
+| 2.3.0 | Nov 14, 2024 | SP_011-SP_013 complete - Registration-free experience, criteria accordion, code deduplication |
+| 2.0.0 | Nov 12, 2024 | SP_007 complete - Visual design enhancement |
+| 1.0.0 | Nov 12, 2024 | SP_006-SP_010 complete - MVP to visual prototype foundation |
 
 ---
 
-## Definition of Done
-
-### Prototype Sprint Complete Criteria
-- [ ] All backend dependencies removed and archived
-- [ ] Mock services created and functional
-- [ ] JSON dummy data created for all features
-- [ ] All 21 features visually demonstrable
-- [ ] Application builds without errors
-- [ ] No console errors during demo
-- [ ] All documentation updated
-- [ ] Code reviewed and cleaned
-- [ ] Sprint retrospective conducted
-
-### Future Functional Sprint Criteria (Reference)
-- [ ] Code complete and reviewed
-- [ ] Unit tests written (>80% coverage)
-- [ ] Integration tests passing
-- [ ] Documentation updated
-- [ ] Deployed to staging
-- [ ] Product owner acceptance
+**Document Owner**: Engineering Team
+**Last Comprehensive Review**: December 3, 2024
+**Next Review**: Upon completion of SP_020
 
 ---
 
-## Team Velocity Tracking
-
-### Sprint Velocity (Prototype Phase)
-| Sprint | Type | Points | Velocity | Notes |
-|--------|------|--------|----------|-------|
-| Sprint 6 | Conversion | N/A | N/A | Architecture refactoring |
-
-**Note**: Traditional velocity metrics don't apply to prototype phase. Success measured by demonstration readiness.
-
----
-
-## Communication & Reporting
-
-### Stakeholder Updates (Prototype Phase)
-- **Weekly**: Progress on prototype conversion
-- **Sprint End**: Demonstration of visual prototype
-- **Ad-hoc**: Design feedback sessions
-- **Post-Demo**: Functional implementation decision
-
-### Team Ceremonies (Adjusted for Prototype)
-- **Daily Check-in**: As needed (not daily)
-- **Sprint Planning**: Completed (SP_006)
-- **Sprint Review**: End of Week 2 (Prototype Demo)
-- **Retrospective**: Prototype learnings
-
----
-
-## Key Decisions Log
-
-### November 12, 2024 - Pivot to Visual Prototype
-**Decision**: Convert functional MVP to visual prototype
-**Made By**: Product Team
-**Rationale**:
-- Focus on team alignment before backend investment
-- Validate UX/UI design with stakeholders
-- Reduce complexity and development time
-- Enable rapid design iteration
-
-**Impact**:
-- **Positive**: Faster to demonstrate, easier to modify, no backend costs
-- **Negative**: No real functionality, must convert back later
-- **Mitigation**: All code archived for restoration
-
-**Alternatives Considered**:
-1. ❌ Continue with functional MVP - Too complex, longer timeline
-2. ❌ Design mockups only - Not interactive enough
-3. ✅ Visual prototype with dummy data - Best balance
-
----
-
-## Appendix
-
-### Reference Documents
-- [PROJECT_ROADMAP.md](./PROJECT_ROADMAP.md) - Prototype roadmap
-- [SP_006 Sprint Plan](./SPRINTS/SP_006_MVP_to_Visual_Prototype_Conversion.md) - Detailed plan
-- [ARCHITECTURE.md](../00_PLAN/ARCHITECTURE.md) - Prototype architecture
-- [FEATURE_LIST.md](../00_PLAN/FEATURE_LIST.md) - Feature details
-
-### Archived Code Location
-- `/archived/` - All removed functional code
-- `/archived/README.md` - Restoration instructions
-
-### Tools & Systems (Prototype)
-- **Project Management**: This document
-- **Version Control**: Git
-- **CI/CD**: Not needed (static site)
-- **Hosting**: Static hosting (Vercel, Netlify)
-- **Monitoring**: Not needed for prototype
-
----
-
-## Document History
-
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0.0 | 2024-10-26 | System | Initial progress tracking |
-| 2.0.0 | 2024-11-12 | System | Updated for prototype conversion (Sprint 6) |
-| 3.0.0 | 2024-11-15 | System | SP_014 Complete, reorganized structure |
-| 3.1.0 | 2024-11-23 | System | Documentation alignment, removed duplicates |
-| 3.8.0 | 2024-11-27 | System | Phase boundary clarification, SP_018/SP_019 creation, architecture updates |
-
----
-
-*This document tracks progress for both Phase 0 (Visual Prototype - Complete) and Phase 1 (n8n AI Integration - Active).*
-
-**Phase 0 (Complete)**: Visual Prototype (SP_006-SP_015) - Mock services with visual demonstration
-**Phase 1 (Active)**: n8n AI Integration (SP_016-SP_017 Complete) - Real AI backend
-**Next Sprint**: SP_018 - n8n Vendor Selection Integration
-**Last Updated**: November 27, 2024
-
+*This document reflects the actual implementation status based on comprehensive codebase analysis. All webhook endpoints, timeouts, storage keys, and integration points have been verified against the source code.*

@@ -1,19 +1,24 @@
 /**
- * VendorComparison Component
- * Sprint: SP_015 (Revised) - Integrated into workflow
+ * VendorComparisonNew Component
+ * Sprint: SP_019 - Two-Stage Progressive Comparison with Original UI
  *
- * Mobile-first vendor comparison screen with vertical bar chart
- * Layout: Horizontal vendor cards at top + vertical bar chart below
+ * Implements the new two-stage workflow system while preserving 100% of the original UI:
+ * - Stage 1: Individual vendor × criterion research (parallel, max 5 concurrent)
+ * - Stage 2: Comparative ranking with star allocation (per criterion, after all Stage 1 complete)
  *
- * Can be used in two modes:
- * 1. Standalone mode: Load from mockAIdata.json (for /comparison route)
- * 2. Workflow mode: Accept vendors/criteria from workflow (vendor-comparison step)
+ * UI preserved from original VendorComparison.tsx:
+ * - Same vendor cards, bar charts, score popups, retry buttons
+ * - Same mobile/desktop layouts
+ * - Same match percentage calculation
+ * - Same executive summary integration
  *
- * Features:
- * - Progressive loading: Researches each vendor sequentially via n8n
- * - Score popup: Shows evidence URL and AI comment for each score
- * - Retry functionality: Failed vendors can be retried individually
- * - localStorage persistence: Compared vendors persist per project
+ * New backend behavior:
+ * - Process criteria sequentially (criterion-by-criterion)
+ * - Within each criterion, vendors process in parallel (up to 5 concurrent)
+ * - Stage 2 triggers when all Stage 1 complete for a criterion
+ * - Both stages persist to separate localStorage keys
+ * - Individual cell-level retry for Stage 1
+ * - Row-level retry button for Stage 2
  */
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
@@ -28,109 +33,19 @@ import { ExecutiveSummaryDialog } from './vendor-comparison/ExecutiveSummaryDial
 import { Button } from './ui/button';
 import { TechRequest, Vendor as WorkflowVendor, Criteria as WorkflowCriteria } from './VendorDiscovery';
 import { TYPOGRAPHY } from '../styles/typography-config';
+import { useTwoStageComparison } from '../hooks/useTwoStageComparison';
+import { useVendorTransformation, useCriteriaTransformation } from '../hooks/useVendorTransformation';
+import { calculateMatchPercentage } from '../utils/vendorComparison';
 import {
-  compareVendor,
-  ComparedVendor,
-  VendorForComparison,
   generateExecutiveSummary,
   getExecutiveSummaryFromStorage,
   clearExecutiveSummaryFromStorage,
-  ExecutiveSummaryData
+  ExecutiveSummaryData,
+  ComparedVendor
 } from '../services/n8nService';
 
 // ===========================================
-// Match Percentage Calculation
-// ===========================================
-
-/**
- * Calculate match percentage from vendor scores and criteria
- *
- * Algorithm:
- * - Base scores: star=95, yes=80, unknown=60, no=10
- * - Importance weights: high=1.5, medium=1.0, low=0.7
- * - Feature category: 1.3x weight multiplier
- * - Star scores are valued higher to differentiate exceptional performance
- * - Result: Weighted average based on importance and type
- * - Cap at 98%
- */
-const calculateMatchPercentage = (
-  scores: Record<string, 'no' | 'unknown' | 'yes' | 'star'>,
-  criteria: { id: string; importance: string; type?: string }[],
-  vendorName?: string // Optional for debugging
-): number => {
-  if (!scores || Object.keys(scores).length === 0 || criteria.length === 0) {
-    return -1; // No data
-  }
-
-  // Importance multipliers
-  const importanceMultipliers: Record<string, number> = {
-    high: 1.5,
-    medium: 1.0,
-    low: 0.7
-  };
-
-  // Base score values
-  const baseScores: Record<string, number> = {
-    star: 95,
-    yes: 80,
-    unknown: 60,
-    no: 10
-  };
-
-  let totalWeight = 0;
-  let weightedScore = 0;
-
-  // Count scores by type for debugging
-  const scoreCount = { star: 0, yes: 0, unknown: 0, no: 0 };
-
-  for (const criterion of criteria) {
-    const score = scores[criterion.id];
-    if (!score) continue;
-
-    // Track score counts
-    scoreCount[score]++;
-
-    // Get importance multiplier
-    const importanceWeight = importanceMultipliers[criterion.importance] || 1.0;
-
-    // Apply feature category uplift (1.3x)
-    const typeMultiplier = criterion.type === 'feature' ? 1.3 : 1.0;
-
-    // Final weight for this criterion
-    const weight = importanceWeight * typeMultiplier;
-
-    // Add to totals
-    const baseScore = baseScores[score] || 60;
-    weightedScore += baseScore * weight;
-    totalWeight += weight;
-  }
-
-  if (totalWeight === 0) return -1;
-
-  // Calculate percentage
-  let percentage = weightedScore / totalWeight;
-
-  // Debug logging
-  if (vendorName) {
-    console.log(`🔍 Match % calculation for ${vendorName}:`, {
-      scores: scoreCount,
-      totalWeight: totalWeight.toFixed(2),
-      weightedScore: weightedScore.toFixed(2),
-      basePercentage: percentage.toFixed(2),
-      finalBeforeCap: percentage.toFixed(2),
-      final: Math.min(percentage, 98).toFixed(2)
-    });
-  }
-
-  // Cap at 98%
-  percentage = Math.min(percentage, 98);
-
-  // Round to integer
-  return Math.round(percentage);
-};
-
-// ===========================================
-// Types for Progressive Loading
+// Types for Progressive Loading (Compatibility)
 // ===========================================
 
 type VendorComparisonStatus = 'pending' | 'loading' | 'completed' | 'failed';
@@ -139,13 +54,10 @@ interface VendorComparisonState {
   status: VendorComparisonStatus;
   comparedData?: ComparedVendor;
   error?: string;
-  errorCode?: string; // 'TIMEOUT' or other error codes from n8n
+  errorCode?: string;
 }
 
-// localStorage key prefix for compared vendors
-const COMPARED_VENDORS_STORAGE_PREFIX = 'compared_vendors_';
-
-interface VendorComparisonProps {
+interface VendorComparisonNewProps {
   // Standalone mode props
   projectId?: string;
   className?: string;
@@ -160,7 +72,7 @@ interface VendorComparisonProps {
   onShortlistChange?: (shortlistedIds: string[]) => void;
 }
 
-export const VendorComparison: React.FC<VendorComparisonProps> = ({
+export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
   projectId,
   className = '',
   vendors: workflowVendors,
@@ -175,23 +87,141 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
   const isWorkflowMode = !!workflowVendors && !!workflowCriteria;
 
   // ===========================================
-  // Progressive Loading State
+  // Two-Stage Orchestration Hook
   // ===========================================
 
-  // Track comparison state for each vendor
-  const [vendorComparisonStates, setVendorComparisonStates] = useState<Record<string, VendorComparisonState>>({});
+  const {
+    comparisonState,
+    isRunning,
+    startComparison,
+    pauseComparison,
+    resumeComparison,
+    retryCellStage1,
+    retryRowStage2,
+    resetComparison,
+  } = useTwoStageComparison({
+    projectId: projectId || '',
+    vendors: workflowVendors || [],
+    criteria: workflowCriteria || [],
+    techRequest: techRequest || {} as TechRequest,
+    autoStart: true, // Auto-start comparison on mount
+  });
+
+  // ===========================================
+  // Map comparisonState to vendorComparisonStates format
+  // ===========================================
+
+  // Build vendorComparisonStates from comparisonState for compatibility with UI components
+  const vendorComparisonStates: Record<string, VendorComparisonState> = useMemo(() => {
+    if (!workflowVendors || !workflowCriteria) return {};
+
+    const states: Record<string, VendorComparisonState> = {};
+
+    for (const vendor of workflowVendors) {
+      // Collect scores from comparison state
+      const scores: Record<string, 'yes' | 'no' | 'unknown' | 'star'> = {};
+      const scoreDetails: Record<string, CriterionScoreDetail> = {};
+
+      let hasFailedCells = false;
+      let hasLoadingCells = false;
+      let allCellsComplete = true;
+
+      for (const criterion of workflowCriteria) {
+        const cell = comparisonState.criteria[criterion.id]?.cells[vendor.id];
+
+        if (cell?.status === 'failed') {
+          hasFailedCells = true;
+          allCellsComplete = false;
+        } else if (cell?.status === 'loading') {
+          hasLoadingCells = true;
+          allCellsComplete = false;
+        } else if (cell?.status === 'pending') {
+          allCellsComplete = false;
+        }
+
+        if (cell?.value) {
+          scores[criterion.id] = cell.value;
+          scoreDetails[criterion.id] = {
+            state: cell.value,
+            evidence: cell.evidenceUrl || '',
+            comment: cell.comment || '',
+          };
+        }
+      }
+
+      // Calculate match percentage (uses shared utility)
+      const criteriaForCalc = workflowCriteria
+        .filter(c => !c.isArchived)
+        .map(c => ({
+          id: c.id,
+          importance: c.importance,
+          type: c.type || 'other',
+        }));
+
+      const matchPercentage = calculateMatchPercentage(scores, criteriaForCalc, vendor.name);
+
+      // Determine status
+      const status: VendorComparisonStatus =
+        hasFailedCells ? 'failed' :
+        hasLoadingCells ? 'loading' :
+        allCellsComplete ? 'completed' : 'pending';
+
+      // Build ComparedVendor data structure
+      const comparedData: ComparedVendor = {
+        id: vendor.id,
+        name: vendor.name,
+        website: vendor.website,
+        description: vendor.description || '',
+        matchPercentage,
+        scores,
+        scoreDetails,
+        // These fields may not be available in two-stage mode yet, but we keep them for compatibility
+        killerFeature: undefined,
+        keyFeatures: [],
+        executiveSummary: undefined,
+      };
+
+      states[vendor.id] = {
+        status,
+        comparedData,
+        error: hasFailedCells ? 'Some criteria failed to load' : undefined,
+        errorCode: hasFailedCells ? 'CELL_FAILED' : undefined,
+      };
+    }
+
+    return states;
+  }, [workflowVendors, workflowCriteria, comparisonState]);
 
   // Track if comparison has started
-  const [comparisonStarted, setComparisonStarted] = useState(false);
+  const comparisonStarted = useMemo(() => {
+    return Object.values(comparisonState.criteria).some(row =>
+      Object.values(row.cells).some(cell => cell.status !== 'pending')
+    );
+  }, [comparisonState]);
 
-  // Track if all comparisons are complete (for sorting)
-  const [allComparisonsComplete, setAllComparisonsComplete] = useState(false);
+  // Track if all comparisons are complete
+  const allComparisonsComplete = useMemo(() => {
+    if (!workflowVendors || !workflowCriteria) return false;
 
-  // Track if generation is currently in progress (for Stop Generation button)
-  const [isGenerating, setIsGenerating] = useState(false);
+    return workflowVendors.every(vendor => {
+      const state = vendorComparisonStates[vendor.id];
+      return state?.status === 'completed' || state?.status === 'failed';
+    });
+  }, [workflowVendors, vendorComparisonStates]);
 
-  // Ref to signal abortion of generation
-  const abortGenerationRef = useRef(false);
+  // ===========================================
+  // Retry functionality (maps to new hook)
+  // ===========================================
+
+  const retryVendor = useCallback(async (vendorId: string) => {
+    // Retry all failed cells for this vendor
+    for (const criterion of workflowCriteria || []) {
+      const cell = comparisonState.criteria[criterion.id]?.cells[vendorId];
+      if (cell?.status === 'failed') {
+        await retryCellStage1(criterion.id, vendorId);
+      }
+    }
+  }, [workflowCriteria, comparisonState, retryCellStage1]);
 
   // Score detail popup state
   const [selectedScoreDetail, setSelectedScoreDetail] = useState<{
@@ -199,225 +229,6 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
     criterionName: string;
     detail: CriterionScoreDetail;
   } | null>(null);
-
-  // localStorage key for this project's compared vendors
-  const comparedVendorsStorageKey = projectId ? `${COMPARED_VENDORS_STORAGE_PREFIX}${projectId}` : null;
-
-  // ===========================================
-  // Load persisted comparison data
-  // ===========================================
-
-  useEffect(() => {
-    if (!comparedVendorsStorageKey || !isWorkflowMode) return;
-
-    const stored = localStorage.getItem(comparedVendorsStorageKey);
-    if (stored) {
-      try {
-        const parsedStates: Record<string, VendorComparisonState> = JSON.parse(stored);
-        console.log('[VendorComparison] Loading from localStorage:', Object.keys(parsedStates).map(id => ({
-          id,
-          name: parsedStates[id].comparedData?.name,
-          hasKillerFeature: !!parsedStates[id].comparedData?.killerFeature,
-          killerFeature: parsedStates[id].comparedData?.killerFeature
-        })));
-        setVendorComparisonStates(parsedStates);
-
-        // Check if all vendors have been compared
-        if (workflowVendors) {
-          const allComplete = workflowVendors.every(v =>
-            parsedStates[v.id]?.status === 'completed' ||
-            parsedStates[v.id]?.status === 'failed'
-          );
-          if (allComplete) {
-            setComparisonStarted(true);
-            setAllComparisonsComplete(true);
-          }
-        }
-      } catch {
-        console.error('[VendorComparison] Failed to parse stored comparison data');
-      }
-    }
-  }, [comparedVendorsStorageKey, isWorkflowMode, workflowVendors]);
-
-  // ===========================================
-  // Save comparison data to localStorage
-  // ===========================================
-
-  useEffect(() => {
-    if (!comparedVendorsStorageKey || !isWorkflowMode) return;
-    if (Object.keys(vendorComparisonStates).length === 0) return;
-
-    localStorage.setItem(comparedVendorsStorageKey, JSON.stringify(vendorComparisonStates));
-  }, [vendorComparisonStates, comparedVendorsStorageKey, isWorkflowMode]);
-
-  // ===========================================
-  // Compare a single vendor via n8n
-  // ===========================================
-
-  const compareOneVendor = useCallback(async (vendor: WorkflowVendor) => {
-    if (!techRequest || !workflowCriteria || !projectId) return;
-
-    // Set vendor to loading state
-    setVendorComparisonStates(prev => ({
-      ...prev,
-      [vendor.id]: { status: 'loading' }
-    }));
-
-    try {
-      // Prepare vendor for comparison
-      const vendorForComparison: VendorForComparison = {
-        id: vendor.id,
-        name: vendor.name,
-        website: vendor.website,
-        description: vendor.description || '',
-        features: vendor.features || []
-      };
-
-      // Get project details from techRequest
-      // Note: TechRequest has: category, description, companyInfo
-      const projectName = techRequest.companyInfo?.substring(0, 50) || 'Vendor Evaluation';
-      const baseProjectDescription = techRequest.description || '';
-      const projectCategory = techRequest.category || 'Software';
-
-      // Append all vendor names to project description for n8n context
-      const allVendorNames = workflowVendors?.map(v => v.name).join(', ') || '';
-      const projectDescription = allVendorNames
-        ? `${baseProjectDescription}. Comparing the following vendors: ${allVendorNames}`
-        : baseProjectDescription;
-
-      // Call n8n workflow
-      const response = await compareVendor(
-        projectId,
-        projectName,
-        projectDescription,
-        projectCategory,
-        vendorForComparison,
-        workflowCriteria.filter(c => !c.isArchived).map(c => ({
-          id: c.id,
-          name: c.name,
-          explanation: c.explanation || '',
-          importance: c.importance,
-          type: c.type || 'other',
-          isArchived: false
-        }))
-      );
-
-      if (response.success && response.vendor) {
-        console.log('[VendorComparison] Storing compared data for', vendor.name, ':', {
-          killerFeature: response.vendor.killerFeature,
-          executiveSummary: response.vendor.executiveSummary,
-          keyFeatures: response.vendor.keyFeatures
-        });
-        setVendorComparisonStates(prev => ({
-          ...prev,
-          [vendor.id]: {
-            status: 'completed',
-            comparedData: response.vendor
-          }
-        }));
-      } else {
-        setVendorComparisonStates(prev => ({
-          ...prev,
-          [vendor.id]: {
-            status: 'failed',
-            error: response.error?.message || 'Comparison failed',
-            errorCode: response.error?.code || 'UNKNOWN_ERROR'
-          }
-        }));
-      }
-    } catch (error) {
-      setVendorComparisonStates(prev => ({
-        ...prev,
-        [vendor.id]: {
-          status: 'failed',
-          error: error instanceof Error ? error.message : 'Comparison failed',
-          errorCode: 'UNKNOWN_ERROR'
-        }
-      }));
-    }
-  }, [techRequest, workflowCriteria, projectId]);
-
-  // ===========================================
-  // Start progressive comparison
-  // ===========================================
-
-  const startComparison = useCallback(async () => {
-    if (!workflowVendors || comparisonStarted) return;
-
-    setComparisonStarted(true);
-    setAllComparisonsComplete(false);
-    setIsGenerating(true);
-    abortGenerationRef.current = false;
-
-    // Compare vendors sequentially
-    for (const vendor of workflowVendors) {
-      // Check if generation was stopped
-      if (abortGenerationRef.current) {
-        break;
-      }
-
-      // Skip if already completed
-      if (vendorComparisonStates[vendor.id]?.status === 'completed') {
-        continue;
-      }
-
-      await compareOneVendor(vendor);
-    }
-
-    setIsGenerating(false);
-    setAllComparisonsComplete(true);
-  }, [workflowVendors, comparisonStarted, vendorComparisonStates, compareOneVendor]);
-
-  // ===========================================
-  // Retry failed vendor
-  // ===========================================
-
-  const retryVendor = useCallback(async (vendorId: string) => {
-    const vendor = workflowVendors?.find(v => v.id === vendorId);
-    if (!vendor) return;
-
-    await compareOneVendor(vendor);
-
-    // Check if all are now complete
-    if (workflowVendors) {
-      const allComplete = workflowVendors.every(v => {
-        const state = v.id === vendorId
-          ? vendorComparisonStates[v.id]
-          : vendorComparisonStates[v.id];
-        return state?.status === 'completed' || state?.status === 'failed';
-      });
-      if (allComplete) {
-        setAllComparisonsComplete(true);
-      }
-    }
-  }, [workflowVendors, compareOneVendor, vendorComparisonStates]);
-
-  // ===========================================
-  // Auto-start comparison in workflow mode
-  // ===========================================
-
-  useEffect(() => {
-    if (isWorkflowMode && workflowVendors && workflowVendors.length > 0 && !comparisonStarted) {
-      // Check if we have any uncompleted vendors
-      const hasUncompleted = workflowVendors.some(v =>
-        !vendorComparisonStates[v.id] ||
-        vendorComparisonStates[v.id]?.status === 'pending' ||
-        vendorComparisonStates[v.id]?.status === 'failed'
-      );
-
-      if (hasUncompleted) {
-        // Small delay to allow component to render
-        const timer = setTimeout(() => {
-          startComparison();
-        }, 500);
-        return () => clearTimeout(timer);
-      } else {
-        // All vendors already compared
-        setComparisonStarted(true);
-        setAllComparisonsComplete(true);
-      }
-    }
-  }, [isWorkflowMode, workflowVendors, comparisonStarted, vendorComparisonStates, startComparison]);
 
   // Standalone mode now returns empty - all data should come from n8n workflow
   const standaloneCriteria: Criterion[] = useMemo(() => {
@@ -428,99 +239,17 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
     return [];
   }, []);
 
-  // Convert workflow vendors to ComparisonVendor format
+  // Convert workflow vendors to ComparisonVendor format using shared hook
   // Uses compared data when available, falls back to basic vendor info
-  const workflowShortlist: ComparisonVendor[] = useMemo(() => {
-    if (!workflowVendors) return [];
+  const workflowShortlist = useVendorTransformation(
+    workflowVendors,
+    workflowCriteria,
+    vendorComparisonStates,
+    allComparisonsComplete
+  );
 
-    // Get criteria for match percentage calculation
-    const criteriaForCalc = workflowCriteria
-      ? workflowCriteria.filter(c => !c.isArchived).map(c => ({
-          id: c.id,
-          importance: c.importance,
-          type: c.type || 'other'
-        }))
-      : [];
-
-    let vendors = workflowVendors.map((v, index) => {
-      const comparisonState = vendorComparisonStates[v.id];
-      const comparedData = comparisonState?.comparedData;
-
-      // If we have compared data, use it
-      if (comparedData) {
-        // Calculate match percentage client-side from scores
-        const calculatedMatchPercentage = calculateMatchPercentage(
-          comparedData.scores,
-          criteriaForCalc,
-          v.name // Pass vendor name for debugging
-        );
-
-        console.log('[VendorComparison] Using compared data for', v.name, ':', {
-          killerFeature: comparedData.killerFeature,
-          executiveSummary: comparedData.executiveSummary,
-          keyFeaturesCount: comparedData.keyFeatures?.length
-        });
-
-        return {
-          id: v.id,
-          name: comparedData.name,
-          logo: `https://logo.clearbit.com/${comparedData.website.replace(/^https?:\/\//, '')}`,
-          website: comparedData.website,
-          killerFeature: comparedData.killerFeature,
-          executiveSummary: comparedData.executiveSummary,
-          keyFeatures: comparedData.keyFeatures,
-          matchPercentage: calculatedMatchPercentage,
-          scores: new Map(Object.entries(comparedData.scores)),
-          scoreDetails: comparedData.scoreDetails,
-          color: VENDOR_COLOR_PALETTE[index % VENDOR_COLOR_PALETTE.length],
-          // Additional state info for UI
-          comparisonStatus: comparisonState.status,
-        };
-      }
-
-      // Use basic vendor info (pending/loading/failed state)
-      const scores = v.criteriaScores || {};
-      return {
-        id: v.id,
-        name: v.name,
-        logo: `https://logo.clearbit.com/${v.website.replace(/^https?:\/\//, '')}`,
-        website: v.website,
-        killerFeature: v.description || '',
-        executiveSummary: v.description || '',
-        keyFeatures: v.features || [],
-        matchPercentage: -1, // -1 indicates no data yet, display as "--"
-        scores: new Map(Object.entries(scores)),
-        color: VENDOR_COLOR_PALETTE[index % VENDOR_COLOR_PALETTE.length],
-        // Additional state info for UI
-        comparisonStatus: comparisonState?.status || 'pending',
-        comparisonError: comparisonState?.error,
-        comparisonErrorCode: comparisonState?.errorCode,
-      };
-    });
-
-    // Sort by matchPercentage after all comparisons complete
-    if (allComparisonsComplete) {
-      vendors = [...vendors].sort((a, b) => b.matchPercentage - a.matchPercentage);
-    }
-
-    return vendors;
-  }, [workflowVendors, vendorComparisonStates, allComparisonsComplete, workflowCriteria]);
-
-  // Convert workflow criteria to Criterion format
-  const workflowCriteriaFormatted: Criterion[] = useMemo(() => {
-    if (!workflowCriteria) return [];
-
-    // Filter out archived criteria
-    return workflowCriteria
-      .filter(c => !c.isArchived)
-      .map(c => ({
-        id: c.id,
-        name: c.name,
-        description: c.explanation || '',
-        importance: c.importance,
-        type: c.type || 'other',
-      }));
-  }, [workflowCriteria]);
+  // Convert workflow criteria to Criterion format using shared hook
+  const workflowCriteriaFormatted = useCriteriaTransformation(workflowCriteria);
 
   // Use workflow data if available, otherwise use standalone data
   const criteria = isWorkflowMode ? workflowCriteriaFormatted : standaloneCriteria;
@@ -681,32 +410,10 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
   // Listen for custom event from parent VendorDiscovery to regenerate comparison
   useEffect(() => {
     const handleRegenerateComparison = () => {
-      // Clear all comparison states
-      setVendorComparisonStates({});
-      setComparisonStarted(false);
-      setAllComparisonsComplete(false);
-      abortGenerationRef.current = false;
-
-      // Re-trigger comparison after a small delay to allow state to clear
+      resetComparison();
+      // Start comparison after a small delay to allow state to update
       setTimeout(() => {
-        if (workflowVendors && workflowVendors.length > 0) {
-          setComparisonStarted(true);
-          setAllComparisonsComplete(false);
-          setIsGenerating(true);
-
-          // Compare vendors sequentially
-          (async () => {
-            for (const vendor of workflowVendors) {
-              // Check if generation was stopped
-              if (abortGenerationRef.current) {
-                break;
-              }
-              await compareOneVendor(vendor);
-            }
-            setIsGenerating(false);
-            setAllComparisonsComplete(true);
-          })();
-        }
+        startComparison();
       }, 100);
     };
 
@@ -714,29 +421,26 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
     return () => {
       window.removeEventListener('regenerateComparison', handleRegenerateComparison);
     };
-  }, [workflowVendors, compareOneVendor]);
+  }, [resetComparison, startComparison]);
 
   // Listen for custom event to stop generation
   useEffect(() => {
     const handleStopGeneration = () => {
-      abortGenerationRef.current = true;
-      setIsGenerating(false);
-      // Mark all loading vendors as having their current state preserved
-      // The loop will break on next iteration
+      pauseComparison();
     };
 
     window.addEventListener('stopComparisonGeneration', handleStopGeneration);
     return () => {
       window.removeEventListener('stopComparisonGeneration', handleStopGeneration);
     };
-  }, []);
+  }, [pauseComparison]);
 
   // Broadcast generation status to parent
   useEffect(() => {
     window.dispatchEvent(new CustomEvent('comparisonGenerationStatus', {
-      detail: { isGenerating }
+      detail: { isGenerating: isRunning }
     }));
-  }, [isGenerating]);
+  }, [isRunning]);
 
   const toggleShortlist = (vendorId: string) => {
     const newSet = new Set(shortlistedVendorIds);
@@ -962,6 +666,7 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
               criteria={criteria}
               onScoreClick={handleScoreClick}
               onRetryVendor={retryVendor}
+              comparisonState={comparisonState}
             />
           </motion.div>
         </div>
@@ -992,6 +697,7 @@ export const VendorComparison: React.FC<VendorComparisonProps> = ({
               onToggleShortlist={toggleShortlist}
               onScoreClick={handleScoreClick}
               onRetryVendor={retryVendor}
+              comparisonState={comparisonState}
             />
           </motion.div>
         </div>

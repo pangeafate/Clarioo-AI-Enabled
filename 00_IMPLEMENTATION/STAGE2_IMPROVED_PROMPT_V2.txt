@@ -1,0 +1,217 @@
+IMPROVED STAGE 2 PROMPT (V2 - Correct State Transition Logic)
+==================================================================
+
+This prompt should replace the "text" field in the Stage 2 n8n workflow JSON
+(line 120 in "Clarioo TESTING AI Rank Criterion Results (Stage 2) (1).json")
+
+COPY EVERYTHING BELOW THIS LINE:
+================================================================================
+
+RESEARCH TASK: Stage 2 - Comparative Ranking & Evidence Verification
+
+CRITERION BEING EVALUATED:
+Name: {{ $json.criterion.name }}
+ID: {{ $json.criterion.id }}
+Importance: {{ $json.criterion.importance }}
+Description: {{ $json.criterion.description || 'N/A' }}
+
+PROJECT CONTEXT:
+{{ $json.project_description }}
+
+STAGE 1 RESULTS (Individual Vendor Research):
+{{ JSON.stringify($json.stage1_results, null, 2) }}
+
+Number of vendors: {{ $json.stage1_results.length }}
+
+CORE PRINCIPLES:
+1. Stage 1 determined if features exist/don't exist
+2. Stage 2's job is to COMPARE and VERIFY, not re-evaluate existence
+3. NEVER downgrade "yes" to "no" based on lack of competitive advantage
+4. Stars are ONLY for competitive advantages with 3rd party evidence
+
+STAGE 2 RESPONSIBILITIES:
+
+1. COMPARATIVE RANKING (for vendors with "yes")
+   - Compare vendors that have Stage 1 "yes" status
+   - Identify competitive advantages using 3rd party sources
+   - Award up to 2 stars total across all vendors
+
+2. EVIDENCE VERIFICATION (for vendors with "no")
+   - Review the Stage 1 evidence link
+   - Verify if feature is clearly stated as absent
+   - If NOT clearly absent → Change "no" to "unknown"
+   - If clearly absent → Keep "no"
+
+3. PRESERVE "unknown" STATUS
+   - Do not re-research vendors marked "unknown" in Stage 1
+   - Keep status as "unknown"
+
+STATE TRANSITION RULES (CRITICAL):
+
+FROM STAGE 1 "yes":
+├─ Competitive advantage found (3rd party evidence) → state = "star"
+│  └─ REPLACE evidence_url with 3rd party URL (G2, Reddit, Capterra)
+└─ No competitive advantage found → state = "yes" (KEEP AS-IS)
+   └─ DO NOT downgrade to "no"
+   └─ Comment: Keep Stage 1 comment or add brief note
+
+FROM STAGE 1 "no":
+├─ Review Stage 1 evidence_url
+├─ Link clearly states feature absent → state = "no" (keep)
+└─ Link does NOT clearly state absent → state = "unknown" (upgrade)
+
+FROM STAGE 1 "unknown":
+└─ state = "unknown" (keep as-is, do not research)
+
+SEARCH BUDGET LOGIC:
+
+Count Stage 1 "yes" results:
+- 0 vendors with "yes" → search_count = 0 (only verify "no" evidence)
+- 1 vendor with "yes" → search_count = 0 (no comparison possible)
+- 2+ vendors with "yes" → search_count = 1-10 (comparative analysis)
+
+COMPARATIVE RESEARCH (only if 2+ vendors have "yes"):
+
+Search strategies for finding competitive advantages:
+- "[vendor A] vs [vendor B] {{ $json.criterion.name }}"
+- "best [category] for {{ $json.criterion.name }}"
+- "{{ $json.criterion.name }} comparison [vendor A] [vendor B]"
+- "[vendor A] {{ $json.criterion.name }} rated review reddit"
+- "G2 comparison [vendor A] vs [vendor B] {{ $json.criterion.name }}"
+
+Look for evidence of competitive advantages:
+- Direct comparisons showing vendor superiority
+- Awards or recognition for this specific criterion
+- User testimonials preferring one vendor over others
+- Expert reviews highlighting exceptional performance
+- Benchmarks or metrics showing better results
+
+REQUIREMENTS FOR COMPETITIVE ADVANTAGE:
+✓ Must use THIRD-PARTY sources only (G2, Capterra, Reddit, TrustRadius, review sites)
+✓ Must explicitly compare vendors or rank them
+✓ Must demonstrate clear advantage, not just feature presence
+✓ Must provide specific competitor names in the evidence
+✗ NEVER use vendor website URLs for star evidence
+
+STAR ALLOCATION (Maximum 2 stars per criterion):
+
+Rules for awarding stars:
+- Award 0-2 stars total (NOT always exactly 2)
+- Only award if clear competitive advantage exists
+- Star evidence MUST be from 3rd party sources
+- Star evidence MUST name specific competitors
+- When assigning star, REPLACE evidence_url with 3rd party URL
+- Comment format: "[Specific advantage] vs [Competitor names] per [Source type]"
+
+Example star comments:
+✓ "Rated #1 for integrations vs Salesforce and HubSpot per G2 reviews"
+✓ "Superior automation capabilities vs Zoho and Dynamics per Reddit consensus"
+✗ "No competitive advantage found" ← WRONG, keep as "yes" instead
+
+EVIDENCE VERIFICATION FOR "no" STATUS:
+
+For each vendor with Stage 1 "no":
+1. Read the evidence_url provided by Stage 1
+2. Check if the link clearly states the feature is absent
+3. Clearly absent = explicit statement like:
+   - "This feature is not available"
+   - "Does not support [feature]"
+   - Pricing page with no mention of feature
+4. NOT clearly absent = vague, contradictory, or no clear statement
+5. Update state accordingly:
+   - Clearly absent → Keep "no"
+   - Not clearly absent → Change to "unknown"
+
+EVIDENCE REUSE FROM STAGE 1:
+
+For vendors with "yes" that don't get stars:
+- REUSE: evidence_url, evidence_description from Stage 1
+- REUSE: vendor_site_evidence, third_party_evidence, research_notes
+- KEEP: All Stage 1 fields unchanged
+- Only UPDATE if you found better comparative evidence
+
+CRITERION INSIGHT:
+
+Create a 2-3 sentence insight about this criterion across all vendors:
+- Which vendors lead in this area and why
+- Key differentiators between vendors (if stars awarded)
+- Overall competitive landscape for this criterion
+- If no stars: "All vendors offer this feature with similar capabilities"
+
+OUTPUT STRUCTURE:
+{
+  "criterion_id": "{{ $json.criterion.id }}",
+  "criterion_name": "{{ $json.criterion.name }}",
+  "criterion_importance": "{{ $json.criterion.importance }}",
+  "vendor_rankings": [
+    {
+      "vendor_id": "UUID",
+      "vendor_name": "Name",
+      "state": "yes|star|no|unknown",
+      "evidence_url": "3rd party URL for stars, Stage 1 URL otherwise",
+      "evidence_description": "Description (Stage 1 or updated)",
+      "comment": "For yes: Stage 1 comment. For star: [advantage] vs [competitor] per [source]. For no→unknown: 'Evidence unclear, requires verification'"
+    }
+  ],
+  "criterion_insight": "2-3 sentence summary of competitive landscape",
+  "stars_awarded": 0-2,
+  "search_count": 0-10
+}
+
+FINAL VALIDATION CHECKLIST:
+
+Before returning JSON, verify:
+☐ No "yes" status downgraded to "no" (only "yes" or "star")
+☐ All "no" statuses verified (kept as "no" or upgraded to "unknown")
+☐ All "unknown" statuses preserved (not changed)
+☐ All "star" states have 3rd party evidence_url (NOT vendor.com domains)
+☐ All "star" evidence_url REPLACED with 3rd party source
+☐ All "star" comments name specific competitors
+☐ stars_awarded is 0, 1, or 2
+☐ search_count is 0-10 (0 if no comparative research needed)
+☐ criterion_insight provided
+☐ Each vendor has exactly one of: yes|star|no|unknown
+
+EXAMPLES:
+
+Example 1 - Competitive Advantage Found:
+Stage 1: vendor_id="abc", evidence_strength="yes", evidence_url="https://vendor.com/features"
+Stage 2 finds: G2 comparison shows vendor is #1 vs competitors
+Output: {
+  "vendor_id": "abc",
+  "state": "star",
+  "evidence_url": "https://g2.com/compare/vendor-vs-competitor", ← REPLACED
+  "comment": "Rated #1 for automation vs Salesforce and Zoho per G2 reviews"
+}
+
+Example 2 - No Competitive Advantage:
+Stage 1: vendor_id="def", evidence_strength="yes", evidence_url="https://vendor.com/docs"
+Stage 2 finds: No standout advantage vs competitors
+Output: {
+  "vendor_id": "def",
+  "state": "yes", ← KEPT AS YES, NOT DOWNGRADED
+  "evidence_url": "https://vendor.com/docs", ← KEPT FROM STAGE 1
+  "comment": "Feature available, no standout advantage identified"
+}
+
+Example 3 - Evidence Verification (no → unknown):
+Stage 1: vendor_id="ghi", evidence_strength="no", evidence_url="https://vendor.com/pricing"
+Stage 2 review: Pricing page doesn't clearly state feature is absent
+Output: {
+  "vendor_id": "ghi",
+  "state": "unknown", ← UPGRADED FROM NO
+  "evidence_url": "https://vendor.com/pricing",
+  "comment": "Evidence unclear, feature absence not explicitly stated"
+}
+
+Example 4 - Evidence Verification (no → no):
+Stage 1: vendor_id="jkl", evidence_strength="no", evidence_url="https://vendor.com/faq"
+Stage 2 review: FAQ explicitly states "This feature is not available"
+Output: {
+  "vendor_id": "jkl",
+  "state": "no", ← KEPT AS NO
+  "evidence_url": "https://vendor.com/faq",
+  "comment": "Feature explicitly stated as not available"
+}
+
+Return ONLY the JSON object.

@@ -1,0 +1,383 @@
+{
+  "name": "Clarioo Vendor Card Summary Generator (Modified)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "6e32f3ef-1103-404b-ac0b-8ce2da70b7b4",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "http://localhost:8080"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "fc1854be-96bb-46e6-86b4-27c6a5388669",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "position": [-576, -240],
+      "webhookId": "6e32f3ef-1103-404b-ac0b-8ce2da70b7b4",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = items[0].json.body || {};\n\nconst vendor_name = body.vendor_name;\nconst vendor_website = body.vendor_website;\nconst project_id = body.project_id;\nconst project_context = body.project_context || '';\n\nconst errors = [];\n\nif (!vendor_name || vendor_name.trim() === '') {\n  errors.push('vendor_name is required');\n}\n\nif (!vendor_website || vendor_website.trim() === '') {\n  errors.push('vendor_website is required');\n}\n\nif (!project_id || project_id.trim() === '') {\n  errors.push('project_id is required');\n}\n\nif (errors.length > 0) {\n  return [{\n    json: {\n      validation_error: true,\n      error_code: 'INVALID_INPUT',\n      error_message: errors.join(', ')\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    validation_error: false,\n    vendor_name: vendor_name.trim(),\n    vendor_website: vendor_website.trim(),\n    project_id,\n    project_context: project_context.trim()\n  }\n}];"
+      },
+      "id": "6ce530bf-0c61-462f-ba4e-7020d8a7fa5a",
+      "name": "Input Validation",
+      "type": "n8n-nodes-base.code",
+      "position": [-352, -240],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "validation-check",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "leftValue": "={{ $json.validation_error }}",
+              "rightValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5a7e4f9b-749f-4408-9e77-46195e40ac62",
+      "name": "Check Validation",
+      "type": "n8n-nodes-base.if",
+      "position": [-128, -240],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  success: false,\n  error: {\n    code: $json.error_code,\n    message: $json.error_message\n  }\n} }}",
+        "options": {
+          "responseCode": 400,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "http://localhost:8080"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "cd7026f6-36e1-4117-9c95-93395784e333",
+      "name": "Return Validation Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [160, -384],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Research this vendor and generate a summary for a comparison tool vendor card.\n\nVENDOR TO RESEARCH:\n- Name: {{ $json.vendor_name }}\n- Website: {{ $json.vendor_website }}\n\n{{ $json.project_context ? `PROJECT CONTEXT:\\n${$json.project_context}\\n\\n` : '' }}RESEARCH TASKS:\n1. Visit the vendor's website and recent documentation\n2. Identify their most unique/compelling feature (killer feature)\n3. Understand their core product offering and value proposition\n4. List their top 3-5 key features/capabilities\n\nOUTPUT REQUIREMENTS:\n- killerFeature: What makes this vendor stand out? What's their unique selling point? (1-2 sentences)\n- executiveSummary: Brief \"About\" section - what does this vendor do? (2-3 sentences)\n- keyFeatures: Top 3-5 features as short phrases (not full sentences)\n\nUse Perplexity's search to gather current, accurate information from official sources.\n\nReturn ONLY the JSON object with the structure defined in the system message.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a vendor research assistant that generates concise, accurate vendor summaries for comparison tools.\n\nYour task is to research a vendor and generate a structured JSON summary with three key fields:\n1. killerFeature - The vendor's most unique/compelling feature (1-2 sentences)\n2. executiveSummary - A brief \"About\" section (2-3 sentences)\n3. keyFeatures - Top 3-5 features as bullet points\n\nCRITICAL RULES:\n1. Use Perplexity's web search capabilities to gather current information\n2. Focus on factual, verifiable information from official sources\n3. Be concise - vendor cards have limited space\n4. Prioritize recent information (last 12-24 months)\n5. Return ONLY valid JSON - no additional text before or after\n\nYour response MUST be a valid JSON object with this exact structure:\n{\n  \"vendor_name\": \"string\",\n  \"killerFeature\": \"string (1-2 sentences, starts with what makes them unique)\",\n  \"executiveSummary\": \"string (2-3 sentences, brief about section)\",\n  \"keyFeatures\": [\"feature1\", \"feature2\", \"feature3\", \"feature4\", \"feature5\"]\n}\n\nDo NOT include any text before or after the JSON."
+        }
+      },
+      "id": "1d85c08f-458b-46c9-86ab-c1222d38b729",
+      "name": "AI Analysis Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [96, -96],
+      "typeVersion": 2.2,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-sonar-large-128k-online",
+        "options": {
+          "temperature": 0.3,
+          "maxTokens": 2000
+        }
+      },
+      "id": "perplexity-chat-model-new",
+      "name": "Perplexity Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatPerplexity",
+      "position": [16, 192],
+      "typeVersion": 1,
+      "notes": "REPLACE OpenAI Chat Model with this Perplexity node"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"vendor_name\": {\n      \"type\": \"string\",\n      \"description\": \"The vendor's name (should match input)\"\n    },\n    \"killerFeature\": {\n      \"type\": \"string\",\n      \"description\": \"The vendor's most unique/compelling feature (1-2 sentences)\"\n    },\n    \"executiveSummary\": {\n      \"type\": \"string\",\n      \"description\": \"Brief about section (2-3 sentences)\"\n    },\n    \"keyFeatures\": {\n      \"type\": \"array\",\n      \"description\": \"Top 3-5 key features\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"minItems\": 3,\n      \"maxItems\": 5\n    }\n  },\n  \"required\": [\"vendor_name\", \"killerFeature\", \"executiveSummary\", \"keyFeatures\"]\n}"
+      },
+      "id": "2b1dd32d-dced-4ea6-8df7-37c6fe0a71e4",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [304, 192],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  const aiOutput = items[0].json.output;\n\n  if (!aiOutput || !aiOutput.vendor_name || !aiOutput.killerFeature) {\n    throw new Error('Invalid AI response: missing required vendor summary fields');\n  }\n\n  // Ensure keyFeatures is an array\n  if (!Array.isArray(aiOutput.keyFeatures)) {\n    throw new Error('Invalid AI response: keyFeatures must be an array');\n  }\n\n  return [{\n    json: {\n      success: true,\n      vendor_summary: {\n        vendor_name: aiOutput.vendor_name,\n        killerFeature: aiOutput.killerFeature,\n        executiveSummary: aiOutput.executiveSummary,\n        keyFeatures: aiOutput.keyFeatures\n      },\n      generated_at: new Date().toISOString()\n    }\n  }];\n\n} catch (error) {\n  return [{\n    json: {\n      success: false,\n      error: {\n        code: 'AI_PROCESSING_ERROR',\n        message: `Vendor summary generation failed: ${error.message}`\n      }\n    }\n  }];\n}"
+      },
+      "id": "267d7a7a-e89e-470d-ac12-6967112a349f",
+      "name": "Format Success Response",
+      "type": "n8n-nodes-base.code",
+      "position": [448, -192],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "success-check",
+              "operator": {
+                "type": "boolean",
+                "operation": "false"
+              },
+              "leftValue": "={{ $json.success }}",
+              "rightValue": false
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "fcdeba62-461a-4879-8ca2-6b652274bebe",
+      "name": "Check Success",
+      "type": "n8n-nodes-base.if",
+      "position": [656, -192],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "http://localhost:8080"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "7febbc51-b380-4c3f-80e7-36f04dd5ca5d",
+      "name": "Return Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [896, -208],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "jsCode": "if (items[0].json.error && items[0].json.error.code) {\n  return [{\n    json: {\n      success: false,\n      error: items[0].json.error\n    }\n  }];\n}\n\nconst errorMessage = items[0].json.error?.message || items[0].json.message || 'An unexpected error occurred during vendor summary generation';\n\nreturn [{\n  json: {\n    success: false,\n    error: {\n      code: 'INTERNAL_ERROR',\n      message: errorMessage,\n      vendor_name: items[0].json.vendor_name || 'Unknown'\n    }\n  }\n}];"
+      },
+      "id": "47e5ce6a-c20f-4a43-9d54-3d655febd6c7",
+      "name": "Handle Processing Error",
+      "type": "n8n-nodes-base.code",
+      "position": [896, 64],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 500,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "http://localhost:8080"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "7647ff43-b2ae-4fb5-9e81-f174798c5f47",
+      "name": "Return Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [1120, 64],
+      "typeVersion": 1.4
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Input Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Validation": {
+      "main": [
+        [
+          {
+            "node": "Check Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Validation": {
+      "main": [
+        [
+          {
+            "node": "Return Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Analysis Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Analysis Agent": {
+      "main": [
+        [
+          {
+            "node": "Format Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Processing Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perplexity Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Analysis Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Analysis Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Success Response": {
+      "main": [
+        [
+          {
+            "node": "Check Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Success": {
+      "main": [
+        [
+          {
+            "node": "Handle Processing Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Processing Error": {
+      "main": [
+        [
+          {
+            "node": "Return Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "tags": []
+}

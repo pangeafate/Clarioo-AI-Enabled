@@ -4,17 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowRight, CheckCircle, LogOut, User, ArrowLeft, Save, Sparkles, RefreshCw, Square } from "lucide-react";
+import { ArrowRight, CheckCircle, LogOut, User, ArrowLeft, Save, Sparkles, RefreshCw, Square, Play, Info } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import CriteriaBuilder from "./vendor-discovery/CriteriaBuilder";
 import VendorSelection from "./vendor-discovery/VendorSelection";
-import { VendorComparison } from "./VendorComparison";
+import { VendorComparisonNew } from "./VendorComparisonNew";
 import VendorInviteNew from "./vendor-discovery/VendorInviteNew";
 import { WorkflowNavigation, WORKFLOW_STEPS, type Step } from "./WorkflowNavigation";
 import { SPACING } from '@/styles/spacing-config';
 import { TYPOGRAPHY } from '@/styles/typography-config';
 import { getCriteriaFromStorage, getProjectByIdFromStorage, needsEmailRetry, retryEmailCollection } from '@/services/n8nService';
+import { loadComparisonState } from '@/utils/comparisonStorage';
 
 /**
  * GAP-1: Workflow State Persistence Structure
@@ -99,6 +100,7 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [isComparisonGenerating, setIsComparisonGenerating] = useState(false);
   const [shouldTriggerDiscovery, setShouldTriggerDiscovery] = useState(false); // Flag to trigger vendor discovery manually
+  const [hasTableData, setHasTableData] = useState(false); // Track if comparison table has data
 
   const storageKey = `workflow_${project.id}`;
 
@@ -113,6 +115,45 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
       window.removeEventListener('comparisonGenerationStatus', handleGenerationStatus as EventListener);
     };
   }, []);
+
+  // Check if comparison table has data (for dynamic Generate/Regenerate button text)
+  useEffect(() => {
+    if (currentStep !== 'vendor-comparison') {
+      setHasTableData(false);
+      return;
+    }
+
+    const checkTableData = () => {
+      const comparisonState = loadComparisonState(project.id);
+      if (!comparisonState) {
+        setHasTableData(false);
+        return;
+      }
+
+      // Check if any cells have completed or failed status (visible data in table)
+      const hasData = Object.values(comparisonState.criteria).some(row =>
+        Object.values(row.cells).some(cell =>
+          cell.status === 'completed' || cell.status === 'failed'
+        )
+      );
+
+      setHasTableData(hasData);
+    };
+
+    checkTableData();
+
+    // Also check when localStorage changes (e.g., comparison updates)
+    const handleStorageChange = () => checkTableData();
+    window.addEventListener('storage', handleStorageChange);
+
+    // Check periodically while on comparison step (in case same-tab updates don't trigger storage event)
+    const interval = setInterval(checkTableData, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [currentStep, project.id]);
 
   /**
    * GAP-1 FIX: Load workflow state from localStorage on mount
@@ -544,9 +585,22 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
                         : WORKFLOW_STEPS[currentStepIndex].description}
                     </CardDescription>
                   </div>
-                  {/* Executive Summary and Regenerate/Stop Buttons - Only show on vendor-comparison step */}
+                  {/* Executive Summary and Regenerate/Continue/Stop Buttons - Only show on vendor-comparison step */}
                   {currentStep === 'vendor-comparison' && (
                     <div className="flex flex-col sm:flex-row gap-2 flex-shrink-0">
+                      {/* Info button - always visible, opens guide popup */}
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          // Dispatch custom event to open guide popup
+                          window.dispatchEvent(new CustomEvent('openComparisonGuide'));
+                        }}
+                        className="flex-shrink-0"
+                        title="View comparison guide"
+                      >
+                        <Info className="h-4 w-4" />
+                      </Button>
                       {isComparisonGenerating ? (
                         <Button
                           variant="outline"
@@ -564,24 +618,45 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
                           Stop Generation
                         </Button>
                       ) : (
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            // Clear compared vendors from localStorage and trigger regeneration
-                            const comparedVendorsKey = `compared_vendors_${project.id}`;
-                            localStorage.removeItem(comparedVendorsKey);
-                            // Dispatch custom event to trigger comparison restart
-                            window.dispatchEvent(new CustomEvent('regenerateComparison'));
-                            toast({
-                              title: "Regenerating comparison",
-                              description: "Re-analyzing all vendors against criteria...",
-                            });
-                          }}
-                          className="gap-2"
-                        >
-                          <RefreshCw className="h-4 w-4" />
-                          Regenerate
-                        </Button>
+                        <>
+                          {/* Continue button - only show if table has data */}
+                          {hasTableData && (
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                // Dispatch custom event to continue populating pending cells
+                                window.dispatchEvent(new CustomEvent('continueComparison'));
+                                toast({
+                                  title: "Continuing comparison",
+                                  description: "Populating remaining cells...",
+                                });
+                              }}
+                              className="gap-2"
+                            >
+                              <Play className="h-4 w-4" />
+                              Continue
+                            </Button>
+                          )}
+                          {/* Generate/Regenerate button - text changes based on table data */}
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              // Clear compared vendors from localStorage and trigger regeneration
+                              const comparedVendorsKey = `compared_vendors_${project.id}`;
+                              localStorage.removeItem(comparedVendorsKey);
+                              // Dispatch custom event to trigger comparison restart
+                              window.dispatchEvent(new CustomEvent('regenerateComparison'));
+                              toast({
+                                title: hasTableData ? "Regenerating comparison" : "Generating comparison",
+                                description: hasTableData ? "Re-analyzing all vendors against criteria..." : "Analyzing all vendors against criteria...",
+                              });
+                            }}
+                            className="gap-2"
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                            {hasTableData ? 'Regenerate' : 'Generate'}
+                          </Button>
+                        </>
                       )}
                       <Button
                         onClick={() => {
@@ -623,7 +698,7 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
                   />
                 )}
                 {currentStep === 'vendor-comparison' && selectedVendors.length > 0 && (
-                  <VendorComparison
+                  <VendorComparisonNew
                     projectId={project.id}
                     vendors={selectedVendors}
                     criteria={criteria}
