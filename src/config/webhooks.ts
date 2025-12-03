@@ -42,7 +42,10 @@ const PRODUCTION_WEBHOOKS = {
   CRITERIA_CHAT: 'https://n8n.lakestrom.com/webhook/clarioo-criteria-chat',
   FIND_VENDORS: 'https://n8n.lakestrom.com/webhook/clarioo-find-vendors',
   COMPARE_VENDORS: 'https://n8n.lakestrom.com/webhook/clarioo-compare-vendors',
+  COMPARE_VENDOR_CRITERION: 'https://n8n.lakestrom.com/webhook/find-criterion-vendor-stage1', // Stage 1: Individual cell research (Production)
+  RANK_CRITERION_RESULTS: 'https://n8n.lakestrom.com/webhook/rank-criteria-stage2', // Stage 2: Comparative ranking (Production)
   EXECUTIVE_SUMMARY: 'https://n8n.lakestrom.com/webhook/clarioo-executive-summary',
+  VENDOR_SUMMARY: 'https://n8n.lakestrom.com/webhook/Vendor-Card-Summary', // Vendor card summary generator (Perplexity)
   EMAIL_COLLECTION: 'https://n8n.lakestrom.com/webhook/clarioo-email-collection',
 } as const;
 
@@ -51,7 +54,10 @@ const TESTING_WEBHOOKS = {
   CRITERIA_CHAT: 'https://n8n.lakestrom.com/webhook/7b57ec80-4343-43f0-9cb3-36e0dc383c0a',
   FIND_VENDORS: 'https://n8n.lakestrom.com/webhook/059d83e9-5a1e-4303-b29c-41212ebb9f55',
   COMPARE_VENDORS: 'https://n8n.lakestrom.com/webhook/9243e868-56df-4b64-a98c-2bc56a087d77',
+  COMPARE_VENDOR_CRITERION: 'https://n8n.lakestrom.com/webhook/a7f3e891-2d4b-4c5e-9a1f-8b3c6d7e9f2a', // Stage 1: Testing webhook
+  RANK_CRITERION_RESULTS: 'https://n8n.lakestrom.com/webhook/b2c4d8f1-3e5a-4f6b-8c9d-1a2b3c4d5e6f', // Stage 2: Testing webhook
   EXECUTIVE_SUMMARY: 'https://n8n.lakestrom.com/webhook/11b92992-7c97-40d1-b6d1-037ce4743667',
+  VENDOR_SUMMARY: 'https://n8n.lakestrom.com/webhook/6e32f3ef-1103-404b-ac0b-8ce2da70b7b4', // Modified workflow: Vendor card summary generator
   EMAIL_COLLECTION: 'https://n8n.lakestrom.com/webhook/755744fd-7b51-4979-af1f-acfa3cd95963',
 } as const;
 
@@ -83,5 +89,8 @@ export const getProjectCreationUrl = () => getWebhookUrl('PROJECT_CREATION');
 export const getCriteriaChatUrl = () => getWebhookUrl('CRITERIA_CHAT');
 export const getFindVendorsUrl = () => getWebhookUrl('FIND_VENDORS');
 export const getCompareVendorsUrl = () => getWebhookUrl('COMPARE_VENDORS');
+export const getCompareVendorCriterionUrl = () => getWebhookUrl('COMPARE_VENDOR_CRITERION'); // Stage 1
+export const getRankCriterionResultsUrl = () => getWebhookUrl('RANK_CRITERION_RESULTS'); // Stage 2
 export const getExecutiveSummaryUrl = () => getWebhookUrl('EXECUTIVE_SUMMARY');
+export const getVendorSummaryUrl = () => getWebhookUrl('VENDOR_SUMMARY'); // Vendor card summary
 export const getEmailCollectionUrl = () => getWebhookUrl('EMAIL_COLLECTION');
