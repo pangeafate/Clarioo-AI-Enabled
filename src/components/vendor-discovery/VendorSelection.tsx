@@ -512,16 +512,23 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {vendors.map((vendor) => (
-              <Card key={vendor.id} className={`cursor-pointer transition-all ${
-                selectedVendorIds.has(vendor.id) ? 'ring-2 ring-primary' : ''
-              }`}>
+              <Card
+                key={vendor.id}
+                className={`cursor-pointer transition-all ${
+                  selectedVendorIds.has(vendor.id) ? 'ring-2 ring-primary' : ''
+                }`}
+                onClick={() => toggleVendorSelection(vendor.id)}
+              >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-end mb-3 gap-2">
                     {vendor.id.startsWith('custom-') && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => removeVendor(vendor.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeVendor(vendor.id);
+                        }}
                         className="h-6 w-6 p-0 text-destructive hover:text-destructive/80"
                       >
                         <Trash2 className="h-3 w-3" />
@@ -529,7 +536,13 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
                     )}
                     <Checkbox
                       checked={selectedVendorIds.has(vendor.id)}
-                      onCheckedChange={() => toggleVendorSelection(vendor.id)}
+                      onCheckedChange={(e) => {
+                        // Prevent double-toggle from card click
+                        if (e !== undefined) {
+                          toggleVendorSelection(vendor.id);
+                        }
+                      }}
+                      onClick={(e) => e.stopPropagation()}
                     />
                   </div>
 
