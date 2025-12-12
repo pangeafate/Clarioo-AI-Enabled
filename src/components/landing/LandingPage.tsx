@@ -152,6 +152,32 @@ export const LandingPage = () => {
     }, 100);
   };
 
+  /**
+   * SP_021: Handle template project creation
+   * Called when user creates a project from a template
+   */
+  const handleTemplateProjectCreated = (project: Project) => {
+    console.log('[LandingPage] Template project created:', project);
+
+    // Select the new project
+    setSelectedProject(project);
+
+    // Switch to project view
+    setCurrentView('project');
+
+    // Force ProjectDashboard to re-mount and reload
+    setProjectsLoaded(false);
+    setDashboardRefreshKey(prev => prev + 1);
+
+    // Scroll to workflow section
+    setTimeout(() => {
+      const workflowElement = document.getElementById('workflow-section');
+      if (workflowElement) {
+        workflowElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
   // Auto-select first project when projects are loaded
   const handleProjectsLoaded = (projects: Project[]) => {
     if (projects.length > 0 && !projectsLoaded) {
@@ -430,6 +456,7 @@ export const LandingPage = () => {
       <HeroSection
         currentView={currentView}
         onViewToggle={handleViewToggle}
+        onTemplateProjectCreated={handleTemplateProjectCreated}
       />
 
       {/* Element 4 - iPod Navigation: Placeholder for future implementation */}

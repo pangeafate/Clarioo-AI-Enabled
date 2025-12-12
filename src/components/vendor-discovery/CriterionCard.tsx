@@ -53,13 +53,16 @@ export interface CriterionCardProps {
   onImportanceChange?: (id: string, importance: 'low' | 'medium' | 'high', isArchived: boolean) => void;
   /** When true, disables swipe gestures (for use in drag-and-drop containers) */
   disableSwipe?: boolean;
+  /** When true, disables all editing features (for preview modals) */
+  readOnly?: boolean;
 }
 
 export const CriterionCard: React.FC<CriterionCardProps> = ({
   criterion,
   onEdit,
   onImportanceChange,
-  disableSwipe = false
+  disableSwipe = false,
+  readOnly = false
 }) => {
   const { toast } = useToast();
 
@@ -330,7 +333,7 @@ export const CriterionCard: React.FC<CriterionCardProps> = ({
                 <div className="flex items-center justify-center h-7 w-7 xs:h-8 xs:w-8">
                   <SignalAntenna
                     importance={criterion.importance}
-                    isInteractive={!criterion.isArchived && !!onImportanceChange}
+                    isInteractive={!readOnly && !criterion.isArchived && !!onImportanceChange}
                     onImportanceChange={(newImportance) => {
                       if (!onImportanceChange) return;
                       if (newImportance === 'archive') {
@@ -352,33 +355,37 @@ export const CriterionCard: React.FC<CriterionCardProps> = ({
                   />
                 </div>
 
-                {/* AI Chat Button */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => {
-                    e.stopPropagation(); // Prevent swipe interference
-                    onEdit(criterion, 'chat');
-                  }}
-                  className={SPACING.vendorDiscovery.criterion.iconButton}
-                  title="Chat with AI"
-                >
-                  <Bot className={SPACING.vendorDiscovery.criterion.icon} />
-                </Button>
+                {/* AI Chat Button (hidden in readOnly mode) */}
+                {!readOnly && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent swipe interference
+                      onEdit(criterion, 'chat');
+                    }}
+                    className={SPACING.vendorDiscovery.criterion.iconButton}
+                    title="Chat with AI"
+                  >
+                    <Bot className={SPACING.vendorDiscovery.criterion.icon} />
+                  </Button>
+                )}
 
-                {/* Edit Button */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => {
-                    e.stopPropagation(); // Prevent swipe interference
-                    onEdit(criterion, 'edit');
-                  }}
-                  className={SPACING.vendorDiscovery.criterion.iconButton}
-                  title="Edit criterion"
-                >
-                  <SquarePen className={SPACING.vendorDiscovery.criterion.icon} />
-                </Button>
+                {/* Edit Button (hidden in readOnly mode) */}
+                {!readOnly && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent swipe interference
+                      onEdit(criterion, 'edit');
+                    }}
+                    className={SPACING.vendorDiscovery.criterion.iconButton}
+                    title="Edit criterion"
+                  >
+                    <SquarePen className={SPACING.vendorDiscovery.criterion.icon} />
+                  </Button>
+                )}
               </div>
             </div>
 

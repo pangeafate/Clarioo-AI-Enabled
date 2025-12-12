@@ -60,6 +60,8 @@ export interface AccordionSectionProps {
   onEditCategory?: (oldName: string, newName: string) => void;
   onDeleteCategory?: (categoryName: string) => void;
   isCustomCategory?: boolean;
+  // Read-only mode (for preview modals)
+  readOnly?: boolean;
 }
 
 export const AccordionSection: React.FC<AccordionSectionProps> = ({
@@ -75,7 +77,8 @@ export const AccordionSection: React.FC<AccordionSectionProps> = ({
   onOrderChange,
   onEditCategory,
   onDeleteCategory,
-  isCustomCategory = false
+  isCustomCategory = false,
+  readOnly = false
 }) => {
   // Track which item is being dragged for visual feedback
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -248,9 +251,9 @@ export const AccordionSection: React.FC<AccordionSectionProps> = ({
           </span>
         </button>
 
-        {/* Right side: Edit icon (custom categories only, when expanded) + Chevron */}
+        {/* Right side: Edit icon (custom categories only, when expanded, not in readOnly) + Chevron */}
         <div className="flex items-center gap-1">
-          {isCustomCategory && isExpanded && onEditCategory && (
+          {!readOnly && isCustomCategory && isExpanded && onEditCategory && (
             <Button
               variant="ghost"
               size="icon"
@@ -288,8 +291,8 @@ export const AccordionSection: React.FC<AccordionSectionProps> = ({
             className="overflow-hidden"
           >
             <div className={`${SPACING.vendorDiscovery.accordion.content} ${SPACING.vendorDiscovery.accordion.spacing}`}>
-              {/* SP_014: Drag-and-drop mode when sorting is off */}
-              {!isSortedByImportance && onOrderChange ? (
+              {/* SP_014: Drag-and-drop mode when sorting is off (disabled in readOnly) */}
+              {!readOnly && !isSortedByImportance && onOrderChange ? (
                 <Reorder.Group
                   axis="y"
                   values={localOrder}
@@ -328,8 +331,9 @@ export const AccordionSection: React.FC<AccordionSectionProps> = ({
                           <CriterionCard
                             criterion={criterion}
                             onEdit={onEditCriterion}
-                            onImportanceChange={onImportanceChange}
+                            onImportanceChange={readOnly ? undefined : onImportanceChange}
                             disableSwipe={true}
+                            readOnly={readOnly}
                           />
                         </div>
                       </div>
@@ -359,23 +363,27 @@ export const AccordionSection: React.FC<AccordionSectionProps> = ({
                       <CriterionCard
                         criterion={criterion}
                         onEdit={onEditCriterion}
-                        onImportanceChange={onImportanceChange}
+                        onImportanceChange={readOnly ? undefined : onImportanceChange}
+                        disableSwipe={readOnly}
+                        readOnly={readOnly}
                       />
                     </motion.div>
                   ))}
                 </AnimatePresence>
               )}
 
-              {/* Add New Criterion Button */}
-              <button
-                onClick={() => onAddCriterion(title.toLowerCase())}
-                className="w-full border border-dashed border-gray-300 rounded-lg bg-white hover:border-primary hover:bg-primary/5 transition-all"
-              >
-                <div className={`${SPACING.vendorDiscovery.accordion.addButton} flex items-center justify-center gap-1.5 xs:gap-2 text-muted-foreground hover:text-primary group`}>
-                  <Plus className="h-4 w-4 xs:h-5 xs:w-5 group-hover:scale-110 transition-transform" />
-                  <span className={TYPOGRAPHY.button.default}>Add {title} Criterion</span>
-                </div>
-              </button>
+              {/* Add New Criterion Button (hidden in readOnly mode) */}
+              {!readOnly && (
+                <button
+                  onClick={() => onAddCriterion(title.toLowerCase())}
+                  className="w-full border border-dashed border-gray-300 rounded-lg bg-white hover:border-primary hover:bg-primary/5 transition-all"
+                >
+                  <div className={`${SPACING.vendorDiscovery.accordion.addButton} flex items-center justify-center gap-1.5 xs:gap-2 text-muted-foreground hover:text-primary group`}>
+                    <Plus className="h-4 w-4 xs:h-5 xs:w-5 group-hover:scale-110 transition-transform" />
+                    <span className={TYPOGRAPHY.button.default}>Add {title} Criterion</span>
+                  </div>
+                </button>
+              )}
             </div>
           </motion.div>
         )}

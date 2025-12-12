@@ -26,6 +26,9 @@ import { useState } from 'react';
 import { ViewToggleButton } from './ViewToggleButton';
 import { ExpertsButton } from './ExpertsButton';
 import { ExpertsModal } from './ExpertsModal';
+import { TemplatesButton } from './TemplatesButton';
+import { TemplatesModal } from '../templates/TemplatesModal';
+import { MobileMenu } from './MobileMenu';
 import { TYPOGRAPHY } from '@/styles/typography-config';
 
 interface HeroSectionProps {
@@ -33,10 +36,13 @@ interface HeroSectionProps {
   // SP_011: View toggle props
   currentView?: 'landing' | 'project';
   onViewToggle?: () => void;
+  // SP_021: Template project creation callback
+  onTemplateProjectCreated?: (project: { id: string; name: string; description: string; status: string; created_at: string; updated_at: string; category?: string }) => void;
 }
 
-export const HeroSection = ({ children, currentView, onViewToggle }: HeroSectionProps) => {
+export const HeroSection = ({ children, currentView, onViewToggle, onTemplateProjectCreated }: HeroSectionProps) => {
   const [isExpertsModalOpen, setIsExpertsModalOpen] = useState(false);
+  const [isTemplatesModalOpen, setIsTemplatesModalOpen] = useState(false);
 
   return (
     <motion.section
@@ -48,12 +54,24 @@ export const HeroSection = ({ children, currentView, onViewToggle }: HeroSection
       {/* Subtle gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-blue-600/5 pointer-events-none" />
 
-      {/* SP_011: View Toggle Button and Experts Button - Upper left corner, stacked vertically */}
+      {/* Mobile: Hamburger Menu | Desktop: Buttons stacked vertically */}
       {currentView && onViewToggle && (
-        <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-          <ViewToggleButton currentView={currentView} onToggle={onViewToggle} />
-          <ExpertsButton onClick={() => setIsExpertsModalOpen(true)} />
-        </div>
+        <>
+          {/* Mobile Menu - Hamburger */}
+          <MobileMenu
+            currentView={currentView}
+            onViewToggle={onViewToggle}
+            onExpertsClick={() => setIsExpertsModalOpen(true)}
+            onTemplatesClick={() => setIsTemplatesModalOpen(true)}
+          />
+
+          {/* Desktop Buttons - Hidden on mobile */}
+          <div className="hidden md:flex absolute top-4 left-4 z-10 flex-col gap-2">
+            <ViewToggleButton currentView={currentView} onToggle={onViewToggle} />
+            <ExpertsButton onClick={() => setIsExpertsModalOpen(true)} />
+            <TemplatesButton onClick={() => setIsTemplatesModalOpen(true)} />
+          </div>
+        </>
       )}
 
       <div className="relative max-w-5xl mx-auto text-center space-y-4">
@@ -131,6 +149,13 @@ export const HeroSection = ({ children, currentView, onViewToggle }: HeroSection
       <ExpertsModal
         isOpen={isExpertsModalOpen}
         onClose={() => setIsExpertsModalOpen(false)}
+      />
+
+      {/* Templates Modal */}
+      <TemplatesModal
+        isOpen={isTemplatesModalOpen}
+        onClose={() => setIsTemplatesModalOpen(false)}
+        onProjectCreated={onTemplateProjectCreated}
       />
     </motion.section>
   );
