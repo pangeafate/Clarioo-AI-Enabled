@@ -72,7 +72,7 @@ export const HeroSection = ({ children, currentView, onViewToggle, onTemplatePro
         muted
         playsInline
         className="absolute inset-0 w-full h-full object-cover"
-        style={{ transform: parallaxTransform, transition: 'transform 0.1s ease-out' }}
+        style={{ transform: parallaxTransform, willChange: 'transform' }}
       >
         <source src="/video_hero1.mp4" type="video/mp4" />
       </video>
