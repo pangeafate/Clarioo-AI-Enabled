@@ -22,7 +22,7 @@
 
 import { motion } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ViewToggleButton } from './ViewToggleButton';
 import { ExpertsButton } from './ExpertsButton';
 import { ExpertsModal } from './ExpertsModal';
@@ -43,51 +43,37 @@ interface HeroSectionProps {
 export const HeroSection = ({ children, currentView, onViewToggle, onTemplateProjectCreated }: HeroSectionProps) => {
   const [isExpertsModalOpen, setIsExpertsModalOpen] = useState(false);
   const [isTemplatesModalOpen, setIsTemplatesModalOpen] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
-
-  // Parallax effect on scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Calculate parallax transform (moves slower than scroll)
-  const parallaxTransform = `translateY(${scrollY * 0.5}px)`;
 
   return (
     <motion.section
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
-      className="relative flex flex-col items-center justify-center px-4 py-12 md:py-16 overflow-hidden"
+      className="relative flex flex-col items-center justify-center px-4 py-12 md:py-16 bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50"
     >
-      {/* Video Background */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute inset-0 w-full h-full object-cover"
-        style={{ transform: parallaxTransform, willChange: 'transform' }}
-      >
-        <source src="/video_hero1.mp4" type="video/mp4" />
-      </video>
+      {/* Subtle gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-blue-600/5 pointer-events-none" />
 
-      {/* Dark overlay for text visibility */}
-      <div className="absolute inset-0 bg-black/60 pointer-events-none" />
-
-      {/* Hamburger Menu - All screen sizes */}
+      {/* Mobile: Hamburger Menu | Desktop: Buttons stacked vertically */}
       {currentView && onViewToggle && (
-        <MobileMenu
-          currentView={currentView}
-          onViewToggle={onViewToggle}
-          onExpertsClick={() => setIsExpertsModalOpen(true)}
-          onTemplatesClick={() => setIsTemplatesModalOpen(true)}
-        />
+        <>
+          {/* Mobile Menu - Hamburger (mobile only) */}
+          <div className="md:hidden">
+            <MobileMenu
+              currentView={currentView}
+              onViewToggle={onViewToggle}
+              onExpertsClick={() => setIsExpertsModalOpen(true)}
+              onTemplatesClick={() => setIsTemplatesModalOpen(true)}
+            />
+          </div>
+
+          {/* Desktop Buttons - Hidden on mobile */}
+          <div className="hidden md:flex absolute top-4 left-4 z-10 flex-col gap-2">
+            <ViewToggleButton currentView={currentView} onToggle={onViewToggle} />
+            <ExpertsButton onClick={() => setIsExpertsModalOpen(true)} />
+            <TemplatesButton onClick={() => setIsTemplatesModalOpen(true)} />
+          </div>
+        </>
       )}
 
       <div className="relative max-w-5xl mx-auto text-center space-y-4">
@@ -110,7 +96,7 @@ export const HeroSection = ({ children, currentView, onViewToggle, onTemplatePro
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className={`${TYPOGRAPHY.heading.h1} text-white leading-[1.1]`}
+          className={`${TYPOGRAPHY.heading.h1} text-gray-900 leading-[1.1]`}
           style={{ letterSpacing: '-0.03em' }}
         >
           Software Discovery & Selection Co-pilot
@@ -121,7 +107,7 @@ export const HeroSection = ({ children, currentView, onViewToggle, onTemplatePro
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className={`${TYPOGRAPHY.special.subtitle} text-white max-w-3xl mx-auto`}
+          className={`${TYPOGRAPHY.special.subtitle} text-gray-500 max-w-3xl mx-auto`}
         >
           Streamline "Needs-to-Decision" buying journey with expert AI and automate 90% of manual work
         </motion.p>

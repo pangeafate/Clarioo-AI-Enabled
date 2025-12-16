@@ -86,7 +86,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
       {/* Hamburger Menu Button - Desktop and Mobile */}
       <label
         className="hamburger-menu scale-[0.33] sm:scale-50 md:scale-75 lg:scale-100"
-        style={{ '--foreground': isOpen ? 'white' : (isOverWhite ? '#374151' : 'white') } as React.CSSProperties}
+        style={{ '--foreground': isOpen ? 'white' : '#374151' } as React.CSSProperties}
       >
         <input
           type="checkbox"
