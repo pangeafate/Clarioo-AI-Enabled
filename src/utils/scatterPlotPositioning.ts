@@ -234,15 +234,27 @@ export function adjustPositions(
 
         const distance = calculateDistance(pos1.x, pos1.y, pos2.x, pos2.y);
 
-        if (distance < minDistance && distance > 0) {
+        if (distance < minDistance) {
           // Calculate vector from pos1 to pos2
           const dx = pos2.x - pos1.x;
           const dy = pos2.y - pos1.y;
 
-          // Normalize the vector
+          // Normalize the vector (handle zero-distance case)
           const magnitude = Math.sqrt(dx * dx + dy * dy);
-          const unitX = dx / magnitude;
-          const unitY = dy / magnitude;
+
+          let unitX: number;
+          let unitY: number;
+
+          if (magnitude === 0) {
+            // Vendors at EXACT same position - use random direction to separate them
+            const randomAngle = Math.random() * Math.PI * 2;
+            unitX = Math.cos(randomAngle);
+            unitY = Math.sin(randomAngle);
+          } else {
+            // Normal case: vendors close but not overlapping
+            unitX = dx / magnitude;
+            unitY = dy / magnitude;
+          }
 
           // Nudge both positions apart along the vector
           // Amount is proportional to screen size (50% of minDistance)

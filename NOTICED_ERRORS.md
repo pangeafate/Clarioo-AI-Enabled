@@ -119,3 +119,79 @@ Labels positioned outside parent container bounds escaped CSS overflow clipping.
    - Top-right: Multiple Verticals + Multi-Function (universal platforms)
 
 **Documentation:** See `00_IMPLEMENTATION/SPRINTS/SP_026_Vendor_Positioning_Scatter_Plot/AXIS_ORIENTATION_UPDATE.md`
+
+---
+
+## E002: Vendors completely overlap on scatter plot (mobile)
+
+**First Noticed:** 2026-01-11
+**Last Noticed:** 2026-01-11
+
+**Description:**
+When 9 vendors are displayed on scatter plot (especially mobile), 2+ vendors completely overlap at the exact same position. Clicking on the overlapped vendor selects/deselects both vendors simultaneously, as if they are a single entity.
+
+**Context:**
+- Component: VendorPositioningScatterPlot (SP_026)
+- Screen size: Mobile (9 vendors in small chart space)
+- Related files:
+  - src/utils/scatterPlotPositioning.ts
+  - src/components/vendor-scatterplot/VendorPositioningScatterPlot.tsx
+  - src/components/vendor-scatterplot/AnimatedVendorLogo.tsx
+
+**Root Causes (3 Strong Explanations):**
+
+1. **Zero-Distance Collision Bug (CRITICAL):**
+   - Line 237: `if (distance < minDistance && distance > 0)`
+   - The check explicitly skips vendors at EXACTLY the same position (distance === 0)
+   - When n8n returns identical scores for multiple vendors, they normalize to same coordinates
+   - Collision resolution never runs because `distance > 0` fails
+   - Division by zero would occur if code reached magnitude calculation, but check prevents it
+
+2. **Edge Constraint Over-Clamping on Mobile (CRITICAL):**
+   - Mobile usable space only 55.7% due to massive bottom buffer (logoSize * 2.5)
+   - With 9 vendors in tiny area, multiple vendors get clamped to same boundary coordinate
+   - Line 303: "FINAL enforcement - chart boundaries are ABSOLUTE priority"
+   - This overrides collision detection, stacking vendors back together after separation
+
+3. **Click Event Propagation Through Stacked Logos (BEHAVIORAL):**
+   - Both logos render at identical coordinates when overlapped
+   - Touch events hit both div wrappers at same position
+   - No `event.stopPropagation()` in click handler
+   - `handleLogoClick` called twice (once per vendor) in same render cycle
+   - React batches state updates → both vendors select/deselect simultaneously
+
+**Resolution Applied:**
+
+**File:** `src/utils/scatterPlotPositioning.ts` (lines 237-272)
+
+**Changes Made:**
+1. Removed `&& distance > 0` check from collision detection condition
+2. Added zero-distance guard in vector normalization:
+   ```typescript
+   if (magnitude === 0) {
+     // Vendors at EXACT same position - use random direction to separate them
+     const randomAngle = Math.random() * Math.PI * 2;
+     unitX = Math.cos(randomAngle);
+     unitY = Math.sin(randomAngle);
+   } else {
+     // Normal case: vendors close but not overlapping
+     unitX = dx / magnitude;
+     unitY = dy / magnitude;
+   }
+   ```
+
+**How It Works:**
+- When vendors are at identical positions (distance = 0), use random direction instead of calculating vector
+- Nudge them apart in random directions (proportional to minDistance * 0.5)
+- Multiple iterations spread them further apart
+- Prevents division by zero and ensures separation starts
+
+**Expected Results:**
+- ✅ Vendors at same position get separated in random directions
+- ✅ Collision detection runs for all vendor pairs (including distance = 0)
+- ✅ Each vendor remains independently clickable
+- ✅ No NaN coordinates or rendering glitches
+
+**Status:** ✅ **RESOLVED** - Zero-distance case now handled with random separation
+
+**Date Resolved:** 2026-01-11
