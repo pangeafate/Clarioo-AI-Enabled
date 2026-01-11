@@ -53,6 +53,7 @@ import { RegistrationToggle } from './RegistrationToggle';
 import { AnimatedInputs } from './AnimatedInputs';
 import { ArtifactVisualization } from './ArtifactVisualization';
 import { CardCarousel } from './CardCarousel';
+import { TemplateCarouselSection } from './TemplateCarouselSection';
 import { CriteriaCreationAnimation } from './CriteriaCreationAnimation';
 import { EmailCollectionModal } from '../email/EmailCollectionModal';
 import { WebhookModeToggle } from '../WebhookModeToggle';
@@ -527,6 +528,9 @@ export const LandingPage = () => {
           >
             {/* Artifact Visualization - Element 6 */}
             <ArtifactVisualization />
+
+            {/* Template Carousel Section - Expert-validated templates */}
+            <TemplateCarouselSection onTemplateProjectCreated={handleTemplateProjectCreated} />
 
             {/* Card Carousel - Element 8 */}
             <CardCarousel />

@@ -1,34 +1,41 @@
 # Codebase Structure
 
-Version: 3.8.0
-Last Updated: December 2, 2024
-Status: Phase 1 - n8n AI Integration (SP_017 Complete)
+Version: 4.1.0
+Last Updated: January 10, 2026
+Status: Phase 1 - n8n AI Integration (SP_022 Complete)
 
 ## Overview
 
-This document provides a comprehensive overview of the Clarioo codebase organization. The project transitioned from Phase 0 (Visual Prototype, SP_006-SP_015) to **Phase 1 (n8n AI Integration, SP_016+)**. Core workflows now use 6 real n8n webhooks with GPT-4o-mini processing. All project data, criteria, and workflow state persist in localStorage. The structure follows a modular, feature-based organization optimized for React + TypeScript development with clear separation of concerns.
+This document provides a comprehensive overview of the Clarioo codebase organization. The project transitioned from Phase 0 (Visual Prototype, SP_006-SP_015) to **Phase 1 (n8n AI Integration, SP_016-SP_022 Complete)**. Core workflows now use 10 real n8n webhooks with GPT-4o-mini and Perplexity processing. All project data, criteria, workflow state, and comparison cache persist in localStorage. The structure follows a modular, feature-based organization optimized for React + TypeScript development with clear separation of concerns.
 
 ## Directory Structure
 
 ```
 /
 ├── src/                           # Source code
+│   ├── assets/                   # Static assets (images, animations)
 │   ├── components/                # React components
-│   │   ├── ui/                   # shadcn/ui components (52 components)
+│   │   ├── ui/                   # shadcn/ui components (51 components)
 │   │   ├── landing/              # Landing page components
 │   │   ├── vendor-discovery/     # Vendor discovery workflow components
-│   │   └── projects/             # Project management components
-│   ├── pages/                    # Page-level components
-│   ├── services/                 # Service layer
-│   │   └── mock/                 # Mock service implementations
+│   │   ├── vendor-comparison/    # Vendor comparison components
+│   │   ├── vendor-battlecards/   # Vendor battlecard components (SP_023)
+│   │   ├── email/                # Email collection components
+│   │   ├── templates/            # Template components (SP_021/SP_022)
+│   │   └── shared/               # Shared components (chat, forms, etc.)
+│   ├── config/                   # Configuration files (webhook URLs, etc.)
+│   ├── constants/                # Application constants
 │   ├── data/                     # Static data and JSON files
-│   │   ├── api/                  # Dummy API response data
+│   │   ├── comparisons/          # Comparison visualization data
 │   │   └── templates/            # Email and document templates
 │   ├── hooks/                    # Custom React hooks
-│   ├── types/                    # TypeScript type definitions
-│   ├── utils/                    # Utility functions
 │   ├── lib/                      # Third-party library configurations
-│   └── styles/                   # Style configuration files
+│   ├── pages/                    # Page-level components (Auth, Index, NotFound)
+│   ├── services/                 # Service layer
+│   │   └── mock/                 # Mock service implementations
+│   ├── styles/                   # Style configuration files
+│   ├── types/                    # TypeScript type definitions
+│   └── utils/                    # Utility functions
 ├── 00_PLAN/                      # Strategic planning documents
 ├── 00_IMPLEMENTATION/            # Implementation guidelines and sprints
 │   └── SPRINTS/                  # Sprint documentation
@@ -42,40 +49,38 @@ This document provides a comprehensive overview of the Clarioo codebase organiza
 **Purpose**: Reusable UI components following atomic design principles
 
 **Structure**:
-- **`/ui/`** - 52 shadcn/ui primitive components (buttons, inputs, dialogs, etc.)
+- **`/ui/`** - 49 shadcn/ui primitive components (buttons, inputs, dialogs, etc.)
 - **`/landing/`** - Landing page specific components
-  - `AuthModal.tsx` - Authentication modal
+  - `AnimatedInputs.tsx` - Input fields with animations
+  - `ArtifactVisualization.tsx` - Process visualization
+  - `CardCarousel.tsx` - Interactive carousel (376 lines)
   - `CategoryDropdown.tsx` - Project category selector
-  - `RegistrationToggle.tsx` - Sign up/Sign in toggle
+  - `EditProjectDialog.tsx` - Project editing dialog
   - `ExamplesBulletPopover.tsx` - Example projects popover
+  - `HeroSection.tsx` - Hero section with gradient
+  - `LandingPage.tsx` - Main landing page
   - `ProjectConfirmationDialog.tsx` - Project creation confirmation
-  - `ViewToggleButton.tsx` - View mode toggle
-- **`/vendor-discovery/`** - 5-step vendor discovery workflow components
+  - `RegistrationToggle.tsx` - Sign up/Sign in toggle
+- **`/vendor-discovery/`** - Vendor discovery workflow components
   - `AccordionSection.tsx` - Collapsible criteria sections
   - `CategorySelector.tsx` - Category selection interface
   - `CriteriaAccordion.tsx` - Criteria hierarchy display
   - `CriteriaCard.tsx` - Individual criterion card
   - `CriterionEditSidebar.tsx` - Criterion editing interface
-  - `ExecutiveSummary.tsx` - AI-generated summary display
+  - `ShareDialog.tsx` - Team sharing and export (211 lines)
   - `SignalAntenna.tsx` - Visual signal strength indicator
-- **`/vendor-comparison/`** - Vendor comparison visualization components
-  - `DesktopColumnHeader.tsx` - Desktop view column headers
-  - `ExecutiveSummaryDialog.tsx` - Executive summary modal
+  - `VendorCard.tsx` - Vendor card display
+- **`/vendor-comparison/`** - Vendor comparison components
+  - `DesktopColumnHeader.tsx` - Desktop view headers
+  - `ExecutiveSummaryDialog.tsx` - Executive summary modal (641 lines)
   - `VendorCard.tsx` - Individual vendor card
-  - `VerticalBarChart.tsx` - Vertical bar chart visualization
-  - `wave-chart/` - Wave chart components for comparison
-  - `navigation/` - Comparison navigation components
-- **`/shared/`** - Shared components across features
+  - `VerticalBarChart.tsx` - Comparison visualization with cell states
+- **`/email/`** - Email collection components
+  - `EmailCollectionModal.tsx` - Email modal with Trophy animation
+- **`/shared/`** - Shared components
   - `chat/` - Chat interface components
-  - `empty/` - Empty state components
   - `forms/` - Form components
   - `loading/` - Loading state components
-  - `stats/` - Statistics display components
-- **`/email/`** - Email collection components
-  - `EmailCollectionModal.tsx` - Email collection modal with Lottie animation
-- **`/projects/`** - Project management components
-  - `NewProjectDialog.tsx` - New project creation dialog
-  - `ProjectCard.tsx` - Project card display
 
 **File Naming Convention**: PascalCase for component files (`ComponentName.tsx`)
 
@@ -84,40 +89,41 @@ This document provides a comprehensive overview of the Clarioo codebase organiza
 **Purpose**: Top-level route components
 
 **Key Files**:
-- `Index.tsx` - Landing page (main entry point)
+- `Index.tsx` - Main entry point (landing page routing)
 - `Auth.tsx` - Authentication page
-- `TechInput.tsx` - Technology input step
-- `CriteriaBuilder.tsx` - Criteria building step
-- `VendorSelection.tsx` - Vendor selection step
-- `Comparison.tsx` - Vendor comparison step
-- `SendInvitation.tsx` - Invitation sending step
 - `NotFound.tsx` - 404 error page
 
-**Workflow**: Index → TechInput → CriteriaBuilder → VendorSelection → Comparison → SendInvitation
+**Note**: The workflow is now component-based within the landing page, not separate pages. The LandingPage component handles the entire user journey from landing to project creation and workflow navigation.
 
 ### 3. Services Layer (`/src/services/`)
 
 **Purpose**: Business logic and data access abstraction
 
 **Structure**:
-- `n8nService.ts` - **Real AI** via n8n webhooks (6 active endpoints)
-  - **Project Creation** (SP_016): `createProjectWithAI()`, 45s timeout
-  - **Criteria Chat** (SP_016): `sendCriteriaChat()`, conversational criterion management
-  - **Vendor Search** (SP_016+): `findVendors()`, discovers vendors matching criteria
-  - **Vendor Comparison** (SP_016+): `compareVendor()`, researches individual vendors
-  - **Executive Summary** (SP_016+): `generateExecutiveSummary()`, comprehensive analysis
-  - **Email Collection** (SP_017): `collectEmail()`, sends to Google Sheets with device metadata
-  - **Storage Functions**: `saveProjectToStorage()`, `getCriteriaFromStorage()`, `saveEmailToStorage()`, etc.
+- `n8nService.ts` - **Real AI** via n8n webhooks (10 active endpoints)
+  - **Project Creation** (SP_016): `createProjectWithAI()`, 120s timeout
+  - **Criteria Chat** (SP_016): `sendCriteriaChat()`, 120s timeout
+  - **Find Vendors** (SP_018): `findVendors()`, 180s timeout
+  - **Compare Vendor Criterion** (SP_018): `compareVendorCriterion()`, 45s timeout - Stage 1
+  - **Rank Criterion Results** (SP_018): `rankCriterionResults()`, 90s timeout - Stage 2
+  - **Compare Vendors** (SP_019): Single vendor comprehensive analysis, 180s timeout
+  - **Executive Summary** (SP_019): `generateExecutiveSummary()`, 120s timeout
+  - **Vendor Card Summary** (SP_019): Via Perplexity, 120s timeout
+  - **Email Collection** (SP_017): `collectEmail()`, 30s timeout to Google Sheets
+  - **Battlecard Row** (SP_023): `generateBattlecardRow()`, 60s timeout
+  - **Storage Functions**: `saveProjectToStorage()`, `getCriteriaFromStorage()`, localStorage cache management
   - **User/Session IDs**: `getUserId()` (localStorage), `getSessionId()` (sessionStorage)
+- `templateService.ts` - Template management (SP_021): `loadTemplates()`, `createProjectFromTemplate()`
 - `storageService.ts` - Browser localStorage abstraction layer with type safety
-- **`/mock/`** - Mock service implementations for authentication and fallback data
+- `comparisonStorage.ts` - Two-stage comparison cache management (Stage 1 & 2)
+- **`/mock/`** - Mock service implementations for authentication and fallback
   - `authService.ts` - Mock authentication (login, signup, logout)
   - `projectService.ts` - Mock project CRUD operations
   - `aiService.ts` - Mock AI fallback for development/testing
   - `dataService.ts` - Mock data fetching utilities
 
 **Service Patterns**:
-- **Real Services** (`n8nService.ts`): Real HTTP API calls to n8n webhooks, 45s timeout, localStorage persistence
+- **Real Services** (`n8nService.ts`, `templateService.ts`): Real HTTP API calls to 10 n8n webhooks, GPT-4o-mini + Perplexity, localStorage persistence
 - **Mock Services** (in `/mock/`): Return Promises with 300-800ms delays, data from JSON files
 
 ### 4. Data Layer (`/src/data/`)
@@ -125,20 +131,15 @@ This document provides a comprehensive overview of the Clarioo codebase organiza
 **Purpose**: Static data, dummy API responses, and configuration
 
 **Structure**:
-- **`/api/`** - Dummy API response JSON files
-  - `auth.json` - Mock user data
-  - `projects.json` - Mock project data
-  - `vendors.json` - Mock vendor database
-  - `criteria.json` - Mock evaluation criteria
-  - `aiSummaries.json` - Mock AI-generated summaries
-  - `techInput.json` - Mock technology input data
-  - `mockAIdata.json` - Large mock AI dataset (48KB)
 - **`/comparisons/`** - Comparison visualization data
-  - `wave-chart-data.json` - Wave chart comparison data
+  - `wave-chart-data.json` - Wave chart comparison data (if present)
 - **`/templates/`** - Document templates
   - `email-templates.json` - Email invitation templates
-- `categories.ts` - Project category definitions
-- `projectExamples.ts` - Example project data
+- `categories.ts` - Project category definitions (15+ categories)
+- `projectExamples.ts` - Example project data (4 examples)
+- `mockAIdata.json` - Large mock AI dataset (48KB) for fallback
+
+**Note**: The `/api/` directory mentioned in earlier documentation does not exist. Mock data is minimal as most functionality uses real n8n webhooks.
 
 **Data Format**: All files use JSON format mimicking future REST API responses
 
@@ -147,15 +148,15 @@ This document provides a comprehensive overview of the Clarioo codebase organiza
 **Purpose**: Reusable React hooks for state management and side effects
 
 **Key Hooks**:
-- `useProjectCreation.ts` - **n8n AI-powered** project creation with loading/error states
-- `useAuth.tsx` - Authentication state management
-- `useVendorDiscovery.ts` - Vendor discovery workflow state
-- `useVendorComparison.ts` - Vendor comparison logic
-- `useCriteriaGeneration.ts` - AI criteria generation
+- `useProjectCreation.ts` - n8n AI-powered project creation with loading/error states
+- `useTwoStageComparison.ts` - Two-stage progressive comparison logic (SP_018)
+- `useVendorTransformation.ts` - Vendor data transformation with Perplexity
 - `useCriteriaChat.ts` - Criteria refinement chat
 - `useCriteriaChat.test.ts` - Tests for criteria chat functionality
 - `useCriteriaOrder.ts` - Criteria ordering and sorting logic
 - `useExecutiveSummary.ts` - Executive summary generation
+- `useWebhookMode.ts` - Webhook mode state management
+- `useAuth.tsx` - Authentication state management
 - `useChat.ts` - Generic chat interface hook
 - `useChat.test.ts` - Tests for chat functionality
 - `useSwipeGesture.ts` - Mobile swipe gesture detection
@@ -186,10 +187,11 @@ This document provides a comprehensive overview of the Clarioo codebase organiza
 **Purpose**: Pure utility functions
 
 **Key Files**:
-- `deviceMetadata.ts` - Device metadata collection (browser, OS, device type, screen resolution, timezone) (SP_017)
-- `mockHelpers.ts` - Mock data generation utilities
-- `dataTransformers.ts` - Data transformation functions
-- `exportHelpers.ts` - Export/download utilities
+- `comparisonStorage.ts` - Two-stage comparison cache management (SP_018)
+- `deviceMetadata.ts` - Device metadata collection (browser, OS, device, resolution, timezone) (SP_017)
+- `exportHelpers.ts` - Export/download utilities (Excel, PDF)
+- `splineInterpolation.ts` - Catmull-Rom spline for wave charts (if present)
+- Data transformation and mock helpers
 
 **Function Style**: Pure functions, no side effects
 
@@ -352,6 +354,7 @@ See `/00_PLAN/ARCHITECTURE.md` for detailed migration strategy.
 ## Related Documentation
 
 - **ARCHITECTURE.md** - System architecture and technical design
+- **DESIGN_GUIDELINES.md** - Typography, colors, spacing, animations, brand guidelines
 - **GL-RDD.md** - README-Driven Development guidelines
 - **PROJECT_ROADMAP.md** - Sprint history and future planning
 - **PROGRESS.md** - Detailed sprint deliverables
@@ -360,5 +363,5 @@ See `/00_PLAN/ARCHITECTURE.md` for detailed migration strategy.
 
 *This document should be updated whenever significant structural changes are made to the codebase.*
 
-*Last Updated: November 23, 2024*
-*Phase: Phase 1 - n8n AI Integration*
+*Last Updated: January 10, 2026*
+*Phase: Phase 1 - n8n AI Integration (SP_022 Complete)*

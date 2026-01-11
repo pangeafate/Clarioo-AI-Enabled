@@ -21,7 +21,7 @@ import type { ExecutiveSummaryData } from '../../services/n8nService';
 
 // Default empty executive summary structure when no data from n8n
 const defaultExecutiveSummary = {
-  title: 'Executive Summary',
+  title: 'Pre-demo brief',
   generatedAt: new Date().toISOString(),
   sections: {
     keyCriteria: {
@@ -102,7 +102,7 @@ export const ExecutiveSummaryDialog: React.FC<ExecutiveSummaryDialogProps> = ({
     const riskFactors = summaryData.riskFactors || { vendorSpecific: [], generalConsiderations: [] };
 
     return {
-      title: 'Executive Summary',
+      title: 'Pre-demo brief',
       generatedAt: new Date().toISOString(),
       sections: {
         keyCriteria: {
@@ -264,7 +264,7 @@ export const ExecutiveSummaryDialog: React.FC<ExecutiveSummaryDialogProps> = ({
               {/* Header with action buttons */}
               <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
                 <h2 className={`${TYPOGRAPHY.heading.h5} text-gray-900`}>
-                  Executive Summary
+                  Pre-demo brief
                 </h2>
                 <div className="flex items-center gap-2">
                   {/* Regenerate Button */}
@@ -530,8 +530,8 @@ export const ExecutiveSummaryDialog: React.FC<ExecutiveSummaryDialogProps> = ({
         criteria={criteria}
         projectId={projectId}
         title="Download or Share"
-        description="Download the executive summary or share via link"
-        downloadButtonText="Download Executive Summary"
+        description="Download the pre-demo brief or share via link"
+        downloadButtonText="Download Pre-demo brief"
         downloadDescription="Download as Excel file (.xlsx)"
       />
 

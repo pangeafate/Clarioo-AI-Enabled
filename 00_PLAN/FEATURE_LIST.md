@@ -2,20 +2,20 @@
 
 ## Overview
 
-**Version**: 3.9.0
-**Last Updated**: December 4, 2024
-**Current Phase**: Phase 1 - n8n AI Integration (SP_018 Complete)
+**Version**: 4.1.0
+**Last Updated**: January 10, 2026
+**Current Phase**: Phase 1 - n8n AI Integration (SP_022 Complete)
 
 **🚀 PHASE 1 - n8n AI INTEGRATION ACTIVE**
 
 This document lists all features of the Clarioo platform. The project transitioned from Phase 0 (Visual Prototype, SP_006-SP_015) to **Phase 1 (n8n AI Integration, SP_016+)**. Core AI workflows now use **real n8n webhooks** with GPT-4o-mini processing.
 
-**Current Mode**: Phase 1 - n8n AI Integration (SP_018 Complete)
+**Current Mode**: Phase 1 - n8n AI Integration (SP_022 Complete)
 **Purpose**: Real AI integration with localStorage persistence, n8n webhook backend
-**AI Backend**: 9 n8n webhooks with GPT-4o-mini (temperature 0.3, max tokens 6000)
+**AI Backend**: 10 n8n webhooks with GPT-4o-mini (temperature 0.3, max tokens 6000)
   - ✅ **Active in UI**: Project Creation, Criteria Chat, Vendor Discovery, Vendor Comparison (Stage 1 & 2), Executive Summary, Vendor Summary, Email Collection (9 webhooks)
-**Latest Sprint**: SP_018 - Two-Stage Progressive Comparison System (Completed December 4, 2024)
-**Next Sprint**: TBD - Continued feature enhancement
+**Latest Sprint**: SP_022 - Template Carousel Section on Landing Page (Completed January 8, 2026)
+**Next Sprint**: SP_020 - Criteria Creation Animation
 
 **📊 Gap Analysis**: See [GAP_ANALYSIS.md](../00_IMPLEMENTATION/GAP_ANALYSIS.md) for detailed mapping of user stories to implementation and identified gaps.
 
@@ -614,7 +614,36 @@ projects (
 
 ## 5. UI/UX Enhancement Features (Completed & Planned)
 
-### 5.0 Interactive Card Carousel (F-026)
+### 5.0 Template Carousel Section (F-043 - Template Discovery Carousel)
+**Status:** ✅ Fully Implemented (SP_022)
+**Priority:** P0
+**Implementation Files:**
+- `src/components/landing/TemplateCarouselSection.tsx` (350 lines)
+- `src/components/landing/LandingPage.tsx` (integration)
+
+**Features:**
+- Expert-validated template showcase on landing page
+- Category filtering with "All" default (reuses CategoryFilter component)
+- Responsive carousel: 3 cards visible (desktop), 1 card (mobile)
+- Manual navigation: Arrow buttons + dot indicators
+- Keyboard support: ArrowLeft/ArrowRight
+- Edge case handling:
+  - Single card: Centered without carousel
+  - Two cards: Carousel mode with navigation
+  - Three cards: Positioned with workaround (middle card focused)
+  - Four+ cards: Standard carousel behavior
+- Card states: Center card full opacity (1.0) and scale (1.0), side cards reduced opacity (0.5) and scale (0.95)
+- Click card → Opens CriteriaPreviewModal
+- "Use These Criteria" checks email submission
+- Shows EmailCollectionModal if email not collected
+- Creates project from template after email submission
+- Navigates to CriteriaBuilder with pre-loaded criteria
+- Section title: "What others discover..."
+- Position: Above CardCarousel section
+- Embla Carousel React integration (consistent with CardCarousel)
+- Smooth transitions (300ms ease-in-out)
+
+### 5.0.1 Interactive Card Carousel (F-026)
 **Status:** ✅ Fully Implemented (SP_007)
 **Priority:** P0
 **Implementation Files:**
@@ -1939,35 +1968,38 @@ All removed functional code is preserved in:
 | 2.3 | Nov 25, 2024 | SP_017 Email Collection Integration with n8n & Google Sheets Complete |
 | 3.8.0 | Dec 2, 2024 | Aligned with codebase reality - localStorage persistence, 6 n8n webhooks active, Phase 0/1 clarification |
 | 3.9.0 | Dec 4, 2024 | SP_018 Two-Stage Progressive Comparison Complete - 9 n8n webhooks active, Executive Summary, Vendor Summary, updated implementation statuses |
+| 4.1.0 | Jan 8, 2026 | SP_022 Template Carousel Section Complete - Landing page template carousel with category filtering, responsive design, edge case handling, modal integrations |
 
 ---
 
 ## Document Status
 
-**Current Version**: 3.9.0
-**Last Updated**: December 4, 2024
-**Project Phase**: Phase 1 - n8n AI Integration (SP_018 Complete)
+**Current Version**: 4.1.0
+**Last Updated**: January 8, 2026
+**Project Phase**: Phase 1 - n8n AI Integration (SP_022 Complete)
 **Previous Phase**: Phase 0 - Visual Prototype (SP_006-SP_015 Complete)
-**Total Features**: 31+
+**Total Features**: 32+
 **Real n8n AI Features**: 9 webhooks (Project Creation, Criteria Chat, Vendor Discovery, Vendor Comparison Stage 1 & 2, Executive Summary, Vendor Summary, Email Collection)
 **localStorage Persistence**: Fully functional for projects, criteria, workflow state, and comparison cache
 **Demo/Mock Features**: Authentication, some UI-only features
-**Functional Features**: Excel Export, Responsive Design, localStorage persistence, ShareDialog, Two-Stage Comparison
+**Functional Features**: Excel Export, Responsive Design, localStorage persistence, ShareDialog, Two-Stage Comparison, Template Carousel
 **Deployment**: ✅ Live on GitHub Pages
 
 **Recent Sprints**:
+- **SP_022**: Template Carousel Section on Landing Page (January 8, 2026)
+- **SP_021**: Project Templates Feature (December 11, 2024)
 - **SP_018**: Two-Stage Progressive Comparison System (December 4, 2024)
 - **SP_017**: Email Collection Integration with n8n & Google Sheets (November 25, 2024)
 - **SP_016**: n8n AI Project Creation Integration with GPT-4o-mini (November 23, 2024)
 - **SP_014**: Swipe-to-adjust importance gestures, ShareDialog for team collaboration
 - **SP_012**: Criteria Builder accordion redesign with SignalAntenna indicators
 
-**Next Sprint**: TBD - Continued feature enhancement
+**Next Sprint**: SP_020 - Criteria Creation Animation
 
 ---
 
-*Version: 3.9.0*
-*Last Updated: December 4, 2024*
-*Phase: Phase 1 - n8n AI Integration (SP_018 Complete)*
+*Version: 4.1.0*
+*Last Updated: January 8, 2026*
+*Phase: Phase 1 - n8n AI Integration (SP_022 Complete)*
 
-*This document reflects Phase 1 with 9 active n8n AI webhooks. All core workflows now use real GPT-4o-mini processing via n8n. Two-stage progressive comparison system with evidence-based analysis and competitive advantage stars. localStorage persistence is fully functional for projects, criteria, workflow state, and comparison cache.*
+*This document reflects Phase 1 with 9 active n8n AI webhooks. All core workflows now use real GPT-4o-mini processing via n8n. Two-stage progressive comparison system with evidence-based analysis and competitive advantage stars. Template carousel section on landing page showcases expert-validated templates with category filtering. localStorage persistence is fully functional for projects, criteria, workflow state, and comparison cache.*

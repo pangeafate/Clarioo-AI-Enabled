@@ -8,9 +8,9 @@
 
 **Vision**: Intelligent, AI-powered software vendor selection platform that eliminates 90% of routine evaluation work through GPT-4o-mini processing via n8n workflows.
 
-**Current Sprint**: SP_021 Complete (Project Templates Feature)
-**Next Sprint**: SP_020 (Criteria Creation Animation)
-**Last Updated**: December 11, 2024 (v4.0.0 - Templates feature implementation)
+**Current Sprint**: SP_024 IN PROGRESS (Battlecards 10-Row Expansion)
+**Next Sprint**: SP_026 PLANNED (Vendor Positioning Scatter Plot)
+**Last Updated**: January 11, 2026 (v4.4.0 - SP_026 planning complete)
 
 ---
 
@@ -49,7 +49,150 @@
 
 ## Sprint History
 
+### 🟢 PLANNED SPRINTS
+
+---
+
+#### Sprint 26: Vendor Positioning Scatter Plot (SP_026)
+**Date**: January 11, 2026
+**Status**: 🟢 PLANNED
+**Duration**: 5-7 days
+**Type**: Feature Implementation + n8n AI Integration
+
+**Objective**: Add interactive 2x2 scatter plot visualization to Vendor Discovery page positioning vendor logos along two strategic dimensions using AI analysis.
+
+**Key Deliverables**:
+1. **VendorPositioningScatterPlot Component** (`src/components/vendor-discovery/VendorPositioningScatterPlot.tsx`, 400-500 lines)
+   - Nivo ResponsiveScatterPlot integration
+   - Circular loading animation (logos circle in center)
+   - Fly-to-position animation (1.2s spring easing)
+   - Collision detection (min 80px distance)
+   - Selection synchronization with vendor cards
+
+2. **AnimatedVendorLogo Component** (`src/components/vendor-discovery/AnimatedVendorLogo.tsx`, 150-200 lines)
+   - 66x66px circular logo containers
+   - Dual animation modes: circling + fly-to-position
+   - Selection halo (blue glow, 8px border)
+   - Hover effects (desktop: scale 1.1, enhanced shadow)
+   - Fallback to vendor initials if no logo
+
+3. **n8n AI Positioning Workflows** (60s timeout)
+   - **Production**: `clarioo-vendor-scatterplot` webhook
+   - **Testing**: UUID-based testing webhook
+   - GPT-4o-mini analysis (temperature 0.3, max tokens 4000)
+   - Returns 0-100 scores for two dimensions per vendor:
+     - X-Axis: Solution Scope (Single-Purpose ↔ Multi-Function)
+     - Y-Axis: Industry Focus (Vertical-Specific ↔ General Purpose)
+
+4. **useVendorScatterplot Hook** (`src/hooks/useVendorScatterplot.ts`, 200-250 lines)
+   - Calls n8n webhook with full vendor objects
+   - Auto-retry logic (2 attempts, exponential backoff)
+   - localStorage caching: `vendor_scatterplot_positions_{projectId}`
+   - Loading/error state management
+
+5. **Positioning Utilities** (`src/utils/scatterPlotPositioning.ts`, 150-200 lines)
+   - Coordinate normalization (0-100 scores → pixel coordinates)
+   - Collision detection algorithm
+   - Logo nudging (maintain relative positioning)
+   - Edge constraint validation (min 40px from chart edges)
+
+6. **Responsive Design**
+   - **Desktop**: Rectangular chart (~1200px width, 500px height)
+   - **Mobile**: Square chart (full width, equal height)
+   - Smaller logos on mobile
+   - Touch interactions: tap to select, long-press for details
+
+7. **TypeScript Types** (`src/types/vendorScatterplot.types.ts`, 50-80 lines)
+   - `VendorScatterplotRequest` / `VendorScatterplotResponse`
+   - `VendorPosition` interface
+   - Component prop types
+
+**Technical Implementation**:
+- **Axis Labels**: Always visible, consistent typography
+  - X: "Single-Purpose" (left) ↔ "Multi-Function" (right)
+  - Y: "Vertical-Specific" (bottom) ↔ "General Purpose" (top)
+- **Selection Sync**: Shared `selectedVendorIds` state with vendor cards
+- **Performance**: 60fps animations on desktop, 30fps on mobile
+- **Error Handling**: Show error message, hide chart, manual retry button
+
+**Impact**:
+- ✅ Visual vendor differentiation through strategic positioning
+- ✅ Enhanced user understanding of vendor landscape
+- ✅ Polished, animation-rich user experience
+- ✅ 11th n8n webhook operational (vendor scatterplot analysis)
+- ✅ Seamless integration with existing vendor discovery workflow
+
+**Sprint Document**: [SP_026_Vendor_Positioning_Scatter_Plot.md](./SPRINTS/SP_026_Vendor_Positioning_Scatter_Plot.md)
+
+---
+
 ### ✅ COMPLETED SPRINTS
+
+---
+
+#### Sprint 22: Template Carousel Section on Landing Page (SP_022)
+**Date**: January 8, 2026
+**Status**: ✅ COMPLETE
+**Duration**: 1 day
+**Type**: Feature Implementation + UX Enhancement
+
+**Objective**: Add template carousel section to landing page showcasing expert-validated project templates with category filtering, allowing users to browse and quick-start projects.
+
+**Key Deliverables**:
+1. **TemplateCarouselSection Component** (`src/components/landing/TemplateCarouselSection.tsx`, 350 lines)
+   - Embla Carousel integration (consistent with CardCarousel)
+   - Category filter showing categories with templates
+   - Responsive: 3 cards (desktop) / 1 card (mobile)
+   - Manual navigation: arrows + dots, keyboard support
+   - Loop enabled, center alignment
+
+2. **Conditional Rendering for Edge Cases**
+   - Single card: Centered without carousel
+   - Two+ cards: Carousel mode with navigation
+   - Consistent card dimensions: `flex-[0_0_100%] md:flex-[0_0_45%] lg:flex-[0_0_35%]`
+
+3. **Three-Card Positioning Workaround**
+   - Issue: Embla reInit() mispositions exactly 3 cards
+   - Solution: Call scrollNext() after reInit to fix positioning
+   - Trade-off: Middle card focused on initialization (user can navigate left)
+   - Comment expanded with detailed explanation
+
+4. **Modal Integrations**
+   - Click card → CriteriaPreviewModal opens
+   - "Use These Criteria" checks email submission
+   - Shows EmailCollectionModal if email not collected
+   - Creates project after email submission
+   - Navigates to CriteriaBuilder with pre-loaded criteria
+
+5. **Section Styling**
+   - Title: "What others discover..."
+   - Position: Above CardCarousel section
+   - Animation: Opacity (1.0/0.5) and scale (1.0/0.95) on card focus
+   - Smooth transitions (300ms ease-in-out)
+
+6. **Code Quality Improvements**
+   - Removed redundant `setSelectedIndex(0)` call
+   - Expanded workaround comment for clarity
+   - Simplified useMemo dependency (templates static)
+
+**Technical Implementation**:
+- **Carousel Config**: `loop: true`, `align: 'center'`, `containScroll: false` (enables 2-card navigation)
+- **State Management**: Category selection, filtered templates, carousel index, modal states
+- **Integration**: templateService.ts, CriteriaPreviewModal, EmailCollectionModal, CategoryFilter, TemplateCard
+- **Edge Case Handling**: Single card centering, 2-card navigation fix, 3-card positioning workaround
+
+**Impact**:
+- ✅ Template carousel section operational on landing page
+- ✅ Category filtering working correctly
+- ✅ Carousel navigation smooth across all scenarios (1-4+ cards)
+- ✅ Single card centered properly
+- ✅ Two cards navigable with containScroll: false
+- ✅ Three cards positioned correctly (middle card focused)
+- ✅ Modal integrations seamless
+- ✅ Responsive design verified (desktop/tablet/mobile)
+- ✅ Code cleanup completed
+
+**Sprint Document**: [SP_022_Template_Carousel_Section.md](./SPRINTS/SP_022_Template_Carousel_Section.md)
 
 ---
 
@@ -439,6 +582,43 @@
 
 ---
 
+#### Sprint 13: Component Reusability & Code Deduplication (SP_013)
+**Date**: November 11, 2024
+**Status**: ✅ COMPLETE
+**Duration**: 5-7 days
+**Type**: Code Quality - Component Architecture Improvement
+
+**Objective**: Extract duplicate code into reusable shared components and consolidate chat architecture.
+
+**Key Deliverables**:
+1. **Shared Components** (`/src/components/shared/`)
+   - LoadingState component (5 usages consolidated)
+   - EmptyState component (3 usages consolidated)
+   - StatsCard component (4 usages consolidated)
+   - AddVendorForm component (2 identical implementations merged)
+
+2. **Chat Architecture** (`/src/components/shared/chat/`)
+   - Base chat components (ChatInterface, ChatMessage, ChatInput, TypingIndicator)
+   - useChat base hook
+   - useCriterionChat specialized hook
+   - Connected CriterionEditSidebar chat to AI service
+
+3. **Form Standardization**
+   - FormDialog component
+   - FormFieldGroup component
+   - Validation pattern standardization
+
+**Impact**:
+- ✅ Eliminated 100% code duplication in vendor forms
+- ✅ Consolidated 5 loading state implementations
+- ✅ Single source of truth for common UI patterns
+- ✅ Reduced bundle size
+- ✅ Improved maintainability
+
+**Sprint Document**: [SP_013_Component_Reusability_Code_Deduplication.md](./SPRINTS/SP_013_Component_Reusability_Code_Deduplication.md)
+
+---
+
 #### Sprint 12: Criteria Builder Accordion (SP_012)
 **Date**: November 14, 2024
 **Status**: ✅ COMPLETE
@@ -637,7 +817,103 @@ These sprints established the UI/UX and component architecture:
 
 ---
 
+## 📋 ACTIVE SPRINTS
+
+### Sprint 24: Battlecards 10-Row Expansion (SP_024)
+**Status**: 🚀 IN PROGRESS
+**Type**: Feature Enhancement + n8n Prompt Engineering
+**Estimated Duration**: 2 hours
+
+**Objective**: Expand battlecards from 3 mandatory rows to exactly 10 rows (7 mandatory + 3 AI-generated) for comprehensive vendor comparison.
+
+**Key Changes**:
+- **7 Mandatory Categories** (in order):
+  1. Ideal For (NEW) - Primary use cases and ideal customer scenarios
+  2. Target Verticals (existing)
+  3. Key Customers (existing)
+  4. Pricing Model (NEW - moved from dynamic pool)
+  5. Company Stage (NEW) - Company maturity and market position
+  6. Primary Geo (NEW) - Geographic markets and headquarters
+  7. Main Integrations (existing)
+
+- **3 AI-Generated Categories**: Dynamic selection based on vendor context, must not duplicate mandatory categories
+
+**Technical Implementation**:
+- Updated `MANDATORY_BATTLECARD_CATEGORIES` array from 3 to 7 items
+- Updated `DEFAULT_BATTLECARDS_CONFIG`: min_rows: 10, max_rows: 10
+- Updated both PRODUCTION and TESTING n8n workflow prompts
+- Added detailed category definitions and search patterns
+- Removed duplicates from dynamic pool (Pricing Model, Company Size/Maturity, Geographic Focus)
+
+**Expected Impact**:
+- Richer vendor comparison data (3.3x more comprehensive)
+- Generation time: 3-4 min → 10-15 min (acceptable with progressive reveal)
+- Cost per project: ~$0.27 → ~$0.90 (justified by richer insights)
+- No breaking changes to existing functionality
+
+**Sprint Document**: [SP_024_Battlecards_10_Row_Expansion.md](./SPRINTS/SP_024_Battlecards_10_Row_Expansion.md)
+
+---
+
 ## 📋 PLANNED SPRINTS
+
+### Sprint 25: Comparison Matrix Cell Summaries (SP_025)
+**Status**: 📋 PLANNED
+**Type**: Enhancement - Comparison Matrix Scannability
+**Estimated Duration**: 2-3 days
+
+**Objective**: Add AI-generated 2-3 word summaries under ✓/⭐ icons in comparison matrix cells to improve scannability without requiring users to click and read full explanations.
+
+**Key Features**:
+- **New n8n workflow**: `Clarioo_AI_Summarize_Criterion_Row` (PRODUCTION + TESTING)
+- **Automatic trigger**: After Stage 2 completes for each criterion row
+- **Smart AI selection**: Only shows summaries when meaningful (not all cells)
+- **UI enhancement**: Grey text under match icons (`text-xs text-gray-500`)
+- **Storage**: Persists in localStorage with Stage 2 results
+
+**Example Output**:
+```
+Criterion: "Real-time Inventory Visibility"
+Vendor A: ✓
+          Real-time omnichannel inventory
+          ^^^^^^^^ (2-3 words, grey)
+```
+
+**Technical Approach**:
+- Row-by-row processing after Stage 2 completion
+- AI decides if summary adds value (returns null if generic)
+- Strict 3-word maximum enforced by n8n prompt
+- No manual buttons - fully automatic
+
+**Expected Impact**:
+- Faster decision-making (users see key differentiators at a glance)
+- Reduced popup opens (target: 20% reduction)
+- Better scannability without cluttering UI
+- Low cost (<$0.01 per row, no web search needed)
+
+**Sprint Document**: [SP_025_Comparison_Matrix_Cell_Summaries.md](./SPRINTS/SP_025_Comparison_Matrix_Cell_Summaries.md)
+
+---
+
+### Sprint 23: Vendor Battlecards (SP_023)
+**Status**: ✅ COMPLETE
+**Type**: Feature Implementation + n8n AI Integration
+**Completed**: January 10, 2026
+
+**Objective**: Add AI-generated Vendor Battlecards matrix providing high-level, real-world comparison categories beyond user-defined criteria.
+
+**Key Deliverables**:
+- Standalone battlecards module below comparison matrix
+- Row-by-row AI generation (initially 3 mandatory categories)
+- Progressive loading with real-time UI updates
+- localStorage caching and regeneration controls
+- New hook: `useBattlecardsGeneration.ts`
+- New folder: `src/components/vendor-battlecards/`
+- n8n webhook: `clarioo-battlecard-row` (90s timeout)
+
+**Sprint Document**: [SP_023_Vendor_Battlecards.md](./SPRINTS/SP_023_Vendor_Battlecards.md)
+
+---
 
 ### Sprint 20: Criteria Creation Animation (SP_020)
 **Status**: 📋 PLANNED
@@ -775,6 +1051,7 @@ These sprints established the UI/UX and component architecture:
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 4.1.0 | Jan 8, 2026 | System | SP_022 complete - Template Carousel Section on Landing Page with category filtering, responsive carousel (3 cards desktop/1 mobile), edge case handling (1-3 cards), and modal integrations |
 | 4.0.0 | Dec 11, 2024 | System | SP_021 complete - Project Templates Feature with read-only component reusability pattern and localStorage integration |
 | 3.9.0 | Dec 3, 2024 | System | Complete rewrite based on actual implementation. Module-by-module verification. Corrected all sprints with actual deliverables, timeouts, and results. |
 | 3.8.0 | Dec 2, 2024 | System | Documentation aligned with codebase reality - Phase 0/1 clarification, localStorage persistence confirmed, 6 n8n webhooks active |
@@ -792,7 +1069,7 @@ These sprints established the UI/UX and component architecture:
 ---
 
 **Document Owner**: Engineering Team
-**Last Comprehensive Review**: December 11, 2024
+**Last Comprehensive Review**: January 8, 2026
 **Next Review**: Upon completion of SP_020
 
 ---

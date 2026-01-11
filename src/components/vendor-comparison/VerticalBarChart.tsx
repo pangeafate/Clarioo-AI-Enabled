@@ -64,7 +64,8 @@ const renderCriterionState = (
   criterionIndex: number,
   vendorIndex: number,
   comparisonStatus?: 'pending' | 'loading' | 'completed' | 'failed',
-  errorCode?: string
+  errorCode?: string,
+  summary?: string | null // SP_025: Cell summary (2-3 words)
 ) => {
   const baseDelay = criterionIndex * 0.05 + vendorIndex * 0.1;
 
@@ -74,11 +75,16 @@ const renderCriterionState = (
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="flex items-center justify-center h-full"
+        className="flex flex-col items-center w-full py-1"
       >
-        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 lg:bg-blue-50/70 flex items-center justify-center">
-          <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 animate-spin" />
+        {/* Icon container - fixed height ensures alignment */}
+        <div className="flex items-center justify-center h-8 sm:h-9 mb-1">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 lg:bg-blue-50/70 flex items-center justify-center flex-shrink-0">
+            <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 animate-spin" />
+          </div>
         </div>
+        {/* Empty space to match other layouts */}
+        <div className="min-h-[16px]"></div>
       </motion.div>
     );
   }
@@ -86,10 +92,15 @@ const renderCriterionState = (
   // Show empty/pending state for vendors not yet started
   if (comparisonStatus === 'pending') {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-100/50 flex items-center justify-center">
-          <div className="w-2 h-2 rounded-full bg-gray-300" />
+      <div className="flex flex-col items-center w-full py-1">
+        {/* Icon container - fixed height ensures alignment */}
+        <div className="flex items-center justify-center h-8 sm:h-9 mb-1">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-100/50 flex items-center justify-center flex-shrink-0">
+            <div className="w-2 h-2 rounded-full bg-gray-300" />
+          </div>
         </div>
+        {/* Empty space to match other layouts */}
+        <div className="min-h-[16px]"></div>
       </div>
     );
   }
@@ -102,16 +113,21 @@ const renderCriterionState = (
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3, delay: baseDelay }}
-        className="flex items-center justify-center h-full cursor-pointer hover:scale-110 transition-transform"
+        className="flex flex-col items-center w-full py-1 cursor-pointer hover:scale-105 transition-transform"
         title={isTimeout ? "Timeout - Click to retry" : "Error - Click to retry"}
       >
-        <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 ${isTimeout ? 'lg:bg-orange-100/70' : 'lg:bg-red-100/70'} flex items-center justify-center`}>
-          {isTimeout ? (
-            <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500" />
-          ) : (
-            <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />
-          )}
+        {/* Icon container - fixed height ensures alignment */}
+        <div className="flex items-center justify-center h-8 sm:h-9 mb-1">
+          <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 ${isTimeout ? 'lg:bg-orange-100/70' : 'lg:bg-red-100/70'} flex items-center justify-center flex-shrink-0`}>
+            {isTimeout ? (
+              <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500" />
+            ) : (
+              <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />
+            )}
+          </div>
         </div>
+        {/* Empty space to match other layouts */}
+        <div className="min-h-[16px]"></div>
       </motion.div>
     );
   }
@@ -123,10 +139,21 @@ const renderCriterionState = (
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3, delay: baseDelay }}
-          className="flex items-center justify-center h-full"
+          className="flex flex-col items-center w-full py-1"
         >
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 lg:bg-green-100/70 flex items-center justify-center">
-            <Check className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+          {/* Icon container - fixed height ensures alignment */}
+          <div className="flex items-center justify-center h-8 sm:h-9 mb-1">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 lg:bg-green-100/70 flex items-center justify-center flex-shrink-0">
+              <Check className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+            </div>
+          </div>
+          {/* Text container - fixed min-height reserves space even when empty */}
+          <div className="min-h-[16px] flex items-start justify-center w-full">
+            {summary && (
+              <div className="hidden lg:block text-[9px] sm:text-[10px] text-gray-400 text-center leading-tight max-w-[80px] px-1">
+                {summary}
+              </div>
+            )}
           </div>
         </motion.div>
       );
@@ -137,11 +164,16 @@ const renderCriterionState = (
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3, delay: baseDelay }}
-          className="flex items-center justify-center h-full"
+          className="flex flex-col items-center w-full py-1"
         >
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 lg:bg-gray-100/70 flex items-center justify-center">
-            <Minus className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+          {/* Icon container - fixed height ensures alignment with other states */}
+          <div className="flex items-center justify-center h-8 sm:h-9 mb-1">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 lg:bg-gray-100/70 flex items-center justify-center flex-shrink-0">
+              <Minus className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+            </div>
           </div>
+          {/* Empty space to match 'yes'/'star' layout */}
+          <div className="min-h-[16px]"></div>
         </motion.div>
       );
 
@@ -151,11 +183,16 @@ const renderCriterionState = (
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3, delay: baseDelay }}
-          className="flex items-center justify-center h-full"
+          className="flex flex-col items-center w-full py-1"
         >
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 lg:bg-gray-100/70 flex items-center justify-center">
-            <HelpCircle className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+          {/* Icon container - fixed height ensures alignment with other states */}
+          <div className="flex items-center justify-center h-8 sm:h-9 mb-1">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 lg:bg-gray-100/70 flex items-center justify-center flex-shrink-0">
+              <HelpCircle className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+            </div>
           </div>
+          {/* Empty space to match 'yes'/'star' layout */}
+          <div className="min-h-[16px]"></div>
         </motion.div>
       );
 
@@ -165,10 +202,21 @@ const renderCriterionState = (
           initial={{ opacity: 0, scale: 0.8, rotate: -30 }}
           animate={{ opacity: 1, scale: 1, rotate: 0 }}
           transition={{ duration: 0.4, delay: baseDelay }}
-          className="flex items-center justify-center h-full"
+          className="flex flex-col items-center w-full py-1"
         >
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 lg:bg-yellow-100/70 flex items-center justify-center">
-            <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 fill-yellow-500" />
+          {/* Icon container - fixed height ensures alignment */}
+          <div className="flex items-center justify-center h-8 sm:h-9 mb-1">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 lg:bg-yellow-100/70 flex items-center justify-center flex-shrink-0">
+              <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 fill-yellow-500" />
+            </div>
+          </div>
+          {/* Text container - fixed min-height reserves space even when empty */}
+          <div className="min-h-[16px] flex items-start justify-center w-full">
+            {summary && (
+              <div className="hidden lg:block text-[9px] sm:text-[10px] text-gray-400 text-center leading-tight max-w-[80px] px-1">
+                {summary}
+              </div>
+            )}
           </div>
         </motion.div>
       );
@@ -607,7 +655,7 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
                             {showDesktopHeaders && <div className="hidden lg:block w-[52px] sm:w-[60px] flex-shrink-0" />}
 
                             {/* Vendor Columns - Icon/Text Display */}
-                            <div className={`flex-1 grid ${gridColsClass} gap-1 xs:gap-1.5 sm:gap-2 items-center min-h-[40px] xs:min-h-[50px] sm:min-h-[60px] relative z-10`}>
+                            <div className={`flex-1 grid ${gridColsClass} gap-1 xs:gap-1.5 sm:gap-2 items-center min-h-[56px] xs:min-h-[60px] sm:min-h-[64px] lg:min-h-[68px] relative z-10`}>
                               {activeVendors.map((vendor, vendorIndex) => {
                                 const state = vendor.scores.get(criterion.id) ?? 'unknown';
                                 const hasScoreDetails = vendor.scoreDetails && vendor.scoreDetails[criterion.id];
@@ -616,6 +664,9 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
                                 const cellStatus = comparisonState?.criteria[criterion.id]?.cells[vendor.id]?.status;
                                 const comparisonStatus = cellStatus || vendor.comparisonStatus;
 
+                                // SP_025: Get cell summary if available
+                                const cellSummary = comparisonState?.criteria[criterion.id]?.cells[vendor.id]?.summary;
+
                                 const errorCode = vendor.comparisonErrorCode;
                                 const isFailed = comparisonStatus === 'failed';
 
@@ -623,7 +674,7 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
                                   <div key={`vendor-${vendorIndex}`} className="min-w-0">
                                     {/* Icon Cell - clickable when score details exist OR when failed (for retry) */}
                                     <div
-                                      className={`w-full h-8 xs:h-9 sm:h-10 flex items-center justify-center ${(hasScoreDetails || isFailed) ? 'cursor-pointer hover:bg-gray-100/50 rounded-md transition-colors' : ''}`}
+                                      className={`w-full min-h-[56px] xs:min-h-[60px] sm:min-h-[64px] lg:min-h-[68px] flex items-start justify-center ${(hasScoreDetails || isFailed) ? 'cursor-pointer hover:bg-gray-100/50 rounded-md transition-colors' : ''}`}
                                       onClick={() => {
                                         if (isFailed && onRetryVendor) {
                                           // Retry failed vendor
@@ -635,7 +686,7 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
                                       }}
                                       title={isFailed ? (errorCode === 'TIMEOUT' ? 'Timeout - Click to retry' : 'Error - Click to retry') : (hasScoreDetails ? 'Click to view evidence' : undefined)}
                                     >
-                                      {renderCriterionState(state, criterionIndex, vendorIndex, comparisonStatus, errorCode)}
+                                      {renderCriterionState(state, criterionIndex, vendorIndex, comparisonStatus, errorCode, cellSummary)}
                                     </div>
                                   </div>
                                 );

@@ -31,6 +31,7 @@ import { VerticalBarChart } from './vendor-comparison/VerticalBarChart';
 import { ShareDialog } from './vendor-discovery/ShareDialog';
 import { ExecutiveSummaryDialog } from './vendor-comparison/ExecutiveSummaryDialog';
 import { VendorComparisonGuidePopup } from './vendor-comparison/VendorComparisonGuidePopup';
+import { VendorBattlecardsMatrix } from './vendor-battlecards/VendorBattlecardsMatrix';
 import { Button } from './ui/button';
 import { TechRequest, Vendor as WorkflowVendor, Criteria as WorkflowCriteria } from './VendorDiscovery';
 import { TYPOGRAPHY } from '../styles/typography-config';
@@ -41,6 +42,7 @@ import {
   saveComparisonState,
   saveStage1Results,
   saveStage2Results,
+  loadStage2Results,
 } from '../utils/comparisonStorage';
 import type { Stage1StorageData, Stage2StorageData } from '../types/vendorComparison.types';
 import {
@@ -141,7 +143,9 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
     };
 
     // Build Stage 2 data from comparisonState
-    const stage2Data: Stage2StorageData = {
+    // Load existing Stage 2 data to preserve summaries (SP_025)
+    const existingStage2Data = loadStage2Results(hookProjectId);
+    const stage2Data: Stage2StorageData = existingStage2Data || {
       projectId: hookProjectId,
       results: {},
       timestamp: new Date().toISOString(),
@@ -170,11 +174,15 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
     // Extract Stage 2 results (criterion-level insights and rankings)
     for (const [criterionId, row] of Object.entries(comparisonState.criteria)) {
       if (row.stage2Status === 'completed' && row.criterionInsight && row.starsAwarded) {
+        // Preserve existing vendorSummaries if they exist (SP_025)
+        const existingSummaries = stage2Data.results[criterionId]?.vendorSummaries;
+
         stage2Data.results[criterionId] = {
           criterionId,
           criterionInsight: row.criterionInsight,
           starsAwarded: row.starsAwarded,
           vendorUpdates: {},
+          vendorSummaries: existingSummaries, // Preserve summaries
         };
 
         // Include vendor-level updates from Stage 2
@@ -191,11 +199,19 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
       }
     }
 
+    // Update timestamp before saving
+    stage2Data.timestamp = new Date().toISOString();
+
     // Save all three data structures to localStorage
     // This is the ONLY place where comparison data is saved
     saveComparisonState(hookProjectId, comparisonState);
     saveStage1Results(stage1Data);
     saveStage2Results(stage2Data);
+
+    // Count summaries for logging
+    const summaryCount = Object.values(stage2Data.results).reduce((count, result) => {
+      return count + (result.vendorSummaries ? Object.keys(result.vendorSummaries).length : 0);
+    }, 0);
 
     console.log('[VendorComparisonNew] 💾 Saved all comparison data:', {
       projectId: hookProjectId,
@@ -203,6 +219,7 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
       isPaused: comparisonState.isPaused,
       stage1Criteria: Object.keys(stage1Data.results).length,
       stage2Criteria: Object.keys(stage2Data.results).length,
+      summariesSaved: summaryCount,
     });
   }, [comparisonState, hookProjectId]);
 
@@ -966,6 +983,28 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
             />
           </motion.div>
         </div>
+
+        {/* ========================================= */}
+        {/* VENDOR BATTLECARDS SECTION (SP_023)      */}
+        {/* ========================================= */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.4 }}
+          className="mt-16 border-t-2 border-gray-200 pt-8"
+        >
+          <VendorBattlecardsMatrix
+            projectId={projectId}
+            workflowVendors={workflowVendors}
+            comparisonVendors={workflowShortlist}
+            criteria={workflowCriteria}
+            techRequest={techRequest}
+            shortlistedVendorIds={shortlistedVendorIds}
+            onToggleShortlist={toggleShortlist}
+            onRetryVendor={retryVendor}
+            isGeneratingVendorSummaries={isGeneratingVendorSummaries}
+          />
+        </motion.div>
 
         {/* Download or Share Button */}
         <div className="flex flex-col items-center gap-3 mt-6">

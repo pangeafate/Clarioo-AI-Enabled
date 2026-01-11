@@ -1,4 +1,4 @@
-PRFAQ — Clarioo (Tight Amazon Narrative)
+PRFAQ — Clarioo (Tight Narrative)
 Press Release (Day 1)
 
 Clarioo launches a buyer-first, evidence-driven system that replaces manual B2B software selection with auditable, automated decisions

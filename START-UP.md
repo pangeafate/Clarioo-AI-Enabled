@@ -4,6 +4,164 @@ This guide helps new AI agents quickly understand the Clarioo codebase and devel
 
 ---
 
+## Prerequisites & Installation (First-Time Setup)
+
+### System Requirements
+
+**Required Software:**
+- **Node.js**: Version 18.x or higher (recommended: 20.x LTS)
+- **Package Manager**: npm (comes with Node.js) or bun (faster alternative)
+- **Git**: For version control
+- **Code Editor**: VS Code recommended with these extensions:
+  - ESLint
+  - Prettier
+  - Tailwind CSS IntelliSense
+  - TypeScript and JavaScript Language Features
+
+**Check if installed:**
+```bash
+node --version    # Should show v18.x or higher
+npm --version     # Should show 9.x or higher
+git --version     # Any recent version
+```
+
+---
+
+### Installation Steps
+
+**1. Clone the Repository** (if not already cloned)
+```bash
+git clone <repository-url>
+cd "25 10 24 Clarioo Copy AI Migration v260108WIP"
+```
+
+**2. Install Dependencies**
+
+Using npm:
+```bash
+npm install
+```
+
+Or using bun (faster):
+```bash
+bun install
+```
+
+This will install all dependencies listed in `package.json`, including:
+- React 18.3.1
+- TypeScript 5.5.3
+- Vite 5.4.1
+- Tailwind CSS
+- shadcn/ui components
+- n8n integration dependencies
+
+**3. Verify Installation**
+```bash
+npm list --depth=0   # Lists all top-level packages
+```
+
+---
+
+### Starting the Development Server
+
+**Start the local development server:**
+```bash
+npm run dev
+```
+
+Or with bun:
+```bash
+bun dev
+```
+
+**Expected output:**
+```
+VITE v5.4.1  ready in XXX ms
+
+➜  Local:   http://localhost:8081/
+➜  Network: use --host to expose
+➜  press h + enter to show help
+```
+
+**Open in browser:**
+Navigate to `http://localhost:8081/` to see the application running.
+
+---
+
+### Available NPM Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server (http://localhost:8081/) |
+| `npm run build` | Build for production (outputs to /dist/) |
+| `npm run preview` | Preview production build locally |
+| `npm run lint` | Run ESLint code quality checks |
+| `npm test` | Run Vitest unit tests |
+| `npm run test:ui` | Run tests with UI dashboard |
+| `npm run test:coverage` | Run tests with coverage report |
+| `npm run test:e2e` | Run Playwright end-to-end tests |
+| `npm run test:e2e:ui` | Run e2e tests with Playwright UI |
+
+---
+
+### Project Configuration
+
+**Environment Variables:**
+- No `.env` file required for local development
+- n8n webhook URLs are configured in `/src/config/webhooks.ts`
+- Webhook mode (production/testing) is stored in localStorage
+
+**Webhook Configuration:**
+- Production webhooks: Point to `https://n8n.lakestrom.com/webhook/`
+- Testing webhooks: Point to testing environment
+- Toggle webhook mode using UI toggle in development
+
+**localStorage Keys:**
+- `clarioo_user_id` - Persistent user ID
+- `clarioo_projects` - All user projects
+- `criteria_${projectId}` - Project criteria
+- `clarioo_webhook_mode` - Webhook mode setting
+- See ARCHITECTURE.md for complete list
+
+---
+
+### Troubleshooting Common Issues
+
+**Issue: Port 8081 already in use**
+```bash
+# Find and kill process using port 8081
+lsof -i :8081
+kill -9 <PID>
+
+# Or use a different port
+npm run dev -- --port 3000
+```
+
+**Issue: Dependencies not installing**
+```bash
+# Clear npm cache
+npm cache clean --force
+
+# Delete node_modules and reinstall
+rm -rf node_modules package-lock.json
+npm install
+```
+
+**Issue: TypeScript errors**
+```bash
+# Restart TypeScript server in VS Code
+CMD/CTRL + Shift + P → "TypeScript: Restart TS Server"
+```
+
+**Issue: Vite build fails**
+```bash
+# Clear Vite cache
+rm -rf node_modules/.vite
+npm run dev
+```
+
+---
+
 ## When NOT Familiar with the Codebase
 
 Follow these steps in order to understand the project:
@@ -24,10 +182,11 @@ Read these documents to understand HOW it's built:
 
 1. **ARCHITECTURE.md** (`/00_IMPLEMENTATION/ARCHITECTURE.md`) - System architecture with visual diagrams
 2. **CODEBASE_STRUCTURE.md** (`/00_IMPLEMENTATION/CODEBASE_STRUCTURE.md`) - Detailed file organization and module boundaries
-3. **webhook_guidance.md** (`/00_IMPLEMENTATION/DIRECTIONS/webhook_guidance.md`) - n8n webhook URLs for production/testing mode
-4. **GL-N8N-INTEGRATION.md** (`/00_IMPLEMENTATION/GL-N8N-INTEGRATION.md`) - n8n integration patterns and best practices (Phase 1 active)
+3. **DESIGN_GUIDELINES.md** (`/00_IMPLEMENTATION/DESIGN_GUIDELINES.md`) - Typography, colors, spacing, animations, brand specs
+4. **webhook_guidance.md** (`/00_IMPLEMENTATION/DIRECTIONS/webhook_guidance.md`) - n8n webhook URLs for production/testing mode
+5. **GL-N8N-INTEGRATION.md** (`/00_IMPLEMENTATION/GL-N8N-INTEGRATION.md`) - n8n integration patterns and best practices (Phase 1 active)
 
-**Goal**: Understand the technical architecture, codebase organization, and current n8n AI integration patterns.
+**Goal**: Understand the technical architecture, design system, codebase organization, and current n8n AI integration patterns.
 
 ---
 
@@ -66,6 +225,7 @@ Ensure these folders exist with correct organization:
 └── 00_IMPLEMENTATION/
     ├── ARCHITECTURE.md
     ├── CODEBASE_STRUCTURE.md
+    ├── DESIGN_GUIDELINES.md
     ├── GL-RDD.md
     ├── GL-TDD.md
     ├── GL-ERROR-LOGGING.md
@@ -159,12 +319,13 @@ Ensure these folders exist with correct organization:
 
 ### Current Project Status
 
-- **Phase**: Phase 1 - n8n AI Integration (SP_016 Complete)
-- **Technology**: React 18.3.1 + TypeScript 5.5.3 + Vite 5.4.2
-- **AI Backend**: Real n8n workflows with GPT-4o-mini (project creation, criteria generation)
-- **Mock Services**: Authentication, vendor selection, vendor comparison (until SP_017/SP_018)
-- **Testing**: Automated tests required for Phase 1 AI integration code
-- **Next Sprints**: SP_017 (n8n Vendor Selection), SP_018 (n8n Vendor Comparison)
+- **Phase**: Phase 1 - n8n AI Integration (SP_022 Complete)
+- **Technology**: React 18.3.1 + TypeScript 5.5.3 + Vite 5.4.1
+- **AI Backend**: 9 active n8n webhooks with GPT-4o-mini and Perplexity
+- **Core Features**: Project creation, criteria generation, vendor discovery, two-stage comparison, executive summary, vendor summary, email collection, template carousel
+- **Persistence**: localStorage for all data (projects, criteria, workflow state, comparison cache)
+- **Testing**: Automated tests required for Phase 1 n8n integration code
+- **Latest Sprint**: SP_022 (Template Carousel Section on Landing Page)
 
 ### Key Files to Check First
 
@@ -184,6 +345,6 @@ Ensure these folders exist with correct organization:
 
 ---
 
-*Last Updated: November 25, 2024*
-*Version: 3.8.0*
-*Phase: Phase 1 - n8n AI Integration (SP_017 Complete)*
+*Last Updated: January 8, 2026*
+*Version: 4.1.0*
+*Phase: Phase 1 - n8n AI Integration (SP_022 Complete)*

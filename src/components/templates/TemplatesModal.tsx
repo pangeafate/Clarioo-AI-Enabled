@@ -248,7 +248,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
     <EmailCollectionModal
       isOpen={isEmailModalOpen}
       onClose={() => setIsEmailModalOpen(false)}
-      onEmailSubmitted={handleEmailSubmitted}
+      onSuccess={handleEmailSubmitted}
     />
     </>
   );

@@ -17,13 +17,16 @@ import {
   Plus,
   ExternalLink,
   Trash2,
-  MessageSquare
+  MessageSquare,
+  Grid3x3,
+  ScatterChart
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { TechRequest, Criteria, Vendor } from "../VendorDiscovery";
 import { useVendorDiscovery } from "@/hooks/useVendorDiscovery";
 import { TYPOGRAPHY } from "@/styles/typography-config";
 import { VendorDiscoveryLoader } from "@/components/shared/loading/VendorDiscoveryLoader";
+import { VendorPositioningScatterPlot } from "@/components/vendor-scatterplot/VendorPositioningScatterPlot";
 
 interface VendorSelectionProps {
   criteria: Criteria[];
@@ -45,6 +48,8 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
   const [selectedVendorIds, setSelectedVendorIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [showAddVendor, setShowAddVendor] = useState(false);
+  const [showGrid, setShowGrid] = useState(true); // SP_026: Toggle grid view visibility
+  const [showChart, setShowChart] = useState(true); // SP_026: Toggle scatter plot visibility
   const [newVendor, setNewVendor] = useState({
     name: '',
     description: '',
@@ -408,27 +413,51 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
   return (
     <div className="space-y-6">
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row justify-end gap-2">
-        <div className="flex gap-2 justify-end">
-          <Button variant="outline" size="sm" className="gap-2 flex-1 sm:flex-none">
-            <MessageSquare className="h-4 w-4" />
-            Chat with AI
+      <div className="flex flex-col sm:flex-row justify-between gap-2">
+        {/* View Toggle - SP_026: Toggle grid and scatter plot visibility */}
+        <div className="flex gap-2">
+          <Button
+            variant={showGrid ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setShowGrid(!showGrid)}
+            className="gap-2"
+          >
+            <Grid3x3 className="h-4 w-4" />
+            Grid
           </Button>
           <Button
-            onClick={handleClearAllVendors}
-            variant="ghost"
+            variant={showChart ? 'default' : 'outline'}
             size="sm"
-            className="text-destructive hover:text-destructive"
-            disabled={isLoading || vendors.length === 0}
-            title="Clear all vendors"
+            onClick={() => setShowChart(!showChart)}
+            className="gap-2"
           >
-            <Trash2 className="h-4 w-4" />
+            <ScatterChart className="h-4 w-4" />
+            Map
           </Button>
         </div>
-        <Button onClick={handleDiscoverMore} variant="default" size="sm" className="gap-2" disabled={isLoading || vendors.length >= MAX_VENDORS}>
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          Discover More
-        </Button>
+
+        <div className="flex flex-col sm:flex-row justify-end gap-2">
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" size="sm" className="gap-2 flex-1 sm:flex-none">
+              <MessageSquare className="h-4 w-4" />
+              Chat with AI
+            </Button>
+            <Button
+              onClick={handleClearAllVendors}
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              disabled={isLoading || vendors.length === 0}
+              title="Clear all vendors"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+          <Button onClick={handleDiscoverMore} variant="default" size="sm" className="gap-2" disabled={isLoading || vendors.length >= MAX_VENDORS}>
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Discover More
+          </Button>
+        </div>
       </div>
 
       {/* Add Vendor Dialog */}
@@ -501,16 +530,17 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
         </DialogContent>
       </Dialog>
 
-      {/* Vendor Selection */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Select Vendors for Comparison</CardTitle>
-          <CardDescription>
-            Found {vendors.length} vendors. Select the ones you want to compare in detail.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Vendor Selection - Grid View */}
+      {showGrid && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Select Vendors for Comparison</CardTitle>
+            <CardDescription>
+              {vendors.length} vendors found. Select vendors for a detailed comparison. <strong>Note:</strong> Industrial and functional focus may vary; see the Vendor Positioning scatterplot.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {vendors.map((vendor) => (
               <Card
                 key={vendor.id}
@@ -602,6 +632,21 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
           )}
         </CardContent>
       </Card>
+      )}
+
+      {/* SP_026: Scatter Plot View (under grid) */}
+      {showChart && vendors.length > 0 && (
+        <VendorPositioningScatterPlot
+          vendors={vendors}
+          selectedVendorIds={Array.from(selectedVendorIds)}
+          onSelectionChange={(newIds) => setSelectedVendorIds(new Set(newIds))}
+          projectId={projectId}
+          projectName={projectName}
+          projectDescription={projectDescription}
+          projectCategory={techRequest.category}
+          criteria={criteria}
+        />
+      )}
 
       {/* Summary & Continue */}
       <Card>

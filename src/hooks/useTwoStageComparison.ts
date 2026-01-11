@@ -30,12 +30,14 @@ import {
 import {
   loadStage1Results,
   loadStage2Results,
+  saveStage2Results,
   loadComparisonState,
   clearAllComparisonData,
 } from '../utils/comparisonStorage';
 import {
   compareVendorCriterion,
   rankCriterionResults,
+  summarizeCriterionRow,
   Stage1Response,
   Stage2Response,
 } from '../services/n8nService';
@@ -185,6 +187,15 @@ export const useTwoStageComparison = ({
                 ...mergedState.criteria[criterion.id].cells[vendorId],
                 ...updates,
               };
+            }
+          }
+        }
+
+        // Apply summaries from Stage 2 storage (SP_025)
+        if (stage2Row?.vendorSummaries) {
+          for (const [vendorId, summary] of Object.entries(stage2Row.vendorSummaries)) {
+            if (mergedState.criteria[criterion.id].cells[vendorId]) {
+              mergedState.criteria[criterion.id].cells[vendorId].summary = summary;
             }
           }
         }
@@ -683,6 +694,12 @@ export const useTwoStageComparison = ({
         criterion: criterion.name,
         starsAwarded: response.result!.stars_awarded,
       });
+
+      // SP_025: Generate cell summaries after Stage 2 completion
+      generateSummariesForRow(criterionId, criterion).catch(err => {
+        console.error('[Summarization] Failed for criterion:', criterion.name, err);
+        // Silently fail - summaries are enhancement only, don't block workflow
+      });
     } catch (error: any) {
       console.error('[Stage2] Error:', error);
 
@@ -1079,6 +1096,116 @@ export const useTwoStageComparison = ({
       console.log('[autoStart] Skipping - criteria not initialized yet');
     }
   }, [autoStart, isRunning, comparisonState.isPaused, comparisonState.criteria]); // ✅ Keep criteria to detect initialization, but use ref guard
+
+  // ===========================================
+  // SP_025: Generate Summaries After Stage 2
+  // ===========================================
+
+  /**
+   * Generate 2-3 word summaries for all vendors in a criterion row
+   * Called automatically after Stage 2 completes
+   */
+  const generateSummariesForRow = useCallback(async (
+    criterionId: string,
+    criterion: WorkflowCriteria
+  ) => {
+    console.log('[Summarization] Generating summaries for criterion:', criterion.name);
+
+    try {
+      // Get current row state
+      const rowState = comparisonStateRef.current.criteria[criterionId];
+      if (!rowState) {
+        console.warn('[Summarization] Row not found:', criterionId);
+        return;
+      }
+
+      // Build vendor data for summarization
+      const vendorsData = vendors.map(v => ({
+        vendor_id: v.id,
+        vendor_name: v.name,
+        match_status: (rowState.cells[v.id]?.value || 'unknown') as 'yes' | 'no' | 'unknown' | 'star',
+        evidence_description: rowState.cells[v.id]?.evidenceDescription || '',
+        research_notes: rowState.cells[v.id]?.researchNotes || '',
+      }));
+
+      // Call summarization service
+      const response = await summarizeCriterionRow(
+        projectId,
+        criterionId,
+        criterion.name,
+        criterion.explanation,
+        vendorsData
+      );
+
+      if (!response.success || !response.summaries) {
+        console.warn('[Summarization] Failed or returned no summaries:', response.error);
+        return;
+      }
+
+      console.log('[Summarization] Received summaries:', response.summaries);
+
+      // Update state with summaries
+      setComparisonState(prev => {
+        const updatedCells = { ...prev.criteria[criterionId].cells };
+
+        for (const [vendorId, summary] of Object.entries(response.summaries)) {
+          if (updatedCells[vendorId]) {
+            updatedCells[vendorId] = {
+              ...updatedCells[vendorId],
+              summary, // Add summary to cell state
+            };
+          }
+        }
+
+        return {
+          ...prev,
+          criteria: {
+            ...prev.criteria,
+            [criterionId]: {
+              ...prev.criteria[criterionId],
+              cells: updatedCells,
+            },
+          },
+          lastUpdated: new Date().toISOString(),
+        };
+      });
+
+      // Persist summaries to localStorage (Stage 2 storage)
+      const stage2Data: Stage2StorageData = loadStage2Results(projectId) || {
+        projectId,
+        results: {},
+        timestamp: new Date().toISOString(),
+      };
+
+      // Create Stage 2 result entry if it doesn't exist yet (timing issue with VendorComparisonNew.tsx save)
+      if (!stage2Data.results[criterionId]) {
+        stage2Data.results[criterionId] = {
+          criterionId,
+          criterionInsight: '',
+          starsAwarded: 0,
+          vendorUpdates: {},
+          vendorSummaries: {},
+        };
+      }
+
+      // Save summaries
+      stage2Data.results[criterionId].vendorSummaries = response.summaries;
+      stage2Data.timestamp = new Date().toISOString();
+
+      // Save to localStorage
+      saveStage2Results(stage2Data);
+      console.log('[Summarization] Saved summaries to localStorage:', {
+        criterionId,
+        summaryCount: Object.keys(response.summaries).length,
+      });
+
+      console.log('[Summarization] Completed for criterion:', criterion.name);
+    } catch (error) {
+      console.error('[Summarization] Error:', error);
+      // Don't throw - let caller handle silently
+      throw error;
+    }
+  }, [projectId, vendors]);
 
   return {
     comparisonState,

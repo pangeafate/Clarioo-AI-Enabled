@@ -20,6 +20,9 @@ export interface CellState {
   researchNotes?: string;           // Summary of search process and findings
   searchCount?: number;             // Number of searches used in Stage 1
 
+  // AI-generated summary (2-3 words, shown under icon) - SP_025
+  summary?: string | null;
+
   // Legacy field (kept for backwards compatibility)
   comment?: string;                 // Alias for researchNotes
 
@@ -72,6 +75,7 @@ export interface Stage2StorageData {
     criterionInsight: string;
     starsAwarded: number;
     vendorUpdates: Record<string, Partial<CellState>>; // vendorId -> updates from Stage 2
+    vendorSummaries?: Record<string, string | null>; // vendorId -> 2-3 word summary or null - SP_025
   }>;
   timestamp: string;
 }

@@ -1,0 +1,436 @@
+{
+  "name": "Clarioo AI Summarize Criterion Row (PRODUCTION)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "summarize-criterion-row-production",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "webhook-summarize-row",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -1248,
+        -32
+      ],
+      "webhookId": "summarize-criterion-row-production",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = items[0].json.body || {};\n\nconst user_id = body.user_id;\nconst session_id = body.session_id;\nconst project_id = body.project_id;\nconst criterion_id = body.criterion_id;\nconst criterion_name = body.criterion_name;\nconst criterion_explanation = body.criterion_explanation || '';\nconst vendors = body.vendors || [];\nconst timestamp = body.timestamp;\n\n// Validation\nconst errors = [];\n\nif (!user_id || user_id.trim() === '') {\n  errors.push('user_id is required');\n}\n\nif (!session_id || session_id.trim() === '') {\n  errors.push('session_id is required');\n}\n\nif (!project_id || project_id.trim() === '') {\n  errors.push('project_id is required');\n}\n\nif (!criterion_id || criterion_id.trim() === '') {\n  errors.push('criterion_id is required');\n}\n\nif (!criterion_name || criterion_name.trim() === '') {\n  errors.push('criterion_name is required');\n}\n\nif (!Array.isArray(vendors) || vendors.length === 0) {\n  errors.push('vendors must be a non-empty array');\n}\n\nif (vendors.length > 10) {\n  errors.push('vendors cannot exceed 10');\n}\n\n// Validate vendor objects\nfor (let i = 0; i < vendors.length; i++) {\n  const vendor = vendors[i];\n  if (!vendor.vendor_id) errors.push(`vendor[${i}].vendor_id is required`);\n  if (!vendor.vendor_name) errors.push(`vendor[${i}].vendor_name is required`);\n  if (!vendor.match_status || !['yes', 'no', 'unknown', 'star'].includes(vendor.match_status)) {\n    errors.push(`vendor[${i}].match_status must be one of: yes, no, unknown, star`);\n  }\n  if (typeof vendor.evidence_description !== 'string') {\n    errors.push(`vendor[${i}].evidence_description must be a string`);\n  }\n}\n\nif (!timestamp) {\n  errors.push('timestamp is required');\n}\n\nif (errors.length > 0) {\n  return [{\n    json: {\n      validation_error: true,\n      error_code: 'INVALID_INPUT',\n      error_message: errors.join(', ')\n    }\n  }];\n}\n\n// Format vendors as text for AI prompt (avoid Jinja loops)\nconst vendorsText = vendors.map((v) => {\n  const section = [\n    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',\n    `VENDOR ID: ${v.vendor_id}`,\n    `VENDOR NAME: ${v.vendor_name}`,\n    `MATCH STATUS: ${v.match_status}`,\n    `EVIDENCE: ${v.evidence_description || ''}`,\n  ];\n  if (v.research_notes) {\n    section.push(`RESEARCH NOTES: ${v.research_notes}`);\n  }\n  section.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');\n  return section.join('\\n');\n}).join('\\n\\n');\n\n// Pass through validated data\nreturn [{\n  json: {\n    validation_error: false,\n    user_id,\n    session_id,\n    project_id,\n    criterion_id,\n    criterion_name: criterion_name.trim(),\n    criterion_explanation: criterion_explanation.trim(),\n    vendors: vendors.map(v => ({\n      vendor_id: v.vendor_id,\n      vendor_name: v.vendor_name.trim(),\n      match_status: v.match_status,\n      evidence_description: (v.evidence_description || '').trim(),\n      research_notes: (v.research_notes || '').trim()\n    })),\n    vendors_text: vendorsText,\n    vendor_count: vendors.length,\n    timestamp\n  }\n}];"
+      },
+      "id": "input-validation-summarize",
+      "name": "Input Validation",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -1024,
+        -32
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "validation-check",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "leftValue": "={{ $json.validation_error }}",
+              "rightValue": true
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-validation-summarize",
+      "name": "Check Validation",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -800,
+        -32
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  success: false,\n  error: {\n    code: $json.error_code,\n    message: $json.error_message\n  }\n} }}",
+        "options": {
+          "responseCode": 400,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-validation-error-summarize",
+      "name": "Return Validation Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -512,
+        -176
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=CRITERION: {{ $json.criterion_name }}\nCRITERION EXPLANATION: {{ $json.criterion_explanation }}\n\nYour task: Generate ultra-concise 2-3 word summaries for each vendor's evidence on this criterion.\n\nVENDORS AND THEIR EVIDENCE ({{ $json.vendor_count }} total):\n\n{{ $json.vendors_text }}\n\nSUMMARIZATION RULES:\n\n1. **Only summarize YES/PARTIAL (⭐) matches**\n   - Return null for NO/UNKNOWN matches\n   - Even if evidence exists for NO match, still return null\n\n2. **Maximum 3 words per summary (strictly enforced)**\n   - Good: \"Real-time predictive restocking\" (3 words)\n   - Good: \"EU residency encrypted\" (3 words)\n   - Bad: \"Real-time inventory tracking system\" (4 words)\n\n3. **Meaningful on its own (critical requirement)**\n   - Summary must be comprehensible without reading full evidence\n   - Good: \"Real-time predictive restocking\" (standalone meaningful)\n   - Bad: \"500+ stores predictive\" (keyword extraction, not meaningful)\n   - Test: Would this make sense to someone who hasn't read the full description?\n\n4. **Return null if evidence is generic**\n   - \"Supports inventory tracking\" → null (too vague)\n   - \"Has API capabilities\" → null (too generic)\n   - \"Flexible pricing\" → null (marketing language)\n\n5. **Focus on specific capabilities, not marketing**\n   - Extract concrete differentiators\n   - Include numbers/names/specifics when they fit\n   - Avoid superlatives (\"best\", \"leading\", \"top\")\n\nEXAMPLES:\n\n✓ \"Real-time inventory tracking across 500+ stores with predictive restocking\" \n  → \"Real-time predictive restocking\"\n\n✓ \"GDPR compliant with EU data residency and encryption at rest\" \n  → \"EU residency encrypted\"\n\n✓ \"Best-in-class omnichannel experience per Gartner 2024\" \n  → \"Gartner-rated omnichannel experience\"\n\n✗ \"Supports basic inventory management\" \n  → null (too generic)\n\n✗ \"The platform displays comprehensive product information and real-time inventory data synced with ERP systems, allowing visibility across all locations. [Stage 2 Update] Seamless omnichannel experience vs OneStock per G2 reviews\"\n  → \"Real-time omnichannel inventory\" (meaningful summary)\n  NOT → \"500+ stores predictive\" (keyword extraction)\n\nOUTPUT FORMAT:\n\n**CRITICAL: You MUST return a summaries object with EXACTLY {{ $json.vendor_count }} entries.**\n\n**Use the EXACT vendor_id UUIDs shown above in the VENDORS section.**\n\n**Required JSON structure:**\n{\n  \"success\": true,\n  \"criterion_id\": \"{{ $json.criterion_id }}\",\n  \"summaries\": {\n    // REPLACE THIS COMMENT with entries for EACH vendor ID from above\n    // Each entry: \"vendor_id_uuid_here\": \"your 2-3 word summary\" OR null\n  },\n  \"timestamp\": \"{{ $json.timestamp }}\"\n}\n\n**INSTRUCTIONS:**\n1. Extract ALL vendor_id values from the VENDORS section above\n2. Create one entry in summaries for EACH vendor_id\n3. Use the EXACT vendor_id UUID strings (copy-paste them)\n4. For each vendor:\n   - If match_status is YES or PARTIAL (⭐): Write a 2-3 word summary OR null if generic\n   - If match_status is NO or UNKNOWN: Write null\n5. Verify the number of entries matches {{ $json.vendor_count }}\n\nVALIDATION CHECKLIST:\n□ Each summary is EXACTLY 2-3 words (no exceptions)\n□ Each summary is MEANINGFUL ON ITS OWN (comprehensible without full evidence)\n□ Summaries are null for NO/UNKNOWN matches\n□ Summaries are null if information is too generic\n□ No marketing language or superlatives\n□ Keys in summaries object are the exact vendor_id UUIDs from above\n□ Number of entries in summaries equals {{ $json.vendor_count }}\n□ Test: Would this summary make sense to someone who hasn't read the full description?\n\nReturn ONLY the JSON object with no additional text.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a vendor comparison analyst specializing in creating ultra-concise summaries.\n\nYour task: Given evidence for multiple vendors on a single criterion, generate 2-3 word summaries that highlight key differentiators.\n\nSTRICT RULES:\n- Maximum 3 words per summary (enforced)\n- Only summarize YES/PARTIAL matches\n- Return null if information is generic or not meaningful\n- Focus on specific capabilities, not marketing language\n- Summaries must be MEANINGFUL ON THEIR OWN (comprehensible without reading full evidence)\n- Summaries must be scannable at a glance\n\nEXAMPLE TRANSFORMATIONS:\n✓ \"Real-time inventory tracking across 500+ stores with predictive restocking\" → \"Real-time predictive restocking\"\n✓ \"GDPR compliant with EU data residency and encryption at rest\" → \"EU residency encrypted\"\n✓ \"Supports basic inventory management\" → null (too generic)\n✓ \"Best-in-class omnichannel experience per Gartner\" → \"Gartner-rated omnichannel experience\"\n\nCRITICAL PRINCIPLE:\nSummaries must be standalone meaningful, not just keyword extraction.\n\"Real-time predictive restocking\" ✓ vs \"500+ stores predictive\" ✗"
+        }
+      },
+      "id": "ai-summarize-agent",
+      "name": "AI Summarization Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -576,
+        128
+      ],
+      "typeVersion": 2.2,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "maxTokens": 2000,
+          "temperature": 0.2
+        }
+      },
+      "id": "openai-model-summarize",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        -656,
+        384
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "jKn3GZ9W5ZRgXc2d",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\"type\":\"object\",\"properties\":{\"success\":{\"type\":\"boolean\",\"description\":\"Whether summarization succeeded\"},\"criterion_id\":{\"type\":\"string\",\"description\":\"ID of the criterion that was summarized\"},\"summaries\":{\"type\":\"object\",\"description\":\"Map of vendor_id to summary (2-3 words or null)\"},\"timestamp\":{\"type\":\"string\",\"description\":\"ISO timestamp of completion\"}},\"required\":[\"success\",\"criterion_id\",\"summaries\",\"timestamp\"]}"
+      },
+      "id": "structured-output-summarize",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        -368,
+        384
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  const aiOutput = items[0].json.output;\n\n  // Validate output structure\n  if (!aiOutput || !aiOutput.success || !aiOutput.criterion_id) {\n    throw new Error('Invalid AI response: missing required fields');\n  }\n\n  if (!aiOutput.summaries || typeof aiOutput.summaries !== 'object') {\n    throw new Error('Invalid AI response: summaries must be an object');\n  }\n\n  // Get expected vendor IDs from input\n  const inputVendors = $('Input Validation').first().json.vendors;\n  const expectedVendorIds = inputVendors.map(v => v.vendor_id);\n  \n  // VALIDATION: Check if AI returned correct vendor IDs\n  const aiOutputIds = Object.keys(aiOutput.summaries || {});\n  const unexpectedIds = aiOutputIds.filter(id => !expectedVendorIds.includes(id));\n  const missingIds = expectedVendorIds.filter(id => !aiOutputIds.includes(id));\n  \n  if (unexpectedIds.length > 0) {\n    console.log(`[ID MISMATCH] AI returned unexpected vendor IDs: ${unexpectedIds.join(', ')}`);\n    console.log(`[ID MISMATCH] Expected IDs: ${expectedVendorIds.join(', ')}`);\n  }\n  \n  if (missingIds.length > 0) {\n    console.log(`[ID MISMATCH] AI missing vendor IDs: ${missingIds.join(', ')}`);\n    console.log(`[ID MISMATCH] Expected IDs: ${expectedVendorIds.join(', ')}`);\n  }\n  \n  // Validate word count for each summary\n  const validatedSummaries = {};\n  \n  for (const vendorId of expectedVendorIds) {\n    const summary = aiOutput.summaries[vendorId];\n    \n    if (summary === null || summary === undefined) {\n      validatedSummaries[vendorId] = null;\n      if (summary === undefined) {\n        console.log(`[ID MISSING] Vendor ${vendorId} not found in AI output, setting to null`);\n      }\n      continue;\n    }\n    \n    if (typeof summary !== 'string') {\n      console.log(`[TYPE ERROR] Summary for ${vendorId} is not a string, setting to null`);\n      validatedSummaries[vendorId] = null;\n      continue;\n    }\n    \n    // Validate word count (max 3 words)\n    const wordCount = summary.trim().split(/\\s+/).length;\n    if (wordCount > 3) {\n      console.log(`[WORD COUNT] Summary for ${vendorId} exceeds 3 words (${wordCount} words): \"${summary}\"`);\n      // Truncate to first 3 words as fail-safe\n      const truncated = summary.trim().split(/\\s+/).slice(0, 3).join(' ');\n      validatedSummaries[vendorId] = truncated;\n    } else {\n      validatedSummaries[vendorId] = summary.trim();\n    }\n  }\n\n  // Build final response\n  const response = {\n    success: true,\n    criterion_id: aiOutput.criterion_id,\n    summaries: validatedSummaries,\n    timestamp: aiOutput.timestamp || new Date().toISOString()\n  };\n\n  return [{\n    json: response\n  }];\n\n} catch (error) {\n  return [{\n    json: {\n      success: false,\n      error: {\n        code: 'AI_PROCESSING_ERROR',\n        message: `Summarization failed: ${error.message}`\n      }\n    }\n  }];\n}\n"
+      },
+      "id": "format-success-summarize",
+      "name": "Format Success Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -224,
+        32
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "success-check",
+              "operator": {
+                "type": "boolean",
+                "operation": "false"
+              },
+              "leftValue": "={{ $json.success }}",
+              "rightValue": false
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-success-summarize",
+      "name": "Check Success",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -16,
+        32
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-success-summarize",
+      "name": "Return Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        224,
+        16
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// Check if we already have a formatted error from Format Success Response\nif (items[0].json.error && items[0].json.error.code) {\n  return [{\n    json: {\n      success: false,\n      error: items[0].json.error\n    }\n  }];\n}\n\n// Otherwise, handle raw errors from AI agent\nconst errorMessage = items[0].json.error?.message || items[0].json.message || 'An unexpected error occurred during summarization';\n\nreturn [{\n  json: {\n    success: false,\n    error: {\n      code: 'INTERNAL_ERROR',\n      message: errorMessage\n    }\n  }\n}];"
+      },
+      "id": "handle-error-summarize",
+      "name": "Handle Processing Error",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        224,
+        256
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 500,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-error-summarize",
+      "name": "Return Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        448,
+        256
+      ],
+      "typeVersion": 1.4
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Input Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Validation": {
+      "main": [
+        [
+          {
+            "node": "Check Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Validation": {
+      "main": [
+        [
+          {
+            "node": "Return Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Summarization Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Summarization Agent": {
+      "main": [
+        [
+          {
+            "node": "Format Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Processing Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Summarization Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Summarization Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Success Response": {
+      "main": [
+        [
+          {
+            "node": "Check Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Success": {
+      "main": [
+        [
+          {
+            "node": "Handle Processing Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Processing Error": {
+      "main": [
+        [
+          {
+            "node": "Return Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "summarize-v1",
+  "meta": {
+    "instanceId": "clarioo-summarize-criterion-row"
+  },
+  "id": "ClariooSummarizeCriterionRow",
+  "tags": []
+}

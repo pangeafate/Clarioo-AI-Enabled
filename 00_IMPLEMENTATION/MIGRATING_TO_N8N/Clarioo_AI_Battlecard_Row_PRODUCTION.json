@@ -1,0 +1,474 @@
+{
+  "name": "Clarioo AI Battlecard Row Generator (PRODUCTION)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "clarioo-battlecard-row",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "webhook-battlecard-row",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -1248,
+        -32
+      ],
+      "webhookId": "clarioo-battlecard-row",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = items[0].json.body || {};\n\nconst user_id = body.user_id;\nconst session_id = body.session_id;\nconst project_id = body.project_id;\nconst project_context = body.project_context || '';\nconst vendor_names = body.vendor_names || [];\nconst criteria = body.criteria || [];\nconst already_filled_categories = body.already_filled_categories || [];\nconst is_mandatory_category = body.is_mandatory_category || false;\nconst requested_category = body.requested_category || null;\nconst timestamp = body.timestamp;\n\n// Validation\nconst errors = [];\n\nif (!user_id || user_id.trim() === '') {\n  errors.push('user_id is required');\n}\n\nif (!session_id || session_id.trim() === '') {\n  errors.push('session_id is required');\n}\n\nif (!project_id || project_id.trim() === '') {\n  errors.push('project_id is required');\n}\n\nif (!project_context || project_context.trim().length < 10) {\n  errors.push('project_context must be at least 10 characters');\n}\n\nif (!Array.isArray(vendor_names) || vendor_names.length === 0) {\n  errors.push('vendor_names must be a non-empty array');\n}\n\nif (vendor_names.length > 10) {\n  errors.push('vendor_names cannot exceed 10 vendors');\n}\n\nif (!Array.isArray(criteria) || criteria.length === 0) {\n  errors.push('criteria must be a non-empty array (for context)');\n}\n\nif (!Array.isArray(already_filled_categories)) {\n  errors.push('already_filled_categories must be an array');\n}\n\nif (is_mandatory_category && !requested_category) {\n  errors.push('requested_category is required when is_mandatory_category is true');\n}\n\nif (!timestamp) {\n  errors.push('timestamp is required');\n}\n\nif (errors.length > 0) {\n  return [{\n    json: {\n      validation_error: true,\n      error_code: 'INVALID_INPUT',\n      error_message: errors.join(', ')\n    }\n  }];\n}\n\n// Pass through validated data\nreturn [{\n  json: {\n    validation_error: false,\n    user_id,\n    session_id,\n    project_id,\n    project_context: project_context.trim(),\n    vendor_names,\n    criteria,\n    already_filled_categories,\n    is_mandatory_category,\n    requested_category,\n    timestamp\n  }\n}];"
+      },
+      "id": "input-validation-battlecard",
+      "name": "Input Validation",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -1024,
+        -32
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "validation-check",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "leftValue": "={{ $json.validation_error }}",
+              "rightValue": true
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-validation-battlecard",
+      "name": "Check Validation",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -800,
+        -32
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  success: false,\n  error: {\n    code: $json.error_code,\n    message: $json.error_message\n  }\n} }}",
+        "options": {
+          "responseCode": 400,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-validation-error-battlecard",
+      "name": "Return Validation Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -512,
+        -176
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=PROJECT CONTEXT:\n{{ $json.project_context }}\n\nVENDORS TO COMPARE:\n{{ $json.vendor_names.join(', ') }}\n\nUSER'S EVALUATION CRITERIA (for context):\n{{ $json.criteria.slice(0, 10).map(c => '- ' + c.name + ': ' + (c.explanation || '')).join('\\n') }}\n{{ $json.criteria.length > 10 ? '... and ' + ($json.criteria.length - 10) + ' more criteria' : '' }}\n\n{% if $json.is_mandatory_category %}\nMANDATORY CATEGORY TO RESEARCH:\n\"{{ $json.requested_category }}\"\n\nYour task is to research this specific category for all vendors.\n{% else %}\n🚨 CRITICAL: ALREADY FILLED CATEGORIES 🚨\nThe following {{ $json.already_filled_categories.length }} categories have ALREADY been generated.\nYou MUST NOT select any of these categories:\n\n{{ $json.already_filled_categories.join(', ') }}\n\nYour task is to:\n1. Select ONE NEW comparison category that:\n   - Is NOT in the above list (case-insensitive comparison)\n   - Would provide meaningful differentiation between these specific vendors\n   - Is relevant to the user's evaluation criteria and vendor types\n   - Can be researched through web search\n2. Research that category for all vendors\n{% endif %}\n\nCATEGORY SELECTION GUIDELINES:\n\n1. MANDATORY CATEGORIES (must be filled first, in this order):\n   \n   - Ideal For: Primary use cases, ideal customer scenarios, and best-fit situations. Describe who benefits most from this vendor (e.g., \"SMBs needing simple inventory\", \"enterprises with complex workflows\", \"startups scaling rapidly\"). Focus on use case scenarios, business situations, and customer profiles. **Do NOT include pricing, industries, or company names.**\n   \n   - Target Verticals: Industries/sectors the vendor focuses on (e.g., \"retail\", \"healthcare\", \"manufacturing\"). **Extract ONLY vertical/industry names. NO customer brand names, NO company logos, NO client examples.**\n   \n   - Key Customers: Notable client names, case studies, and customer types (e.g., \"Tesla\", \"Red Bull\", \"Fortune 500 retailers\"). **Extract ONLY client/customer names. NO industry/vertical lists.** Exception: \"Client Name (industry)\" format is allowed.\n   \n   - Pricing Model: Pricing structure, tiers, and fee types (e.g., \"per user/month\", \"transaction-based\", \"flat fee\", \"custom enterprise\"). Include specific pricing numbers if available (e.g., \"$49/user/month\"). **Focus on how the vendor charges, not who can afford it.**\n   \n   - Company Stage: Company maturity, size, funding stage, and market position (e.g., \"startup\", \"Series B\", \"publicly traded\", \"bootstrapped\", \"established player\"). Include founding year, funding rounds, IPO status, employee count if available. **Describes the vendor company itself, not its customers.**\n   \n   - Primary Geo: Geographic markets served, headquarters location, regional focus (e.g., \"North America HQ\", \"EMEA focus\", \"global coverage\", \"APAC expansion\"). Include data residency, office locations, timezone coverage. **Describes where the vendor operates and serves customers.**\n   \n   - Main Integrations: Key partnerships, ecosystem integrations, and technical compatibility (e.g., \"Salesforce Commerce Cloud\", \"SAP\", \"Shopify Plus\", \"REST API\"). **Extract specific integration names and platforms, NOT general capabilities like \"API available\".**\n\n2. ADDITIONAL CATEGORIES (rows 8-10, AI-selected based on vendor context):\n   Choose any comparison category that would be valuable for these specific vendors.\n   \n   Examples (not exhaustive):\n   - Implementation Complexity, Support Model, Security/Compliance\n   - Deployment Options, Contract Terms, Target Company Size\n   - Mobile Apps, Customization Options, API Capabilities\n   - Training/Onboarding, Data Migration, Performance/Scalability\n   - Reporting/Analytics, Multi-channel Support, Offline Capabilities\n   - Or ANY other category relevant to the vendor type and user criteria\n\nRESEARCH PROCESS:\n\nSTEP 1: CATEGORY SELECTION (if not mandatory)\nAnalyze the vendors, project context, and user evaluation criteria to select ONE comparison category that:\n- Has NOT been filled yet (critical - check already_filled_categories list)\n- Would provide meaningful differentiation between these specific vendors\n- Is relevant to the vendor type, industry, and user's needs\n- Can be researched through web search (avoid categories requiring internal vendor data)\n\nSTEP 2: VENDOR RESEARCH (for chosen category)\nFor each vendor, conduct 2-3 Perplexity searches:\n\n**CATEGORY-SPECIFIC EXTRACTION CONSTRAINTS:**\n\n* **If category = Target Verticals**\n  * Extract **only** verticals/industries/sectors.\n  * **Do not include** customer/client brand names.\n  * Focus on industry categories (e.g., \"retail\", \"manufacturing\", \"healthcare\").\n\n* **If category = Key Customers**\n  * Extract **only** client names, case studies, customer types.\n  * **Do not include** vertical/industry lists.\n  * Allowed exception: \"Client Name (industry)\" in parentheses **only**.\n\nSearch patterns:\n- \"[Vendor Name] [category] 2024\"\n- \"[Vendor Name] vs competitors [category]\"\n- \"[Vendor Name] [category] features comparison\"\n\nFor each vendor, extract:\n- Factual information about this category\n- Specific details (numbers, names, features)\n- **ALL source URLs used** (collect every URL you reference)\n\nExample searches:\nIf category is \"Ideal For\":\n- \"[Vendor Name] ideal customer profile use cases\"\n- \"[Vendor Name] best suited for scenarios\"\n- \"[Vendor Name] who should use target audience\"\n\nIf category is \"Pricing Model\":\n- \"[Vendor Name] pricing model per user 2024\"\n- \"[Vendor Name] subscription tiers pricing structure\"\n- \"[Vendor Name] pricing comparison competitors\"\n\nIf category is \"Company Stage\":\n- \"[Vendor Name] funding rounds investors 2024\"\n- \"[Vendor Name] company size employees founded\"\n- \"[Vendor Name] IPO status market position\"\n\nIf category is \"Primary Geo\":\n- \"[Vendor Name] headquarters office locations\"\n- \"[Vendor Name] geographic markets regions served\"\n- \"[Vendor Name] data residency compliance regional\"\n\nIf category is \"Key Customers\":\n- \"Salesforce major customers case studies\"\n- \"HubSpot notable clients industries\"\n- \"Pipedrive customer success stories\"\n\nIf category is \"Target Verticals\":\n- \"Salesforce target industries sectors 2024\"\n- \"HubSpot industry focus verticals\"\n- \"Pipedrive industry specialization\"\n\nSTEP 3: TEXT GENERATION\nFor each vendor cell, write:\n\n**FORMAT:**\n1. **Intro (1-2 sentences)**: Factual and contextual summary\n2. **List (if 2+ items)**: Bullet points with specific details\n3. **Single item**: Keep as paragraph text (no bullet needed)\n\n**BULLET POINT RULES:**\n- Use bullet points for ANY category with 2+ items\n- Each bullet should have specific details (numbers, percentages, names)\n- Be scannable and factual\n- Avoid marketing language\n\nGood examples:\n\n**Target Verticals (list format)**:\n\"Tulip focuses on brick-and-mortar retail transformation. Primary industries served:\n• Retail (60%)\n• Fashion & apparel (25%)\n• Luxury goods (15%)\"\n\n**Key Customers (list format)**:\n\"Tulip serves major global brands in retail and fashion. Notable clients:\n• Saks Fifth Avenue\n• Chanel\n• Michael Kors\n• Kate Spade\"\n\n**Pricing Model (might be paragraph or list)**:\nIf single pricing structure:\n\"HubSpot uses tiered subscription pricing starting at $45/month for Starter, $800/month for Professional, and custom enterprise pricing for 1000+ users.\"\n\nIf multiple pricing components:\n\"HubSpot offers flexible pricing across product tiers:\n• Starter: $45/month (basic features)\n• Professional: $800/month (advanced automation)\n• Enterprise: Custom pricing (1000+ users)\n• Free tier available for up to 1,000 contacts\"\n\n**Main Integrations (list format)**:\n\"NewStore provides extensive integration capabilities across commerce platforms. Key integrations:\n• Salesforce Commerce Cloud\n• SAP Customer Experience\n• Adyen (payments)\n• Shopify Plus\n• REST API for custom integrations\"\n\nBad examples:\n- \"Flexible pricing\" (too vague)\n- \"Many Fortune 500 clients\" (not specific)\n- \"Excellent integration capabilities\" (marketing language)\n- **For Target Verticals (bad):** \"Fashion, electronics; customers include Tesla and Red Bull.\" (mixing verticals with customers)\n- **For Key Customers (bad):** \"Tesla, Red Bull; strong in fashion and electronics.\" (mixing customers with verticals)\n- Using bullet points for single items (just use paragraph)\n\nSEARCH BUDGET:\n- Maximum 15 searches total (2-3 per vendor for {{ $json.vendor_names.length }} vendors)\n- Prioritize official vendor documentation, pricing pages, case study pages\n- Use third-party sources (G2, Capterra, comparison sites) for validation\n- **CRITICAL: Collect ALL source URLs you use - return as array**\n\nOUTPUT STRUCTURE:\n{\n  \"row_id\": \"battlecard_row_[number]\",\n  \"category_title\": \"Selected Category Name\",\n  \"category_definition\": \"One sentence explaining what this category means\",\n  \"cells\": [\n    {\n      \"vendor_name\": \"Vendor 1\",\n      \"text\": \"1-2 intro sentences.\\n• Bullet 1\\n• Bullet 2\\n• Bullet 3\",\n      \"source_urls\": [\n        \"https://vendor1.com/page1\",\n        \"https://g2.com/vendor1-review\",\n        \"https://vendor1.com/case-study\"\n      ]\n    },\n    {\n      \"vendor_name\": \"Vendor 2\",\n      \"text\": \"1-2 intro sentences.\\n• Bullet 1\\n• Bullet 2\",\n      \"source_urls\": [\n        \"https://vendor2.com/pricing\",\n        \"https://vendor2.com/customers\"\n      ]\n    }\n  ],\n  \"timestamp\": \"{{ $json.timestamp }}\"\n}\n\n**IMPORTANT NOTES ON source_urls:**\n- Must be an ARRAY of strings (not a single string)\n- Include ALL URLs you referenced during research\n- Minimum 1 URL per cell, typically 2-5 URLs\n- Prioritize: official docs > case studies > third-party reviews\n\nFINAL VALIDATION:\nBefore returning JSON, verify:\n{% if not $json.is_mandatory_category %}\n□ **🚨 CRITICAL DUPLICATE CHECK 🚨**\n  Your chosen category_title MUST NOT match ANY of these {{ $json.already_filled_categories.length }} categories:\n  {{ $json.already_filled_categories.join(', ') }}\n  \n  - Case-insensitive comparison required (\"Support Model\" = \"support model\")\n  - If your category matches ANY of the above, you MUST choose a different category\n  - This is a HARD REQUIREMENT - no exceptions\n{% endif %}\n□ All vendor cells have specific, factual information\n□ All cells have 1-2 intro sentences\n□ Use bullet points when 2+ items exist\n□ All cells have source_urls as ARRAY (not single string)\n□ Each source_urls array has at least 1 URL\n□ Text is scannable and factual\n□ No marketing language or vague statements\n□ **If category_title = \"Target Verticals\": cell text contains no client/customer brand names**\n□ **If category_title = \"Key Customers\": cell text contains no standalone vertical lists** (allowed only as \"Client (vertical)\")\n\n**DUPLICATE PREVENTION PROTOCOL:**\n{% if not $json.is_mandatory_category %}\nIf you detect that your chosen category_title matches ANY item in this list:\n{{ $json.already_filled_categories.join(', ') }}\n\nThen you MUST:\n1. DO NOT return that category\n2. Select a COMPLETELY DIFFERENT comparison category\n3. Choose something relevant to these specific vendors and their differentiators\n{% endif %}\n\nReturn ONLY the JSON object.\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a vendor intelligence analyst creating battle cards for software comparison.\n\nYOUR ROLE:\n- Generate ONE comparison category (row) at a time\n- Research specific factual information for each vendor in that category\n- Provide scannable, evidence-backed insights\n\nCATEGORY SELECTION PRIORITIES:\n1. First 7 rows: Ideal For, Target Verticals, Key Customers, Pricing Model, Company Stage, Primary Geo, Main Integrations (mandatory)\n2. Remaining rows: Choose dynamic categories based on vendor context\n3. Avoid duplicating categories already filled\n\nRESEARCH QUALITY STANDARDS:\n- Use official vendor documentation as primary source\n- Validate with third-party sources (G2, Capterra, review sites)\n- Be specific: include numbers, names, features\n- No vague statements like \"flexible\" or \"many clients\"\n- Maximum 15 searches for efficiency\n\nOUTPUT FORMAT:\n- Valid JSON only, no markdown\n- One category with cells for all vendors\n- 1-3 sentences per cell\n- Source URL for each cell\n\nSEARCH BUDGET: 15 searches maximum (2-3 per vendor)\n\n{% if not $json.is_mandatory_category %}\n🚨 CRITICAL DUPLICATE PREVENTION 🚨\nThe following categories have ALREADY been generated and you MUST NOT select them:\n{{ $json.already_filled_categories.join(', ') }}\n\nYou MUST choose a DIFFERENT category that is NOT in the above list.\nCase-insensitive comparison required - \"Support Model\" matches \"support model\".\n{% endif %}"
+        }
+      },
+      "id": "ai-battlecard-research",
+      "name": "AI Battlecard Research Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -576,
+        128
+      ],
+      "typeVersion": 2.2,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "maxTokens": 6000,
+          "temperature": 0.3
+        }
+      },
+      "id": "openai-model-battlecard",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        -656,
+        384
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "jKn3GZ9W5ZRgXc2d",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\"type\":\"object\",\"properties\":{\"row_id\":{\"type\":\"string\",\"description\":\"Unique identifier for this row (e.g., battlecard_row_1)\"},\"category_title\":{\"type\":\"string\",\"description\":\"Name of the comparison category (e.g., Pricing Model, Target Verticals)\"},\"category_definition\":{\"type\":\"string\",\"description\":\"One sentence explaining what this category means\"},\"cells\":{\"type\":\"array\",\"description\":\"Array of vendor cells, one per vendor\",\"items\":{\"type\":\"object\",\"properties\":{\"vendor_name\":{\"type\":\"string\"},\"text\":{\"type\":\"string\",\"description\":\"1-2 intro sentences followed by bullet list if 2+ items\"},\"source_urls\":{\"type\":\"array\",\"description\":\"Array of all source URLs used\",\"items\":{\"type\":\"string\"}}},\"required\":[\"vendor_name\",\"text\",\"source_urls\"]}},\"timestamp\":{\"type\":\"string\"}},\"required\":[\"row_id\",\"category_title\",\"cells\"]}"
+      },
+      "id": "structured-output-battlecard",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        -368,
+        384
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  const aiOutput = items[0].json.output;\n\n  // Validate output structure\n  if (!aiOutput || !aiOutput.row_id || !aiOutput.category_title) {\n    throw new Error('Invalid AI response: missing row data');\n  }\n\n  if (!Array.isArray(aiOutput.cells) || aiOutput.cells.length === 0) {\n    throw new Error('Invalid AI response: cells must be non-empty array');\n  }\n\n  // Get expected vendor names from input\n  const expectedVendors = $('Input Validation').first().json.vendor_names;\n  \n  // Validate we have cells for all vendors\n  if (aiOutput.cells.length !== expectedVendors.length) {\n    console.log(`Warning: Expected ${expectedVendors.length} cells but got ${aiOutput.cells.length}`);\n  }\n\n  // Validate each cell\n  for (const cell of aiOutput.cells) {\n    if (!cell.vendor_name || !cell.text) {\n      throw new Error(`Invalid cell: missing vendor_name or text`);\n    }\n    \n    // Validate source_urls is an array\n    if (!Array.isArray(cell.source_urls)) {\n      console.log(`Warning: Cell for ${cell.vendor_name} has invalid source_urls (not array)`);\n      cell.source_urls = cell.source_urls ? [cell.source_urls] : [];\n    }\n    \n    if (cell.source_urls.length === 0) {\n      console.log(`Warning: Cell for ${cell.vendor_name} missing source_urls`);\n      cell.source_urls = [];\n    }\n  }\n\n  // Build final response\n  const response = {\n    row_id: aiOutput.row_id,\n    category_title: aiOutput.category_title,\n    category_definition: aiOutput.category_definition || '',\n    cells: aiOutput.cells.map(cell => ({\n      vendor_name: cell.vendor_name.trim(),\n      text: cell.text.trim(),\n      source_urls: Array.isArray(cell.source_urls) \n        ? cell.source_urls.map(url => url?.trim()).filter(url => url)\n        : []\n    })),\n    timestamp: aiOutput.timestamp || new Date().toISOString()\n  };\n\n  return [{\n    json: {\n      success: true,\n      row: response,\n      research_summary: `Completed battlecard row: ${response.category_title} for ${response.cells.length} vendors`\n    }\n  }];\n\n} catch (error) {\n  return [{\n    json: {\n      success: false,\n      error: {\n        code: 'AI_PROCESSING_ERROR',\n        message: `Battlecard row generation failed: ${error.message}`\n      }\n    }\n  }];\n}\n"
+      },
+      "id": "format-success-battlecard",
+      "name": "Format Success Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -224,
+        32
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "success-check",
+              "operator": {
+                "type": "boolean",
+                "operation": "false"
+              },
+              "leftValue": "={{ $json.success }}",
+              "rightValue": false
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-success-battlecard",
+      "name": "Check Success",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -16,
+        32
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-success-battlecard",
+      "name": "Return Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        224,
+        16
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// Check if we already have a formatted error from Format Success Response\nif (items[0].json.error && items[0].json.error.code) {\n  return [{\n    json: {\n      success: false,\n      error: items[0].json.error\n    }\n  }];\n}\n\n// Otherwise, handle raw errors from AI agent\nconst errorMessage = items[0].json.error?.message || items[0].json.message || 'An unexpected error occurred during battlecard generation';\n\nreturn [{\n  json: {\n    success: false,\n    error: {\n      code: 'INTERNAL_ERROR',\n      message: errorMessage\n    }\n  }\n}];"
+      },
+      "id": "handle-error-battlecard",
+      "name": "Handle Processing Error",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        224,
+        256
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 500,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-error-battlecard",
+      "name": "Return Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        448,
+        256
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "messages": {
+          "message": [
+            {
+              "content": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('message0_Text', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.perplexityTool",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        400
+      ],
+      "id": "perplexity-tool-battlecard",
+      "name": "Message a model in Perplexity",
+      "credentials": {
+        "perplexityApi": {
+          "id": "r8zUmq6Bxb6qMTW3",
+          "name": "Perplexity account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Input Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Validation": {
+      "main": [
+        [
+          {
+            "node": "Check Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Validation": {
+      "main": [
+        [
+          {
+            "node": "Return Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Battlecard Research Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Battlecard Research Agent": {
+      "main": [
+        [
+          {
+            "node": "Format Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Processing Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Battlecard Research Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Battlecard Research Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Success Response": {
+      "main": [
+        [
+          {
+            "node": "Check Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Success": {
+      "main": [
+        [
+          {
+            "node": "Handle Processing Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Processing Error": {
+      "main": [
+        [
+          {
+            "node": "Return Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model in Perplexity": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Battlecard Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "battlecard-v1",
+  "meta": {
+    "instanceId": "clarioo-battlecard-generator"
+  },
+  "id": "ClariooBattlecardRow",
+  "tags": []
+}

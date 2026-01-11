@@ -47,6 +47,9 @@ const PRODUCTION_WEBHOOKS = {
   EXECUTIVE_SUMMARY: 'https://n8n.lakestrom.com/webhook/clarioo-executive-summary',
   VENDOR_SUMMARY: 'https://n8n.lakestrom.com/webhook/Vendor-Card-Summary', // Vendor card summary generator (Perplexity)
   EMAIL_COLLECTION: 'https://n8n.lakestrom.com/webhook/clarioo-email-collection',
+  BATTLECARD_ROW: 'https://n8n.lakestrom.com/webhook/clarioo-battlecard-row', // Battlecard row generator (Production)
+  SUMMARIZE_CRITERION_ROW: 'https://n8n.lakestrom.com/webhook/summarize-criterion-row-production', // SP_025: Cell summaries (Production)
+  VENDOR_SCATTERPLOT: 'https://n8n.lakestrom.com/webhook/clarioo-vendor-scatterplot', // SP_026: Vendor positioning scatter plot (Production)
 } as const;
 
 const TESTING_WEBHOOKS = {
@@ -59,6 +62,22 @@ const TESTING_WEBHOOKS = {
   EXECUTIVE_SUMMARY: 'https://n8n.lakestrom.com/webhook/11b92992-7c97-40d1-b6d1-037ce4743667',
   VENDOR_SUMMARY: 'https://n8n.lakestrom.com/webhook/6e32f3ef-1103-404b-ac0b-8ce2da70b7b4', // Modified workflow: Vendor card summary generator
   EMAIL_COLLECTION: 'https://n8n.lakestrom.com/webhook/755744fd-7b51-4979-af1f-acfa3cd95963',
+  BATTLECARD_ROW: 'https://n8n.lakestrom.com/webhook/e08eae12-70d9-4669-8ee5-f31ffe5b1407', // Testing webhook UUID
+  SUMMARIZE_CRITERION_ROW: 'https://n8n.lakestrom.com/webhook/summarize-criterion-row-testing', // SP_025: Cell summaries (Testing)
+  VENDOR_SCATTERPLOT: 'https://n8n.lakestrom.com/webhook/3f7a9e2b-4c8d-4f1a-9b6e-7d3c5e8f1a2b', // SP_026: Vendor positioning scatter plot (Testing)
+} as const;
+
+// ===========================================
+// Local Development Override (Optional)
+// ===========================================
+
+/**
+ * Optional local development URLs for testing n8n workflows locally
+ * Set WEBHOOK_MODE to 'local' in localStorage to use these
+ */
+const LOCAL_DEVELOPMENT_WEBHOOKS = {
+  ...PRODUCTION_WEBHOOKS,
+  BATTLECARD_ROW: 'http://localhost:8080/webhook/clarioo-battlecard-row', // Local n8n instance
 } as const;
 
 // ===========================================
@@ -71,6 +90,14 @@ const TESTING_WEBHOOKS = {
  */
 export const getWebhookUrls = () => {
   const mode = getWebhookMode();
+
+  // Check for local development override (for testing n8n workflows locally)
+  const localOverride = localStorage.getItem('WEBHOOK_LOCAL_OVERRIDE');
+  if (localOverride === 'true') {
+    console.warn('[webhooks] 🔧 Using LOCAL_DEVELOPMENT_WEBHOOKS (localhost)');
+    return LOCAL_DEVELOPMENT_WEBHOOKS;
+  }
+
   return mode === 'testing' ? TESTING_WEBHOOKS : PRODUCTION_WEBHOOKS;
 };
 
@@ -94,3 +121,6 @@ export const getRankCriterionResultsUrl = () => getWebhookUrl('RANK_CRITERION_RE
 export const getExecutiveSummaryUrl = () => getWebhookUrl('EXECUTIVE_SUMMARY');
 export const getVendorSummaryUrl = () => getWebhookUrl('VENDOR_SUMMARY'); // Vendor card summary
 export const getEmailCollectionUrl = () => getWebhookUrl('EMAIL_COLLECTION');
+export const getBattlecardRowUrl = () => getWebhookUrl('BATTLECARD_ROW'); // Battlecard row generator
+export const getSummarizeCriterionRowUrl = () => getWebhookUrl('SUMMARIZE_CRITERION_ROW'); // SP_025: Cell summaries
+export const getVendorScatterplotUrl = () => getWebhookUrl('VENDOR_SCATTERPLOT'); // SP_026: Vendor positioning scatter plot

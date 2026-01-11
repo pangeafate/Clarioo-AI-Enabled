@@ -142,3 +142,62 @@ export interface EmailCollectionStorage {
   timestamp: string;
   email_passed_to_n8n: boolean;
 }
+
+// ===========================================
+// Vendor Battlecards Types (SP_023)
+// ===========================================
+
+/**
+ * Individual cell in a battlecard row
+ */
+export interface BattlecardCell {
+  vendor_name: string;
+  text: string; // 1-2 intro sentences + bullet list if 2+ items
+  source_urls: string[]; // Array of ALL source URLs used during research
+}
+
+/**
+ * Request payload for n8n battlecard row generation webhook
+ */
+export interface BattlecardRowRequest {
+  user_id: string;
+  session_id: string;
+  project_id: string;
+  project_context: string;
+  vendor_names: string[];
+  criteria: Array<{
+    id: string;
+    name: string;
+    explanation: string;
+    importance: 'low' | 'medium' | 'high';
+    type: string;
+  }>;
+  already_filled_categories: string[];
+  is_mandatory_category?: boolean;
+  requested_category?: string;
+  timestamp: string;
+}
+
+/**
+ * Single battlecard row response from n8n
+ */
+export interface BattlecardRow {
+  row_id: string;
+  category_title: string;
+  category_definition?: string;
+  cells: BattlecardCell[];
+  timestamp: string;
+}
+
+/**
+ * Response from n8n battlecard row webhook
+ */
+export interface BattlecardRowResponse {
+  success: boolean;
+  row?: BattlecardRow;
+  research_summary?: string;
+  error?: {
+    code: 'INVALID_INPUT' | 'AI_PROCESSING_ERROR' | 'TIMEOUT' | 'INTERNAL_ERROR';
+    message: string;
+  };
+}

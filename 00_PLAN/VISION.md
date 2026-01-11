@@ -25,8 +25,9 @@ Clarioo is built on a foundation of exceptional user experience, distinguishing 
 - **Visual Hierarchy**: Strategic use of color, size, and position to guide attention
 
 ### Innovative Interactions
-- **iPod-Style Navigation**: Circular selector for intuitive landing page navigation
-- **Animated States**: "Hypnotic, minimalist" animations on inactive input fields
+- **Smart Entry Points**: Category dropdown and example projects for quick start
+- **Registration-Free Access**: Try before committing with instant project creation
+- **Animated States**: "Hypnotic, minimalist" animations on input fields
 - **Real-Time Visualization**: Logo carousels showing vendor discovery in action
 - **Artifact Generation**: Visual display of how each step produces concrete deliverables
 
@@ -76,32 +77,32 @@ This visual approach creates a **premium, modern aesthetic** that signals sophis
 
 The first impression matters. Our landing page embodies our design philosophy by showing users exactly what they'll experience before asking them to register.
 
-### Unregistered User Experience (Top to Bottom)
+### User Experience (Registration-Free Entry)
 
 **1. Powerful First Message**
 - Headline: "Supercharge your software vendor's selection with AI assistant"
 - Shopify-inspired messaging: Direct, clear value without enterprise jargon
 - Immediately answers: "What is this?" and "What's in it for me?"
 
-**2. Registration Entry Point**
-- Sign In / Sign Up toggle prominently positioned
-- Clear path to activation without friction
-- No email validation walls or multi-step registration
+**2. Optional Registration Entry Point**
+- Sign In / Sign Up toggle available but not required
+- Users can try the platform immediately without registration
+- Registration enables additional features and project saving
 
-**4. Preview Before Registration**
-Two side-by-side input fields (stacked on mobile) in **inactive state**:
+**3. Active Input Fields (No Registration Gate)**
+Two side-by-side input fields (stacked on mobile) - **immediately active**:
 - **Left:** "Tell me more about your company"
   Example: "I work at Zapier in HR function"
 - **Right:** "Tell me what solution you're looking for"
   Example: "Looking for HR management software"
 
-The "magic moment": Fields are visible but inactive, featuring "hypnotic, minimalist" animations:
-- Gentle pulsing glow (not just gray/disabled)
-- Subtle floating effects
-- Gradient border shimmer
-- Visual cue: "Register to unlock"
+Users can start immediately with multiple entry points:
+- **Direct Input**: Type company context and requirements
+- **Category Selector**: Choose from 15+ software categories for instant project creation
+- **Example Projects**: Click pre-configured examples to see the platform in action
+- **Project Templates**: Browse community templates for inspiration
 
-This creates intrigue and shows users exactly what they'll do after registration.
+This creates immediate value and removes friction from the entry experience.
 
 **5. Process Transparency Visualization**
 Single-viewport graphic showing:
@@ -260,13 +261,14 @@ Clarioo provides an intelligent, five-step workflow that:
 
 1. **Design-First Experience**: Exceptional UX that delights users, not generic enterprise software
    - Mobile-first with 80-90% mobile traffic support
-   - iPod-style navigation and innovative interactions
+   - Registration-free entry with multiple quick-start options
    - Animated, engaging interface that makes complex decisions feel simple
 
 2. **AI-First Approach**: Purpose-built with AI at the core, not as an afterthought
-   - GPT-4 powered criteria generation
+   - GPT-4o-mini powered criteria generation via n8n
    - Intelligent vendor discovery with context awareness
-   - Automated comparison analysis with explainable AI
+   - Two-stage progressive comparison with evidence-based analysis
+   - Automated executive summary generation with explainable AI
 
 3. **Visual Transparency**: Complete process observability and artifact generation
    - Real-time visualization of vendor discovery
@@ -436,9 +438,9 @@ Clarioo is positioned to transform how businesses discover and evaluate vendors.
 
 ---
 
-*Version: 3.8.0*
-*Last Updated: November 27, 2024*
+*Version: 4.1.0*
+*Last Updated: January 10, 2026*
 *Phase 0 (Complete): Visual Prototype (SP_006-SP_015) - Mock services with visual demonstration*
-*Phase 1 (Active): n8n AI Integration (SP_016-SP_017 Complete) - Real AI backend integration*
-*Current: Real AI via n8n (GPT-4o-mini) for project creation, criteria generation, and email collection*
-*Next Sprint: SP_018 - n8n Vendor Selection Integration*
+*Phase 1 (Active): n8n AI Integration (SP_016-SP_022 Complete) - Real AI backend integration*
+*Current: Real AI via n8n (GPT-4o-mini) with 10 active webhooks - project creation, criteria generation, vendor discovery, two-stage comparison, executive summary, vendor summary, email collection, template carousel, battlecard generation*
+*Latest Sprint: SP_022 - Template Carousel Section on Landing Page Complete*

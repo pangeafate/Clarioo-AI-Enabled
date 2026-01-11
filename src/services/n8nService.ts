@@ -17,7 +17,15 @@ import type {
   EmailCollectionRequest,
   EmailCollectionResponse,
   EmailCollectionStorage,
+  BattlecardRowRequest,
+  BattlecardRowResponse,
 } from '@/types';
+
+import type {
+  VendorScatterplotRequest,
+  VendorScatterplotResponse,
+  VendorScatterplotCache,
+} from '@/types/vendorScatterplot.types';
 
 import type { CriterionScoreDetail } from '@/types/comparison.types';
 import { collectDeviceMetadata } from '@/utils/deviceMetadata';
@@ -31,6 +39,9 @@ import {
   getExecutiveSummaryUrl,
   getVendorSummaryUrl,
   getEmailCollectionUrl,
+  getBattlecardRowUrl,
+  getSummarizeCriterionRowUrl,
+  getVendorScatterplotUrl,
 } from '@/config/webhooks';
 
 // ===========================================
@@ -39,6 +50,9 @@ import {
 
 const TIMEOUT_MS = 120000; // 2 minutes for project creation and criteria chat
 const VENDOR_SEARCH_TIMEOUT_MS = 180000; // 3 minutes for vendor search
+const BATTLECARD_ROW_TIMEOUT_MS = 90000; // 90 seconds for battlecard row generation
+const SUMMARIZE_CRITERION_ROW_TIMEOUT_MS = 30000; // 30 seconds for criterion row summarization (no web search)
+const VENDOR_SCATTERPLOT_TIMEOUT_MS = 60000; // 60 seconds for vendor scatterplot positioning (SP_026)
 
 // ===========================================
 // Criteria Chat Types
@@ -1892,4 +1906,558 @@ export const retryEmailCollection = async (): Promise<void> => {
     console.error('[email-retry] Retry error:', error);
     // Silently fail - will retry on next user action
   }
+};
+
+// ===========================================
+// Vendor Battlecards API (SP_023)
+// ===========================================
+
+/**
+ * Generate a single battlecard row via n8n AI workflow
+ *
+ * Generates one comparison row (category) across multiple vendors.
+ * Each row contains text cells describing vendor differences for that category.
+ *
+ * @param projectId - Project UUID
+ * @param vendorNames - Array of vendor names to compare (2-5 vendors)
+ * @param projectContext - Combined company context + solution requirements
+ * @param criteria - User's evaluation criteria (for context only)
+ * @param alreadyFilledCategories - Categories already generated (for duplicate prevention)
+ * @param isMandatory - True if requesting a mandatory category
+ * @param requestedCategory - Specific category name (required if isMandatory = true)
+ * @returns Promise resolving to BattlecardRowResponse
+ *
+ * @example
+ * const response = await generateBattlecardRow(
+ *   'proj_123',
+ *   ['Salesforce', 'HubSpot', 'Pipedrive'],
+ *   'B2B SaaS company looking for CRM...',
+ *   [...criteria],
+ *   ['Target Verticals', 'Key Customers'],
+ *   true,
+ *   'Main Integrations'
+ * );
+ */
+export const generateBattlecardRow = async (
+  projectId: string,
+  vendorNames: string[],
+  projectContext: string,
+  criteria: TransformedCriterion[],
+  alreadyFilledCategories: string[],
+  isMandatory?: boolean,
+  requestedCategory?: string
+): Promise<BattlecardRowResponse> => {
+  console.log('[n8n-battlecard] Generating battlecard row');
+  console.log('[n8n-battlecard] Vendors:', vendorNames);
+  console.log('[n8n-battlecard] Already filled:', alreadyFilledCategories);
+  console.log('[n8n-battlecard] Mandatory:', isMandatory);
+  console.log('[n8n-battlecard] Requested category:', requestedCategory);
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), BATTLECARD_ROW_TIMEOUT_MS);
+
+  try {
+    // Build request body
+    const requestBody: BattlecardRowRequest = {
+      user_id: getUserId(),
+      session_id: getSessionId(),
+      project_id: projectId,
+      project_context: projectContext,
+      vendor_names: vendorNames,
+      criteria: criteria.map(c => ({
+        id: c.id,
+        name: c.name,
+        explanation: c.explanation,
+        importance: c.importance,
+        type: c.type,
+      })),
+      already_filled_categories: alreadyFilledCategories,
+      is_mandatory_category: isMandatory,
+      requested_category: requestedCategory,
+      timestamp: new Date().toISOString(),
+    };
+
+    const url = getBattlecardRowUrl();
+    console.log('[n8n-battlecard] Sending request to:', url);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    console.log('[n8n-battlecard] Response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[n8n-battlecard] HTTP error:', response.status, errorText);
+      throw new Error(`HTTP error: ${response.status} - ${errorText}`);
+    }
+
+    let result: BattlecardRowResponse | BattlecardRowResponse[] = await response.json();
+
+    // Handle array response (n8n sometimes wraps response in array)
+    if (Array.isArray(result)) {
+      console.log('[n8n-battlecard] Response is array, extracting first element');
+      if (result.length === 0) {
+        throw new Error('Empty response array from n8n');
+      }
+      result = result[0];
+    }
+
+    if (!result.success) {
+      const errorMessage = result.error?.message || 'Failed to generate battlecard row';
+      const errorCode = result.error?.code || 'INTERNAL_ERROR';
+      console.error('[n8n-battlecard] API error:', errorCode, errorMessage);
+
+      return {
+        success: false,
+        error: {
+          code: errorCode,
+          message: errorMessage,
+        },
+      };
+    }
+
+    if (!result.row) {
+      console.error('[n8n-battlecard] No row data in successful response');
+      return {
+        success: false,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'No row data returned from n8n',
+        },
+      };
+    }
+
+    console.log('[n8n-battlecard] Row generated successfully:', result.row.category_title);
+
+    return result;
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        console.error('[n8n-battlecard] Request timeout');
+        return {
+          success: false,
+          error: {
+            code: 'TIMEOUT',
+            message: 'Battlecard row generation timed out (90s limit)',
+          },
+        };
+      }
+
+      console.error('[n8n-battlecard] Error:', error.message);
+      return {
+        success: false,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: error.message,
+        },
+      };
+    }
+
+    console.error('[n8n-battlecard] Unexpected error:', error);
+    return {
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'An unexpected error occurred during battlecard generation',
+      },
+    };
+  }
+};
+
+// ===========================================
+// Comparison Matrix Cell Summaries API (SP_025)
+// ===========================================
+
+/**
+ * Request for summarizing a criterion row (all vendors)
+ */
+export interface SummarizeCriterionRowRequest {
+  user_id: string;
+  session_id: string;
+  project_id: string;
+  criterion_id: string;
+  criterion_name: string;
+  criterion_explanation: string;
+  vendors: Array<{
+    vendor_id: string;
+    vendor_name: string;
+    match_status: 'yes' | 'no' | 'unknown' | 'star';
+    evidence_description: string;
+    research_notes: string;
+  }>;
+  timestamp: string;
+}
+
+/**
+ * Response from criterion row summarization
+ */
+export interface SummarizeCriterionRowResponse {
+  success: boolean;
+  criterion_id: string;
+  summaries: Record<string, string | null>; // vendor_id -> 2-3 word summary or null
+  timestamp: string;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
+/**
+ * Summarize criterion row (all vendors) - SP_025
+ *
+ * Called after Stage 2 completes for a criterion. Generates 2-3 word summaries
+ * for each vendor cell to improve comparison matrix scannability.
+ *
+ * @param projectId - Project UUID
+ * @param criterionId - Criterion ID being summarized
+ * @param criterionName - Criterion name
+ * @param criterionExplanation - Criterion explanation/description
+ * @param vendors - Array of vendors with their evidence and match status
+ * @returns Promise resolving to summaries for each vendor
+ *
+ * @example
+ * const response = await summarizeCriterionRow(
+ *   'proj_123',
+ *   'crit_001',
+ *   'Real-time Inventory Visibility',
+ *   'Platform provides live inventory tracking across all channels',
+ *   [
+ *     {
+ *       vendor_id: 'v1',
+ *       vendor_name: 'NewStore',
+ *       match_status: 'yes',
+ *       evidence_description: 'Real-time inventory across 500+ stores...',
+ *       research_notes: '...'
+ *     }
+ *   ]
+ * );
+ */
+export const summarizeCriterionRow = async (
+  projectId: string,
+  criterionId: string,
+  criterionName: string,
+  criterionExplanation: string,
+  vendors: Array<{
+    vendor_id: string;
+    vendor_name: string;
+    match_status: 'yes' | 'no' | 'unknown' | 'star';
+    evidence_description: string;
+    research_notes: string;
+  }>
+): Promise<SummarizeCriterionRowResponse> => {
+  console.log('[n8n-summarize] Summarizing criterion row:', criterionName);
+  console.log('[n8n-summarize] Vendors to summarize:', vendors.length);
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), SUMMARIZE_CRITERION_ROW_TIMEOUT_MS);
+
+  try {
+    const requestBody: SummarizeCriterionRowRequest = {
+      user_id: getUserId(),
+      session_id: getSessionId(),
+      project_id: projectId,
+      criterion_id: criterionId,
+      criterion_name: criterionName,
+      criterion_explanation: criterionExplanation,
+      vendors,
+      timestamp: new Date().toISOString(),
+    };
+
+    const url = getSummarizeCriterionRowUrl();
+    console.log('[n8n-summarize] Sending request to:', url);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    console.log('[n8n-summarize] Response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[n8n-summarize] HTTP error:', response.status, errorText);
+      throw new Error(`HTTP error: ${response.status} - ${errorText}`);
+    }
+
+    let result: SummarizeCriterionRowResponse | SummarizeCriterionRowResponse[] = await response.json();
+
+    // Handle array response (n8n sometimes wraps response in array)
+    if (Array.isArray(result)) {
+      console.log('[n8n-summarize] Response is array, extracting first element');
+      if (result.length === 0) {
+        throw new Error('Empty response array from n8n');
+      }
+      result = result[0];
+    }
+
+    if (!result.success) {
+      const errorMessage = result.error?.message || 'Failed to generate summaries';
+      const errorCode = result.error?.code || 'INTERNAL_ERROR';
+      console.error('[n8n-summarize] API error:', errorCode, errorMessage);
+
+      return {
+        success: false,
+        criterion_id: criterionId,
+        summaries: {},
+        timestamp: new Date().toISOString(),
+        error: {
+          code: errorCode,
+          message: errorMessage,
+        },
+      };
+    }
+
+    console.log('[n8n-summarize] Summaries generated successfully for criterion:', criterionName);
+    console.log('[n8n-summarize] Summaries:', result.summaries);
+
+    return result;
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        console.error('[n8n-summarize] Request timeout');
+        return {
+          success: false,
+          criterion_id: criterionId,
+          summaries: {},
+          timestamp: new Date().toISOString(),
+          error: {
+            code: 'TIMEOUT',
+            message: 'Summarization timed out (30s limit)',
+          },
+        };
+      }
+
+      console.error('[n8n-summarize] Error:', error.message);
+      return {
+        success: false,
+        criterion_id: criterionId,
+        summaries: {},
+        timestamp: new Date().toISOString(),
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: error.message,
+        },
+      };
+    }
+
+    console.error('[n8n-summarize] Unexpected error:', error);
+    return {
+      success: false,
+      criterion_id: criterionId,
+      summaries: {},
+      timestamp: new Date().toISOString(),
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'An unexpected error occurred during summarization',
+      },
+    };
+  }
+};
+
+// ===========================================
+// SP_026: Vendor Scatterplot Generation
+// ===========================================
+
+/**
+ * Generate vendor positioning scatter plot via n8n workflow
+ *
+ * Analyzes vendors across two strategic dimensions:
+ * - X-axis: Solution Scope (Multi-Function ↔ Single-Purpose)
+ * - Y-axis: Industry Focus (Multiple Verticals ↔ Vertical-Specific)
+ *
+ * @param projectId - Unique project identifier
+ * @param projectName - Project name
+ * @param projectDescription - Project description
+ * @param projectCategory - Project category (AI-determined)
+ * @param vendors - Array of vendors to analyze
+ * @returns Vendor positioning data (0-100 scores for x and y axes)
+ */
+export const generateVendorScatterplot = async (
+  projectId: string,
+  projectName: string,
+  projectDescription: string,
+  projectCategory: string,
+  vendors: Array<{ id: string; name: string; description: string; website: string }>
+): Promise<VendorScatterplotResponse> => {
+  console.log('[n8n-scatterplot] Generating vendor positioning scatter plot...');
+  console.log('[n8n-scatterplot] Project:', projectName);
+  console.log('[n8n-scatterplot] Vendor count:', vendors.length);
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), VENDOR_SCATTERPLOT_TIMEOUT_MS);
+
+  try {
+    const requestBody: VendorScatterplotRequest = {
+      user_id: getUserId(),
+      session_id: getSessionId(),
+      project_id: projectId,
+      project_name: projectName,
+      project_description: projectDescription,
+      project_category: projectCategory,
+      vendors: vendors.map(v => ({
+        id: v.id,
+        name: v.name,
+        description: v.description,
+        website: v.website,
+      })),
+      timestamp: new Date().toISOString(),
+    };
+
+    const url = getVendorScatterplotUrl();
+    console.log('[n8n-scatterplot] Sending request to:', url);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    console.log('[n8n-scatterplot] Response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[n8n-scatterplot] HTTP error:', response.status, errorText);
+      throw new Error(`HTTP error: ${response.status} - ${errorText}`);
+    }
+
+    let result: VendorScatterplotResponse | VendorScatterplotResponse[] = await response.json();
+
+    // Handle array response (n8n sometimes wraps response in array)
+    if (Array.isArray(result)) {
+      console.log('[n8n-scatterplot] Response is array, extracting first element');
+      if (result.length === 0) {
+        throw new Error('Empty response array from n8n');
+      }
+      result = result[0];
+    }
+
+    if (!result.success || !result.positionings) {
+      const errorMessage = result.error?.message || 'Failed to generate vendor positioning';
+      console.error('[n8n-scatterplot] API error:', errorMessage);
+      throw new Error(errorMessage);
+    }
+
+    console.log('[n8n-scatterplot] Positioning generated successfully');
+    console.log('[n8n-scatterplot] Positions:', result.positionings.length);
+
+    // Cache the result
+    saveVendorScatterplotToStorage(
+      projectId,
+      vendors.map(v => v.id),
+      result.positionings
+    );
+
+    return result;
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        console.error('[n8n-scatterplot] Request timeout');
+        throw new Error('Vendor positioning timed out (60s limit)');
+      }
+      throw error;
+    }
+
+    throw new Error('An unexpected error occurred during vendor positioning');
+  }
+};
+
+// ===========================================
+// Vendor Scatterplot Storage
+// ===========================================
+
+const VENDOR_SCATTERPLOT_PREFIX = 'vendor_scatterplot_positions_';
+
+/**
+ * Save vendor scatterplot positions to localStorage
+ */
+export const saveVendorScatterplotToStorage = (
+  projectId: string,
+  vendorIds: string[],
+  positions: VendorScatterplotResponse['positionings']
+): void => {
+  const key = `${VENDOR_SCATTERPLOT_PREFIX}${projectId}`;
+  const cache: VendorScatterplotCache = {
+    project_id: projectId,
+    vendor_ids: vendorIds,
+    positions,
+    timestamp: new Date().toISOString(),
+  };
+  localStorage.setItem(key, JSON.stringify(cache));
+  console.log('[n8n-scatterplot] Positions cached for project:', projectId);
+};
+
+/**
+ * Get cached vendor scatterplot positions from localStorage
+ * Returns null if cache is invalid (e.g., vendor list changed)
+ */
+export const getVendorScatterplotFromStorage = (
+  projectId: string,
+  currentVendorIds: string[]
+): VendorScatterplotCache | null => {
+  const key = `${VENDOR_SCATTERPLOT_PREFIX}${projectId}`;
+  const stored = localStorage.getItem(key);
+
+  if (!stored) {
+    return null;
+  }
+
+  try {
+    const cache: VendorScatterplotCache = JSON.parse(stored);
+
+    // Validate cache: check if vendor list matches
+    if (cache.vendor_ids.length !== currentVendorIds.length) {
+      console.log('[n8n-scatterplot] Cache invalid: vendor count mismatch');
+      return null;
+    }
+
+    const cachedVendorSet = new Set(cache.vendor_ids);
+    const currentVendorSet = new Set(currentVendorIds);
+
+    for (const id of currentVendorIds) {
+      if (!cachedVendorSet.has(id)) {
+        console.log('[n8n-scatterplot] Cache invalid: vendor list changed');
+        return null;
+      }
+    }
+
+    console.log('[n8n-scatterplot] Using cached positions for project:', projectId);
+    return cache;
+  } catch (error) {
+    console.error('[n8n-scatterplot] Failed to parse cached positions:', error);
+    return null;
+  }
+};
+
+/**
+ * Clear vendor scatterplot cache for a project
+ */
+export const clearVendorScatterplotCache = (projectId: string): void => {
+  const key = `${VENDOR_SCATTERPLOT_PREFIX}${projectId}`;
+  localStorage.removeItem(key);
+  console.log('[n8n-scatterplot] Cache cleared for project:', projectId);
 };

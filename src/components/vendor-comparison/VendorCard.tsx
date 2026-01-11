@@ -25,6 +25,7 @@ interface VendorCardProps {
   onToggleShortlist?: (vendorId: string) => void;
   onRetryVendor?: (vendorId: string) => void;
   isLoadingSummary?: boolean;
+  showArrows?: boolean; // Default true - hide for desktop vertical layout in battlecards
 }
 
 const colorClasses = {
@@ -62,6 +63,7 @@ export const VendorCard: React.FC<VendorCardProps> = ({
   onToggleShortlist,
   onRetryVendor,
   isLoadingSummary = false,
+  showArrows = true, // Default to true for mobile/comparison matrix
 }) => {
   const { toast } = useToast();
   const hasPrevious = currentIndex > 0;
@@ -162,9 +164,10 @@ export const VendorCard: React.FC<VendorCardProps> = ({
 
   return (
     <div className={`vendor-card-wrapper ${className}`}>
-      <div className={`flex items-center ${SPACING.vendorComparison.navigation.gap}`}>
-        {/* Previous Arrow with Counter */}
-        <div className="relative flex-shrink-0">
+      <div className={`flex items-center ${showArrows ? SPACING.vendorComparison.navigation.gap : ''}`}>
+        {/* Previous Arrow with Counter (only if showArrows = true) */}
+        {showArrows && (
+          <div className="relative flex-shrink-0">
           <div
             onClick={(e) => {
               e.stopPropagation();
@@ -200,6 +203,7 @@ export const VendorCard: React.FC<VendorCardProps> = ({
             )}
           </AnimatePresence>
         </div>
+        )}
 
         {/* Vendor Card Content - Clickable to expand */}
         <motion.div
@@ -261,8 +265,9 @@ export const VendorCard: React.FC<VendorCardProps> = ({
           </div>
         </motion.div>
 
-        {/* Next Arrow with Counter */}
-        <div className="relative flex-shrink-0">
+        {/* Next Arrow with Counter (only if showArrows = true) */}
+        {showArrows && (
+          <div className="relative flex-shrink-0">
           <div
             onClick={(e) => {
               e.stopPropagation();
@@ -298,6 +303,7 @@ export const VendorCard: React.FC<VendorCardProps> = ({
             )}
           </AnimatePresence>
         </div>
+        )}
       </div>
 
       {/* Accordion Expansion Content */}

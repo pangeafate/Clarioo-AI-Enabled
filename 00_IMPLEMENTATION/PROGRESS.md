@@ -4,20 +4,21 @@
 
 **Project**: Clarioo Vendor Analyst - AI-Powered Software Vendor Selection Platform
 **Current Phase**: Phase 1 - n8n AI Integration (Active Development)
-**Status**: 9 Active n8n Webhooks | localStorage Persistence | Production-Ready Core Features
-**Version**: 4.0.0
-**Last Updated**: December 11, 2024
+**Status**: 10 Active n8n Webhooks | localStorage Persistence | Production-Ready Core Features
+**Version**: 4.1.0
+**Last Updated**: January 10, 2026
 
 ### Phase Overview
 
 **Phase 0 (SP_006-SP_015)**: Visual Prototype with Mock Data - COMPLETED
-**Phase 1 (SP_016+)**: Real n8n AI Integration - IN PROGRESS
+**Phase 1 (SP_016-SP_022)**: Real n8n AI Integration - COMPLETED
+**Phase 1 (SP_023+)**: Continued Enhancement - IN PROGRESS
 
 ---
 
 ## 🎯 Current Implementation Status
 
-### Real n8n AI Integrations (9 Active Webhooks)
+### Real n8n AI Integrations (10 Active Webhooks)
 
 | Webhook | Function | Timeout | Status | Sprint |
 |---------|----------|---------|--------|--------|
@@ -30,6 +31,7 @@
 | `clarioo-executive-summary` | Executive summary generation | 120s | ✅ ACTIVE | SP_019 |
 | `Vendor-Card-Summary` | Vendor card summary (Perplexity) | 120s | ✅ ACTIVE | SP_019 |
 | `clarioo-email-collection` | Email collection to Google Sheets | 120s | ✅ ACTIVE | SP_017 |
+| `battlecard-row` | Battlecard row generation | 60s | ✅ ACTIVE | SP_023 |
 
 **AI Model**: GPT-4o-mini (temperature: 0.3, max tokens: 6000)
 **Webhook Modes**: Production & Testing (user-switchable via `WebhookModeToggle`)
@@ -267,6 +269,72 @@
 ---
 
 ## 🚀 Completed Sprints
+
+### Sprint 22: Template Carousel Section on Landing Page (SP_022)
+**Date**: January 8, 2026
+**Status**: ✅ COMPLETE
+**Duration**: 1 day
+**Type**: Feature Implementation + UX Enhancement
+
+#### Objectives
+1. ✅ Add template carousel section to landing page above CardCarousel
+2. ✅ Implement category filtering for templates
+3. ✅ Build responsive carousel (3 cards desktop, 1 card mobile)
+4. ✅ Handle edge cases: 1 card (centered), 2 cards (carousel), 3 cards (positioning workaround)
+5. ✅ Integrate with CriteriaPreviewModal and EmailCollectionModal
+6. ✅ Maintain consistent card dimensions across all scenarios
+
+#### Key Deliverables
+
+**1. TemplateCarouselSection Component** (`src/components/landing/TemplateCarouselSection.tsx`, 350 lines)
+- Carousel with Embla integration (same pattern as CardCarousel)
+- Category filtering with "All" default
+- Responsive layout: 3 cards (desktop) / 1 card (mobile)
+- Navigation: Arrow buttons + dot indicators
+- Keyboard support: ArrowLeft/ArrowRight
+
+**2. Conditional Rendering Logic**
+- Single card: Centered display without carousel
+- Two+ cards: Carousel mode with navigation
+- Consistent card dimensions: `flex-[0_0_100%] md:flex-[0_0_45%] lg:flex-[0_0_35%]`
+
+**3. Three-Card Positioning Workaround**
+- Issue: Embla's reInit() doesn't position 3 cards correctly
+- Solution: Call scrollNext() after reInit to fix positioning
+- Trade-off: Middle card focused on initialization (acceptable UX)
+
+**4. Integration Points**
+- Opens CriteriaPreviewModal on card click
+- Checks email submission before project creation
+- Shows EmailCollectionModal if needed
+- Calls onTemplateProjectCreated callback to LandingPage
+
+**5. Section Styling**
+- Title: "What others discover..."
+- Position: Above "See Every Step of the Process" section
+- Animation: Opacity and scale transitions on card focus
+
+#### Technical Implementation
+- **Carousel Config**: loop: true, align: 'center', containScroll: false
+- **State Management**: Category selection, filtered templates, carousel index, modal states
+- **Edge Cases**: Single card centering, 2-card navigation, 3-card positioning bug workaround
+- **Code Quality**: 3 optimizations applied (removed redundant code, expanded comments, simplified dependencies)
+
+#### Actual Results
+✅ Template carousel section operational on landing page
+✅ Category filtering working correctly
+✅ Carousel navigation smooth across all scenarios
+✅ Single card centered without carousel
+✅ Two cards navigable with arrows
+✅ Three cards positioned correctly (middle card focused)
+✅ Four+ cards standard carousel behavior
+✅ Modal integrations working (CriteriaPreviewModal, EmailCollectionModal)
+✅ Responsive design verified (desktop/tablet/mobile)
+✅ Code cleanup completed
+
+**Sprint Document**: [SP_022_Template_Carousel_Section.md](./SPRINTS/SP_022_Template_Carousel_Section.md)
+
+---
 
 ### Sprint 21: Project Templates Feature (SP_021)
 **Date**: December 11, 2024
@@ -923,8 +991,11 @@ These sprints established the foundational UI/UX and component architecture:
 
 ## 🎯 Current Focus & Next Steps
 
-### Immediate Priority: SP_020 - Criteria Creation Animation
+### Planned Sprints
+
+#### SP_020 - Criteria Creation Animation
 **Status**: 📋 PLANNED
+**Priority**: Medium
 **Goal**: Add delightful animation when criteria are generated from n8n
 
 **Key Features**:
@@ -932,6 +1003,17 @@ These sprints established the foundational UI/UX and component architecture:
 - Loading skeleton during n8n API call
 - Smooth fade-in with stagger effect
 - Celebration animation when complete
+
+#### SP_023 - Vendor Battlecards
+**Status**: 📋 PLANNED
+**Priority**: High (Next Sprint)
+**Goal**: Generate AI-powered vendor battlecards for competitive comparison
+
+**Key Features**:
+- Battlecard row generation via n8n webhook (✅ Implemented)
+- Visual battlecard matrix component
+- Export battlecards to PDF/Excel
+- Share battlecards with team
 
 ### Future Enhancements
 
@@ -976,6 +1058,7 @@ These sprints established the foundational UI/UX and component architecture:
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 4.1.0 | Jan 8, 2026 | SP_022 complete - Template Carousel Section on Landing Page. New carousel with category filtering, responsive design (3 cards desktop/1 mobile), edge case handling for 1-3 cards, and modal integrations. 1 new component created (350 lines), 1 file modified. |
 | 4.0.0 | Dec 11, 2024 | SP_021 complete - Project Templates Feature with component reusability pattern (readOnly props) and localStorage integration. 8 new files created, 3 files modified. |
 | 3.9.0 | Dec 3, 2024 | Comprehensive rewrite based on actual implementation. Module-by-module analysis. Corrected all timeouts, endpoints, and integration status. |
 | 3.8.0 | Dec 2, 2024 | Documentation alignment - Phase 0/1 clarification, localStorage persistence confirmed, 6 n8n webhooks active |
@@ -991,7 +1074,7 @@ These sprints established the foundational UI/UX and component architecture:
 ---
 
 **Document Owner**: Engineering Team
-**Last Comprehensive Review**: December 11, 2024
+**Last Comprehensive Review**: January 8, 2026
 **Next Review**: Upon completion of SP_020
 
 ---

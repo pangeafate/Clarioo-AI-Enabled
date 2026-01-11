@@ -1,8 +1,8 @@
 # Clarioo Application Architecture
 
-**Version**: 3.8.0
-**Last Updated**: November 25, 2024
-**Status**: Phase 1 - n8n AI Integration (SP_017 Complete)
+**Version**: 4.1.0
+**Last Updated**: January 10, 2026
+**Status**: Phase 1 - n8n AI Integration (SP_022 Complete)
 **Related Docs**: [CODEBASE_STRUCTURE.md](./CODEBASE_STRUCTURE.md), [PROJECT_ROADMAP.md](./PROJECT_ROADMAP.md)
 
 ---
@@ -21,14 +21,40 @@
 
 ## Executive Summary
 
-Clarioo has transitioned to **Phase 1: n8n AI Integration**, combining real AI processing with remaining mock services. The architecture now includes:
-- **Real AI**: Project creation and criteria generation via n8n webhooks (GPT-4o-mini)
-- **Mock services**: Vendor selection and comparison (planned for SP_017/SP_018)
-- **Hybrid approach**: Real backend for core workflows, mock for remaining features
+Clarioo has completed **Phase 1: n8n AI Integration**, with comprehensive real AI processing via n8n webhooks. The architecture now includes:
+- **Real AI**: 10 active n8n webhooks with GPT-4o-mini and Perplexity integration
+- **Core features**: Project creation, criteria generation, vendor discovery, two-stage comparison, executive summary, vendor summary, email collection, template carousel, battlecard generation
+- **Production-ready**: localStorage persistence, error handling, retry logic, caching strategies
 
-**Current State**: React application with n8n AI backend for project/criteria, mock for vendors
-**Next Phase**: n8n integration for vendor selection (SP_017) and comparison (SP_018)
-**Future State**: Full-stack with Supabase database persistence
+**Current State**: React application with full n8n AI backend integration (10 active webhooks)
+**Next Phase**: Database migration to Supabase for multi-user support and persistence
+**Future State**: Full-stack with Supabase database, authentication, and team collaboration
+
+---
+
+## Technology Stack
+
+### Frontend
+- **React**: 18.3.1
+- **TypeScript**: 5.5.3
+- **Vite**: 5.4.1
+- **React Router**: 6.26.2
+- **Tailwind CSS**: 3.4.11
+- **shadcn/ui**: Radix UI components
+
+### AI Backend
+- **n8n**: Self-hosted workflow automation
+- **GPT-4o-mini**: OpenAI model (temperature 0.3, max tokens 6000)
+- **Perplexity**: AI-powered search and research
+
+### Testing
+- **Vitest**: 4.0.8
+- **Playwright**: 1.56.1
+- **React Testing Library**: Component testing
+
+### Storage
+- **localStorage**: Client-side persistence (Phase 1)
+- **Supabase**: Planned database (Phase 2+)
 
 ---
 
@@ -311,43 +337,77 @@ As of Sprint 16 (November 23, 2024), Clarioo has transitioned from Phase 0 (Visu
 
 ### n8n Webhook Architecture
 
-**n8n Endpoints** (6 active webhooks):
+**n8n Endpoints** (10 active webhooks):
 
 1. **Project Creation**:
    - URL: `https://n8n.lakestrom.com/webhook/clarioo-project-creation`
    - Method: POST
    - Timeout: 120 seconds (2 minutes)
    - Status: ✅ Implemented (SP_016)
+   - Function: AI-powered project and criteria generation from company context
 
 2. **Criteria Chat**:
    - URL: `https://n8n.lakestrom.com/webhook/clarioo-criteria-chat`
    - Method: POST
    - Timeout: 120 seconds (2 minutes)
    - Status: ✅ Implemented (SP_016)
+   - Function: Natural language criterion refinement and editing
 
 3. **Find Vendors**:
    - URL: `https://n8n.lakestrom.com/webhook/clarioo-find-vendors`
    - Method: POST
    - Timeout: 180 seconds (3 minutes)
-   - Status: 📋 Planned (SP_018)
+   - Status: ✅ Implemented (SP_018)
+   - Function: AI-powered vendor discovery with match scoring
 
-4. **Compare Vendors**:
+4. **Compare Vendors** (Single Vendor Summary):
    - URL: `https://n8n.lakestrom.com/webhook/clarioo-compare-vendors`
    - Method: POST
-   - Timeout: 120 seconds (2 minutes)
-   - Status: 📋 Planned (SP_019)
+   - Timeout: 180 seconds (3 minutes)
+   - Status: ✅ Implemented (SP_019)
+   - Function: Single vendor comprehensive analysis
 
-5. **Executive Summary**:
+5. **Compare Vendor Criterion** (Stage 1: Individual Research):
+   - URL: `https://n8n.lakestrom.com/webhook/compare-vendor-criterion`
+   - Method: POST
+   - Timeout: 45 seconds
+   - Status: ✅ Implemented (SP_018)
+   - Function: Per-cell evidence-based research for vendor-criterion pairs
+
+6. **Rank Criterion Results** (Stage 2: Comparative Ranking):
+   - URL: `https://n8n.lakestrom.com/webhook/rank-criterion-results`
+   - Method: POST
+   - Timeout: 90 seconds
+   - Status: ✅ Implemented (SP_018)
+   - Function: Cross-vendor comparative ranking with competitive advantage stars
+
+7. **Executive Summary**:
    - URL: `https://n8n.lakestrom.com/webhook/clarioo-executive-summary`
    - Method: POST
    - Timeout: 120 seconds (2 minutes)
-   - Status: 📋 Planned (SP_019)
+   - Status: ✅ Implemented (SP_019)
+   - Function: Strategic analysis and vendor recommendations
 
-6. **Email Collection**:
+8. **Vendor Card Summary**:
+   - URL: `https://n8n.lakestrom.com/webhook/Vendor-Card-Summary`
+   - Method: POST
+   - Timeout: 120 seconds (2 minutes)
+   - Status: ✅ Implemented (SP_019)
+   - Function: Individual vendor killer features and summary generation via Perplexity
+
+9. **Email Collection**:
    - URL: `https://n8n.lakestrom.com/webhook/clarioo-email-collection`
    - Method: POST
    - Timeout: 30 seconds
    - Status: ✅ Implemented (SP_017)
+   - Function: User email collection with device metadata to Google Sheets
+
+10. **Battlecard Row**:
+   - URL: `https://n8n.lakestrom.com/webhook/battlecard-row`
+   - Method: POST
+   - Timeout: 60 seconds
+   - Status: ✅ Implemented (SP_023)
+   - Function: Generate individual battlecard rows for vendor comparison matrix
 
 **AI Configuration** (set within n8n workflows):
 - AI Model: GPT-4o-mini
@@ -467,9 +527,133 @@ As of Sprint 16 (November 23, 2024), Clarioo has transitioned from Phase 0 (Visu
 - `clarioo_webhook_mode` - Webhook mode (production | testing)
 - `email_submitted` - Flag to prevent duplicate email collection modal
 - `email_passed_to_n8n` - Flag for silent retry of failed email submissions
+- `clarioo_executive_summary_${projectId}` - Cached executive summaries
+- `clarioo_vendor_summary_${projectId}_${vendor}` - Cached vendor summaries
+- `comparison_${projectId}_${vendor}_${criterion}` - Stage 1 comparison cache
+- `ranking_${projectId}_${criterion}` - Stage 2 ranking cache
 
 **sessionStorage** (per browser tab):
 - `clarioo_session_id` - UUID for session tracking
+
+---
+
+## Two-Stage Progressive Comparison System (SP_018)
+
+### Overview
+
+The two-stage comparison system provides sophisticated vendor analysis through progressive enhancement:
+
+**Stage 1: Individual Research** - Per-cell evidence-based analysis
+- Each vendor-criterion pair analyzed independently
+- Evidence collection with source citations
+- Strength assessment (yes/unknown/no) with confidence levels
+- 45-second timeout per cell with retry capability
+- localStorage caching to prevent redundant API calls
+
+**Stage 2: Comparative Ranking** - Cross-vendor competitive analysis
+- Comparative ranking across all vendors for each criterion
+- Competitive advantage stars (0-5 stars) awarded to leaders
+- Relative strength analysis with explanatory evidence
+- 90-second timeout per criterion with retry capability
+- Cache invalidation when comparison data changes
+
+### Architecture Components
+
+**Service Layer** (`src/services/n8nService.ts`):
+- `compareVendorCriterion()` - Stage 1: Individual vendor-criterion research
+- `rankCriterionResults()` - Stage 2: Cross-vendor comparative ranking
+- Request/response formatting for n8n webhooks
+- Error handling with automatic retry logic
+
+**Hooks Layer** (`src/hooks/useTwoStageComparison.ts`):
+- Progressive comparison state management
+- Cell-level loading states (pending/loading/yes/no/unknown/star/failed)
+- Automatic stage progression (Stage 1 → Stage 2)
+- Error recovery and retry coordination
+
+**Storage Layer** (`src/utils/comparisonStorage.ts`):
+- Cache management for Stage 1 and Stage 2 results
+- Automatic cache invalidation on data changes
+- Performance optimization through intelligent caching
+- Storage key generation and retrieval
+
+**Component Layer** (`src/components/VendorComparisonNew.tsx`):
+- Two-stage UI with visual feedback
+- Cell-level state visualization
+- Interactive evidence display
+- Stage progression indicators
+
+### Data Flow
+
+**Stage 1 Flow**:
+1. User initiates comparison for specific vendor-criterion pairs
+2. Component triggers `compareVendorCriterion()` with project context
+3. n8n webhook performs AI-powered research (GPT-4o-mini + Perplexity)
+4. Response includes: strength (yes/unknown/no), evidence, sources
+5. Result cached in localStorage with unique key
+6. UI updates cell state and displays evidence
+
+**Stage 2 Flow**:
+1. After Stage 1 completes for all vendors on a criterion
+2. Component triggers `rankCriterionResults()` with all Stage 1 results
+3. n8n webhook performs comparative analysis across vendors
+4. Response includes: competitive rankings, star awards (0-5), relative strengths
+5. Result cached in localStorage
+6. UI updates cells with star indicators and comparative insights
+
+### Cell State Management
+
+**Possible States**:
+- `pending` - Cell awaiting Stage 1 research
+- `loading` - API call in progress
+- `yes` - Vendor meets criterion (Stage 1 complete)
+- `no` - Vendor does not meet criterion (Stage 1 complete)
+- `unknown` - Insufficient information (Stage 1 complete)
+- `star` - Competitive advantage awarded (Stage 2 complete)
+- `failed` - API call failed, retry available
+
+**State Transitions**:
+```
+pending → loading → (yes/no/unknown) → loading → star
+                 ↓
+               failed → pending (retry)
+```
+
+### Caching Strategy
+
+**Cache Keys**:
+- Stage 1: `comparison_${projectId}_${vendorName}_${criterionId}`
+- Stage 2: `ranking_${projectId}_${criterionId}`
+
+**Cache Invalidation**:
+- Criteria changes (importance, description) invalidate Stage 1
+- Vendor changes invalidate both Stage 1 and Stage 2
+- Manual refresh clears all caches
+- 24-hour automatic expiration (configurable)
+
+**Performance Benefits**:
+- Eliminates redundant API calls
+- Instant load on page refresh
+- Reduced n8n webhook usage
+- Improved user experience
+
+### Error Handling
+
+**Stage 1 Errors**:
+- Network timeout: Mark cell as `failed`, allow retry
+- Invalid response: Log error, show user-friendly message
+- Partial failure: Continue with remaining cells
+
+**Stage 2 Errors**:
+- Network timeout: Retry automatically once
+- Invalid response: Fall back to Stage 1 results
+- Degraded experience: Show Stage 1 without comparative stars
+
+**Retry Logic**:
+- Automatic single retry for Stage 2 failures
+- Manual retry button for persistent Stage 1 failures
+- Exponential backoff for rate limiting
+- Clear error messages with actionable guidance
 
 ---
 

@@ -143,37 +143,8 @@ export const CriteriaPreviewModal: React.FC<CriteriaPreviewModalProps> = ({
             transition={{ duration: 0.2 }}
             className="fixed inset-4 md:inset-8 bg-white rounded-lg shadow-2xl z-50 flex flex-col"
           >
-            {/* Header */}
-            <div className="flex items-start justify-between p-4 md:p-6 border-b">
-              <div className="flex-1 mr-4">
-                <h2 className={cn(TYPOGRAPHY.heading.h4, 'mb-2')}>
-                  {template.lookingFor}
-                </h2>
-
-                {/* Company type */}
-                {template.companyType && (
-                  <p className="text-sm text-gray-600 mb-2">{template.companyType}</p>
-                )}
-
-                {/* Company details */}
-                {template.companyDetails && (
-                  <p className="text-sm text-gray-600 mb-3">{template.companyDetails}</p>
-                )}
-
-                {/* Current tool */}
-                {template.currentTool && (
-                  <p className="text-sm text-gray-700 mb-2">
-                    <span className="font-medium">Currently:</span> {template.currentTool}
-                  </p>
-                )}
-
-                {/* Pain quote */}
-                {template.painQuote && (
-                  <p className="text-sm text-gray-600 italic mb-3">
-                    "{template.painQuote}"
-                  </p>
-                )}
-              </div>
+            {/* Close Button - Fixed in top right */}
+            <div className="absolute top-4 right-4 md:top-6 md:right-6 z-10">
               <Button
                 variant="ghost"
                 size="icon"
@@ -184,21 +155,55 @@ export const CriteriaPreviewModal: React.FC<CriteriaPreviewModalProps> = ({
               </Button>
             </div>
 
-            {/* Content */}
+            {/* Scrollable Content */}
             <ScrollArea className="flex-1 p-4 md:p-6">
-              <div className="max-w-6xl mx-auto space-y-4">
-                {sortedCategories.map(category => (
-                  <AccordionSection
-                    key={category}
-                    title={capitalizeCategory(category)}
-                    criteria={groupedCriteria[category]}
-                    isExpanded={expandedSections.has(category.toLowerCase())}
-                    onToggle={() => toggleSection(category.toLowerCase())}
-                    onEditCriterion={handleEditCriterion}
-                    onAddCriterion={handleAddCriterion}
-                    readOnly={true}
-                  />
-                ))}
+              <div className="max-w-6xl mx-auto space-y-6">
+                {/* Header Content - Now scrollable */}
+                <div className="pr-12">
+                  <h2 className={cn(TYPOGRAPHY.heading.h4, 'mb-2')}>
+                    {template.lookingFor}
+                  </h2>
+
+                  {/* Company type */}
+                  {template.companyType && (
+                    <p className="text-sm text-gray-600 mb-2">{template.companyType}</p>
+                  )}
+
+                  {/* Company details */}
+                  {template.companyDetails && (
+                    <p className="text-sm text-gray-600 mb-3">{template.companyDetails}</p>
+                  )}
+
+                  {/* Current tool */}
+                  {template.currentTool && (
+                    <p className="text-sm text-gray-700 mb-2">
+                      <span className="font-medium">Currently:</span> {template.currentTool}
+                    </p>
+                  )}
+
+                  {/* Pain quote */}
+                  {template.painQuote && (
+                    <p className="text-sm text-gray-600 italic mb-3">
+                      "{template.painQuote}"
+                    </p>
+                  )}
+                </div>
+
+                {/* Criteria Sections */}
+                <div className="space-y-4">
+                  {sortedCategories.map(category => (
+                    <AccordionSection
+                      key={category}
+                      title={capitalizeCategory(category)}
+                      criteria={groupedCriteria[category]}
+                      isExpanded={expandedSections.has(category.toLowerCase())}
+                      onToggle={() => toggleSection(category.toLowerCase())}
+                      onEditCriterion={handleEditCriterion}
+                      onAddCriterion={handleAddCriterion}
+                      readOnly={true}
+                    />
+                  ))}
+                </div>
               </div>
             </ScrollArea>
 
