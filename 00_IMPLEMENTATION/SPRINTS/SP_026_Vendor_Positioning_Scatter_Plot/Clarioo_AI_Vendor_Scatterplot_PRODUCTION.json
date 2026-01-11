@@ -1,0 +1,434 @@
+{
+  "name": "Clarioo AI Vendor Scatterplot",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "clarioo-vendor-scatterplot",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "https://demo.clarioo.io"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -1200,
+        0
+      ],
+      "webhookId": "clarioo-vendor-scatterplot",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = items[0].json.body || {};\n\nconst user_id = body.user_id;\nconst session_id = body.session_id;\nconst project_id = body.project_id;\nconst project_name = body.project_name || '';\nconst project_description = body.project_description || '';\nconst project_category = body.project_category || '';\nconst vendors = body.vendors || [];\nconst timestamp = body.timestamp;\n\n// Validation\nconst errors = [];\n\nif (!user_id || user_id.trim() === '') {\n  errors.push('user_id is required');\n}\n\nif (!session_id || session_id.trim() === '') {\n  errors.push('session_id is required');\n}\n\nif (!project_id || project_id.trim() === '') {\n  errors.push('project_id is required');\n}\n\nif (!project_name || project_name.trim().length < 5) {\n  errors.push('project_name must be at least 5 characters');\n}\n\nif (!project_description || project_description.trim().length < 20) {\n  errors.push('project_description must be at least 20 characters');\n}\n\nif (!Array.isArray(vendors) || vendors.length === 0) {\n  errors.push('vendors must be a non-empty array');\n} else {\n  vendors.forEach((vendor, index) => {\n    if (!vendor.id) errors.push(`vendor[${index}].id is required`);\n    if (!vendor.name) errors.push(`vendor[${index}].name is required`);\n    if (!vendor.description) errors.push(`vendor[${index}].description is required`);\n  });\n}\n\nif (!timestamp) {\n  errors.push('timestamp is required');\n}\n\nif (errors.length > 0) {\n  return [{\n    json: {\n      validation_error: true,\n      error_code: 'INVALID_INPUT',\n      error_message: errors.join(', ')\n    }\n  }];\n}\n\n// Pass through validated data\nreturn [{\n  json: {\n    validation_error: false,\n    user_id,\n    session_id,\n    project_id,\n    project_name: project_name.trim(),\n    project_description: project_description.trim(),\n    project_category: project_category.trim(),\n    vendors,\n    timestamp\n  }\n}];"
+      },
+      "id": "input-validation",
+      "name": "Input Validation",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -976,
+        0
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "validation-check",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "leftValue": "={{ $json.validation_error }}",
+              "rightValue": true
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-validation",
+      "name": "Check Validation",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -752,
+        0
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  success: false,\n  error: {\n    code: $json.error_code,\n    message: $json.error_message\n  }\n} }}",
+        "options": {
+          "responseCode": 400,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "https://demo.clarioo.io"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-validation-error",
+      "name": "Return Validation Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -464,
+        -144
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=PROJECT CONTEXT:\nName: {{ $json.project_name }}\nDescription: {{ $json.project_description }}\nCategory: {{ $json.project_category }}\n\nVENDORS TO ANALYZE ({{ $json.vendors.length }} total):\n\n{{ $json.vendors.map(v => `\nVENDOR: ${v.name}\nID: ${v.id}\nWebsite: ${v.website}\nDescription: ${v.description}\n---\n`).join('\\n') }}\n\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\nTASK: Analyze each vendor and assign scores (0-100) for TWO dimensions\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n\nDIMENSION 1 - SOLUTION SCOPE\nPosition vendors from Single-Purpose specialists to Multi-Function platforms\n\nREFERENCE POINTS - Use these as anchors:\n\nSCORE 0-20 (Single-Purpose Specialists):\n\u2022 Examples: Calendly (only scheduling), Grammarly (only writing), Loom (only video messages)\n\u2022 Characteristics: 1-2 core features, solves ONE specific problem, narrow workflow\n\u2022 Evidence: Simple pricing page with one main feature, \"Does X really well\" positioning\n\nSCORE 40-60 (Focused Suites):\n\u2022 Examples: Mailchimp (email + CRM + landing pages), Asana (tasks + projects + timelines)\n\u2022 Characteristics: 3-5 related features, solves CONNECTED problems, integrated workflow\n\u2022 Evidence: Feature tabs showing 3-5 main capabilities, \"All-in-one for X\" positioning\n\nSCORE 80-100 (Multi-Function Platforms):\n\u2022 Examples: Salesforce (CRM + sales + marketing + service + analytics + apps), Microsoft 365, HubSpot\n\u2022 Characteristics: 10+ major features, platform architecture, serves MANY distinct use cases\n\u2022 Evidence: Complex navigation with 10+ product sections, \"Platform for everything\" positioning\n\n---\n\nDIMENSION 2 - INDUSTRY FOCUS\nPosition vendors from Vertical-Specific (industry-specialized) to Multiple Verticals (horizontal)\n\nREFERENCE POINTS - Use these as anchors:\n\nSCORE 80-100 (Multiple Verticals - Horizontal):\n\u2022 Examples: Slack (messaging for all), Zoom (video for all), Google Workspace\n\u2022 Characteristics: Used identically across ALL industries, no industry-specific features\n\u2022 Evidence: Generic case studies across sectors, no vertical-specific pricing/features\n\nSCORE 40-60 (Industry-Focused):\n\u2022 Examples: Shopify (retail/e-commerce), Toast (restaurants), Procore (construction)\n\u2022 Characteristics: Serves 2-4 related verticals, some industry-specific features\n\u2022 Evidence: Industry-specific templates, targets 2-3 related sectors, some compliance features\n\nSCORE 0-20 (Vertical-Specific - Deep Specialization):\n\u2022 Examples: Veeva (pharma/life sciences), Epic (healthcare), Blackbaud (nonprofits)\n\u2022 Characteristics: ONLY serves one industry, deep regulatory/compliance features\n\u2022 Evidence: Industry-specific homepage, compliance certifications, vertical-only case studies\n\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\nSCORING METHODOLOGY - Follow these 4 steps for EACH vendor\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n\nSTEP 1: RESEARCH (Analyze Individual Vendor)\nFor each vendor, identify:\n\u25a1 Feature Count: Count distinct major features/capabilities (not sub-features)\n\u25a1 Use Cases: How many different jobs-to-be-done does it solve?\n\u25a1 Industry Positioning: Which industries are explicitly mentioned on their website?\n\u25a1 Industry Features: Any industry-specific features, compliance, or workflows?\n\nSTEP 2: COMPARE (Rank Against Other Vendors)\nCreate two rankings:\n\u25a1 Solution Scope Ranking: Order all vendors from narrowest (fewest features) to broadest (most features)\n\u25a1 Industry Focus Ranking: Order all vendors from most horizontal (all industries) to most vertical (one industry)\n\nSTEP 3: DISTRIBUTE SCORES (Apply Distribution Logic)\n\n\ud83c\udfaf DISTRIBUTION RULES - READ CAREFULLY:\n\nWHEN TO CLUSTER (scores within 20 points):\n\u2713 All vendors are in the same category (e.g., all project management tools)\n\u2713 No meaningful differentiation in feature scope or industry focus\n\u2713 Example: Asana (45), Monday (52), ClickUp (58) - all mid-range PM tools\n\nWHEN TO SPREAD MODERATELY (30-40 point range):\n\u2713 Clear differences exist but vendors are in related categories\n\u2713 Some vendors are more specialized/focused than others\n\u2713 Example: Simple tool (30), Mid-range suite (55), Comprehensive platform (70)\n\nWHEN TO SPREAD WIDELY (50+ point range):\n\u2713 Extreme differentiation: niche tool vs enterprise platform\n\u2713 Clear tiers: specialist vs suite vs ecosystem\n\u2713 Example: Single-feature tool (15), Suite (55), Enterprise platform (90)\n\n\u26a0\ufe0f CRITICAL: Use the FULL 0-100 scale when appropriate. Don't be conservative.\nIf you have a true single-purpose tool, score it 10-20, not 40.\nIf you have a true enterprise platform, score it 85-95, not 70.\n\nSTEP 4: CALIBRATE WITH PROJECT CONTEXT\nConsider the project's specific use case ({{ $json.project_category }}):\n\u25a1 Does this vendor position differently for THIS use case?\n\u25a1 Example: Slack is multi-function (score 75) generally, but for \"team chat\" use case specifically, it's more focused (score 45)\n\u25a1 Adjust scores \u00b110-20 points based on project relevance\n\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\nREASONING REQUIREMENTS - Your reasoning MUST include these 3 elements\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n\nFor EACH vendor, provide:\n\n1. FEATURES: \"Offers [X] core features: [list 2-3 key ones]\"\n   Example: \"Offers 3 core features: email campaigns, basic CRM, landing pages\"\n\n2. INDUSTRY: \"Targets [industries/verticals] with [evidence]\"\n   Example: \"Targets all SMBs horizontally (generic homepage, cross-industry case studies)\"\n   OR \"Targets healthcare only (HIPAA compliance, EHR integrations, medical billing)\"\n\n3. RELATIVE: \"Positioned [higher/lower] than [Vendor X] because [specific difference]\"\n   Example: \"Broader than Calendly (1 feature, score 15) but more focused than HubSpot (12+ features, score 85)\"\n\n\u274c BAD REASONING: \"Multi-function platform with broad appeal\"\n\u2705 GOOD REASONING: \"Offers 8 features (CRM, email, analytics, automation, forms, ads, landing pages, social) vs competitors with 2-4 features. Targets SMBs horizontally across all industries (homepage shows retail, SaaS, agency examples). Broader than ActiveCampaign (score 55, fewer features) but more focused than Salesforce (score 92, enterprise platform).\"\n\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\nFINAL CONSISTENCY CHECK - Validate before returning\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n\nBefore returning your response, verify:\n\n\u25a1 1. Do scores reflect ACTUAL feature/industry differences?\n   - If VendorA has 10 features and VendorB has 3, is VendorA scored significantly higher?\n\n\u25a1 2. Are SIMILAR vendors scored similarly (\u00b110 points)?\n   - If two vendors are both \"email marketing tools\", are they within 10 points of each other?\n\n\u25a1 3. Did I use the FULL 0-100 range when appropriate?\n   - If I have true specialists and true platforms, do scores span at least 40 points?\n   - Am I being too conservative by clustering everyone around 50?\n\n\u25a1 4. Does EVERY reasoning cite SPECIFIC evidence?\n   - Feature counts? Industry mentions? Relative comparisons?\n\n\u25a1 5. Are scores distributed logically?\n   - If all vendors scored 40-60, is that genuinely accurate or am I avoiding differentiation?\n   - If vendors are truly different, do scores reflect those differences clearly?\n\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\nOUTPUT FORMAT - Return JSON with this EXACT structure\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n\n{\n  \"positionings\": [\n    {\n      \"vendor_id\": \"uuid-from-input\",\n      \"vendor_name\": \"Vendor Name\",\n      \"x_score\": 75,\n      \"y_score\": 40,\n      \"reasoning\": \"FEATURES: Offers 8 core features (CRM, email marketing, analytics, automation, landing pages, social media, ads management, forms) vs single-purpose competitors. INDUSTRY: Targets SMBs horizontally across all verticals (homepage shows retail, SaaS, agency, nonprofit examples; no vertical-specific features). RELATIVE: Broader than Mailchimp (score 55, fewer integrations) but more focused than Salesforce (score 92, enterprise platform with 15+ products).\"\n    },\n    {\n      \"vendor_id\": \"uuid-from-input-2\",\n      \"vendor_name\": \"Another Vendor\",\n      \"x_score\": 25,\n      \"y_score\": 85,\n      \"reasoning\": \"FEATURES: Offers 2 core features (appointment scheduling, patient reminders) focused on one workflow. INDUSTRY: Targets healthcare exclusively (HIPAA-compliant, EHR integrations, medical billing templates, only healthcare case studies). RELATIVE: More specialized than Calendly (score 15, horizontal scheduling) and much narrower than general practice management suites (score 60+).\"\n    }\n  ]\n}\n\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\nIMPORTANT REMINDERS\n\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n\n\u2713 Use reference vendor examples (Calendly=15, Mailchimp=50, Salesforce=90) as anchors\n\u2713 Follow the 4-step process: Research \u2192 Compare \u2192 Distribute \u2192 Calibrate\n\u2713 Provide detailed reasoning with FEATURES + INDUSTRY + RELATIVE structure\n\u2713 Apply distribution rules (cluster when similar, spread when differentiated)\n\u2713 Run the 5-point consistency check before finalizing\n\u2713 Use the FULL 0-100 scale - don't be afraid of extreme scores when justified\n\u2713 Every vendor_id must match the ID from the input data exactly\n\u2713 Return ONLY valid JSON, no additional text or commentary\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a market analyst specializing in software vendor scatterplot. Your task is to analyze vendors and position them on a 2x2 strategic matrix.\n\nDIMENSION 1 - SOLUTION SCOPE:\n- 0-30: Single-Purpose (Highly specialized, narrow feature set, one primary use case)\n- 31-70: Hybrid (Moderate feature breadth, 2-3 core capabilities)\n- 71-100: Multi-Function (Suite/platform, comprehensive feature set, many use cases)\n\nDIMENSION 2 - INDUSTRY FOCUS:\n- 0-30: Vertical-Specific (Industry-specialized, deep vertical expertise)\n- 31-70: Hybrid (Serves 2-3 related verticals or broad with some specialization)\n- 71-100: General Purpose (Cross-industry, horizontal solution for all sectors)\n\nSCORING GUIDELINES:\n- Base scores on vendor description, website domain, and project context\n- Consider typical product positioning language:\n  - \"platform\", \"suite\", \"ecosystem\" \u2192 Higher solution scope (70-100)\n  - \"specialized\", \"designed for [industry]\", \"built for [vertical]\" \u2192 Lower industry focus (0-40)\n- Ensure score distribution: Avoid clustering all vendors in center (40-60 range)\n- Spread vendors across quadrants when differences exist\n- Each vendor must have scores between 0-100\n\nOUTPUT: Valid JSON only, no markdown."
+        }
+      },
+      "id": "ai-positioning-agent",
+      "name": "AI Positioning Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -528,
+        96
+      ],
+      "typeVersion": 2.2,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "maxTokens": 4000,
+          "temperature": 0.3
+        }
+      },
+      "id": "openai-chat-model",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        -608,
+        352
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "jKn3GZ9W5ZRgXc2d",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"positionings\": {\n      \"type\": \"array\",\n      \"description\": \"Array of vendor scatterplot data\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"vendor_id\": {\n            \"type\": \"string\",\n            \"description\": \"Vendor UUID - copy exactly from input\"\n          },\n          \"vendor_name\": {\n            \"type\": \"string\",\n            \"description\": \"Vendor name\"\n          },\n          \"x_score\": {\n            \"type\": \"number\",\n            \"description\": \"Solution Scope score 0-100 (0=Single-Purpose, 100=Multi-Function)\",\n            \"minimum\": 0,\n            \"maximum\": 100\n          },\n          \"y_score\": {\n            \"type\": \"number\",\n            \"description\": \"Industry Focus score 0-100 (0=Vertical-Specific, 100=General Purpose)\",\n            \"minimum\": 0,\n            \"maximum\": 100\n          },\n          \"reasoning\": {\n            \"type\": \"string\",\n            \"description\": \"Brief explanation of positioning (1 sentence)\"\n          }\n        },\n        \"required\": [\"vendor_id\", \"vendor_name\", \"x_score\", \"y_score\"]\n      }\n    }\n  },\n  \"required\": [\"positionings\"]\n}"
+      },
+      "id": "structured-output-parser",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        -320,
+        352
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  const aiOutput = items[0].json.output;\n\n  // Validate output structure\n  if (!aiOutput || !aiOutput.positionings || !Array.isArray(aiOutput.positionings)) {\n    throw new Error('Invalid AI response: missing positionings array');\n  }\n\n  // Get original vendor IDs from input\n  const inputVendorIds = new Set(\n    $('Input Validation').first().json.vendors.map(v => v.id)\n  );\n\n  // Validate all vendor IDs are present in output\n  const outputVendorIds = new Set(\n    aiOutput.positionings.map(p => p.vendor_id)\n  );\n\n  if (outputVendorIds.size !== inputVendorIds.size) {\n    console.warn('Warning: Output vendor count does not match input vendor count');\n  }\n\n  // Validate scores are 0-100\n  const invalidScores = aiOutput.positionings.filter(p => \n    p.x_score < 0 || p.x_score > 100 || p.y_score < 0 || p.y_score > 100\n  );\n\n  if (invalidScores.length > 0) {\n    console.warn('Warning: Some scores are outside 0-100 range:', invalidScores);\n  }\n\n  // Clamp scores to 0-100 range\n  const positionings = aiOutput.positionings.map(p => ({\n    vendor_id: p.vendor_id,\n    vendor_name: p.vendor_name,\n    x_score: Math.max(0, Math.min(100, p.x_score)),\n    y_score: Math.max(0, Math.min(100, p.y_score)),\n    reasoning: p.reasoning || ''\n  }));\n\n  return [{\n    json: {\n      success: true,\n      positionings: positionings\n    }\n  }];\n\n} catch (error) {\n  return [{\n    json: {\n      success: false,\n      error: {\n        code: 'AI_PROCESSING_ERROR',\n        message: `Vendor positioning analysis failed: ${error.message}`\n      }\n    }\n  }];\n}"
+      },
+      "id": "format-success-response",
+      "name": "Format Success Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -176,
+        0
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "success-check",
+              "operator": {
+                "type": "boolean",
+                "operation": "false"
+              },
+              "leftValue": "={{ $json.success }}",
+              "rightValue": false
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-success",
+      "name": "Check Success",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        32,
+        0
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "https://demo.clarioo.io"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-success-response",
+      "name": "Return Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        272,
+        -16
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// Check if we already have a formatted error from Format Success Response\nif (items[0].json.error && items[0].json.error.code) {\n  return [{\n    json: {\n      success: false,\n      error: items[0].json.error\n    }\n  }];\n}\n\n// Otherwise, handle raw errors from AI agent\nconst errorMessage = items[0].json.error?.message || items[0].json.message || 'An unexpected error occurred during vendor scatterplot analysis';\n\nreturn [{\n  json: {\n    success: false,\n    error: {\n      code: 'INTERNAL_ERROR',\n      message: errorMessage\n    }\n  }\n}];"
+      },
+      "id": "handle-processing-error",
+      "name": "Handle Processing Error",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        272,
+        224
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 500,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "https://demo.clarioo.io"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-error-response",
+      "name": "Return Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        496,
+        224
+      ],
+      "typeVersion": 1.4
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Input Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Validation": {
+      "main": [
+        [
+          {
+            "node": "Check Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Validation": {
+      "main": [
+        [
+          {
+            "node": "Return Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Positioning Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Positioning Agent": {
+      "main": [
+        [
+          {
+            "node": "Format Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Processing Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Positioning Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Positioning Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Success Response": {
+      "main": [
+        [
+          {
+            "node": "Check Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Success": {
+      "main": [
+        [
+          {
+            "node": "Handle Processing Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Processing Error": {
+      "main": [
+        [
+          {
+            "node": "Return Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "instanceId": "d8d0f3a1b5452865880018369d00dbc23f6a859a8ab8f3d9720659ce3799163c"
+  },
+  "tags": []
+}

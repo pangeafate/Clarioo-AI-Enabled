@@ -1,0 +1,183 @@
+=PROJECT CONTEXT:
+Name: {{ $json.project_name }}
+Description: {{ $json.project_description }}
+Category: {{ $json.project_category }}
+
+VENDORS TO ANALYZE ({{ $json.vendors.length }} total):
+
+{{ $json.vendors.map(v => `
+VENDOR: ${v.name}
+ID: ${v.id}
+Website: ${v.website}
+Description: ${v.description}
+---
+`).join('\n') }}
+
+═══════════════════════════════════════════════════════════════════
+TASK: Analyze each vendor and assign scores (0-100) for TWO dimensions
+═══════════════════════════════════════════════════════════════════
+
+DIMENSION 1 - SOLUTION SCOPE
+Position vendors from Single-Purpose specialists to Multi-Function platforms
+
+REFERENCE POINTS - Use these as anchors:
+
+SCORE 0-20 (Single-Purpose Specialists):
+• Examples: Calendly (only scheduling), Grammarly (only writing), Loom (only video messages)
+• Characteristics: 1-2 core features, solves ONE specific problem, narrow workflow
+• Evidence: Simple pricing page with one main feature, "Does X really well" positioning
+
+SCORE 40-60 (Focused Suites):
+• Examples: Mailchimp (email + CRM + landing pages), Asana (tasks + projects + timelines)
+• Characteristics: 3-5 related features, solves CONNECTED problems, integrated workflow
+• Evidence: Feature tabs showing 3-5 main capabilities, "All-in-one for X" positioning
+
+SCORE 80-100 (Multi-Function Platforms):
+• Examples: Salesforce (CRM + sales + marketing + service + analytics + apps), Microsoft 365, HubSpot
+• Characteristics: 10+ major features, platform architecture, serves MANY distinct use cases
+• Evidence: Complex navigation with 10+ product sections, "Platform for everything" positioning
+
+---
+
+DIMENSION 2 - INDUSTRY FOCUS
+Position vendors from Vertical-Specific (industry-specialized) to Multiple Verticals (horizontal)
+
+REFERENCE POINTS - Use these as anchors:
+
+SCORE 0-20 (Vertical-Specific - Deep Specialization):
+• Examples: Veeva (pharma/life sciences), Epic (healthcare), Blackbaud (nonprofits)
+• Characteristics: ONLY serves one industry, deep regulatory/compliance features
+• Evidence: Industry-specific homepage, compliance certifications, vertical-only case studies
+
+SCORE 40-60 (Industry-Focused):
+• Examples: Shopify (retail/e-commerce), Toast (restaurants), Procore (construction)
+• Characteristics: Serves 2-4 related verticals, some industry-specific features
+• Evidence: Industry-specific templates, targets 2-3 related sectors, some compliance features
+
+SCORE 80-100 (Multiple Verticals - Horizontal):
+• Examples: Slack (messaging for all), Zoom (video for all), Google Workspace
+• Characteristics: Used identically across ALL industries, no industry-specific features
+• Evidence: Generic case studies across sectors, no vertical-specific pricing/features
+
+═══════════════════════════════════════════════════════════════════
+SCORING METHODOLOGY - Follow these 4 steps for EACH vendor
+═══════════════════════════════════════════════════════════════════
+
+STEP 1: RESEARCH (Analyze Individual Vendor)
+For each vendor, identify:
+□ Feature Count: Count distinct major features/capabilities (not sub-features)
+□ Use Cases: How many different jobs-to-be-done does it solve?
+□ Industry Positioning: Which industries are explicitly mentioned on their website?
+□ Industry Features: Any industry-specific features, compliance, or workflows?
+
+STEP 2: COMPARE (Rank Against Other Vendors)
+Create two rankings:
+□ Solution Scope Ranking: Order all vendors from narrowest (fewest features) to broadest (most features)
+□ Industry Focus Ranking: Order all vendors from most horizontal (all industries) to most vertical (one industry)
+
+STEP 3: DISTRIBUTE SCORES (Apply Distribution Logic)
+
+🎯 DISTRIBUTION RULES - READ CAREFULLY:
+
+WHEN TO CLUSTER (scores within 20 points):
+✓ All vendors are in the same category (e.g., all project management tools)
+✓ No meaningful differentiation in feature scope or industry focus
+✓ Example: Asana (45), Monday (52), ClickUp (58) - all mid-range PM tools
+
+WHEN TO SPREAD MODERATELY (30-40 point range):
+✓ Clear differences exist but vendors are in related categories
+✓ Some vendors are more specialized/focused than others
+✓ Example: Simple tool (30), Mid-range suite (55), Comprehensive platform (70)
+
+WHEN TO SPREAD WIDELY (50+ point range):
+✓ Extreme differentiation: niche tool vs enterprise platform
+✓ Clear tiers: specialist vs suite vs ecosystem
+✓ Example: Single-feature tool (15), Suite (55), Enterprise platform (90)
+
+⚠️ CRITICAL: Use the FULL 0-100 scale when appropriate. Don't be conservative.
+If you have a true single-purpose tool, score it 10-20, not 40.
+If you have a true enterprise platform, score it 85-95, not 70.
+
+STEP 4: CALIBRATE WITH PROJECT CONTEXT
+Consider the project's specific use case ({{ $json.project_category }}):
+□ Does this vendor position differently for THIS use case?
+□ Example: Slack is multi-function (score 75) generally, but for "team chat" use case specifically, it's more focused (score 45)
+□ Adjust scores ±10-20 points based on project relevance
+
+═══════════════════════════════════════════════════════════════════
+REASONING REQUIREMENTS - Your reasoning MUST include these 3 elements
+═══════════════════════════════════════════════════════════════════
+
+For EACH vendor, provide:
+
+1. FEATURES: "Offers [X] core features: [list 2-3 key ones]"
+   Example: "Offers 3 core features: email campaigns, basic CRM, landing pages"
+
+2. INDUSTRY: "Targets [industries/verticals] with [evidence]"
+   Example: "Targets all SMBs horizontally (generic homepage, cross-industry case studies)"
+   OR "Targets healthcare only (HIPAA compliance, EHR integrations, medical billing)"
+
+3. RELATIVE: "Positioned [higher/lower] than [Vendor X] because [specific difference]"
+   Example: "Broader than Calendly (1 feature, score 15) but more focused than HubSpot (12+ features, score 85)"
+
+❌ BAD REASONING: "Multi-function platform with broad appeal"
+✅ GOOD REASONING: "Offers 8 features (CRM, email, analytics, automation, forms, ads, landing pages, social) vs competitors with 2-4 features. Targets SMBs horizontally across all industries (homepage shows retail, SaaS, agency examples). Broader than ActiveCampaign (score 55, fewer features) but more focused than Salesforce (score 92, enterprise platform)."
+
+═══════════════════════════════════════════════════════════════════
+FINAL CONSISTENCY CHECK - Validate before returning
+═══════════════════════════════════════════════════════════════════
+
+Before returning your response, verify:
+
+□ 1. Do scores reflect ACTUAL feature/industry differences?
+   - If VendorA has 10 features and VendorB has 3, is VendorA scored significantly higher?
+
+□ 2. Are SIMILAR vendors scored similarly (±10 points)?
+   - If two vendors are both "email marketing tools", are they within 10 points of each other?
+
+□ 3. Did I use the FULL 0-100 range when appropriate?
+   - If I have true specialists and true platforms, do scores span at least 40 points?
+   - Am I being too conservative by clustering everyone around 50?
+
+□ 4. Does EVERY reasoning cite SPECIFIC evidence?
+   - Feature counts? Industry mentions? Relative comparisons?
+
+□ 5. Are scores distributed logically?
+   - If all vendors scored 40-60, is that genuinely accurate or am I avoiding differentiation?
+   - If vendors are truly different, do scores reflect those differences clearly?
+
+═══════════════════════════════════════════════════════════════════
+OUTPUT FORMAT - Return JSON with this EXACT structure
+═══════════════════════════════════════════════════════════════════
+
+{
+  "positionings": [
+    {
+      "vendor_id": "uuid-from-input",
+      "vendor_name": "Vendor Name",
+      "x_score": 75,
+      "y_score": 40,
+      "reasoning": "FEATURES: Offers 8 core features (CRM, email marketing, analytics, automation, landing pages, social media, ads management, forms) vs single-purpose competitors. INDUSTRY: Targets SMBs horizontally across all verticals (homepage shows retail, SaaS, agency, nonprofit examples; no vertical-specific features). RELATIVE: Broader than Mailchimp (score 55, fewer integrations) but more focused than Salesforce (score 92, enterprise platform with 15+ products)."
+    },
+    {
+      "vendor_id": "uuid-from-input-2",
+      "vendor_name": "Another Vendor",
+      "x_score": 25,
+      "y_score": 85,
+      "reasoning": "FEATURES: Offers 2 core features (appointment scheduling, patient reminders) focused on one workflow. INDUSTRY: Targets healthcare exclusively (HIPAA-compliant, EHR integrations, medical billing templates, only healthcare case studies). RELATIVE: More specialized than Calendly (score 15, horizontal scheduling) and much narrower than general practice management suites (score 60+)."
+    }
+  ]
+}
+
+═══════════════════════════════════════════════════════════════════
+IMPORTANT REMINDERS
+═══════════════════════════════════════════════════════════════════
+
+✓ Use reference vendor examples (Calendly=15, Mailchimp=50, Salesforce=90) as anchors
+✓ Follow the 4-step process: Research → Compare → Distribute → Calibrate
+✓ Provide detailed reasoning with FEATURES + INDUSTRY + RELATIVE structure
+✓ Apply distribution rules (cluster when similar, spread when differentiated)
+✓ Run the 5-point consistency check before finalizing
+✓ Use the FULL 0-100 scale - don't be afraid of extreme scores when justified
+✓ Every vendor_id must match the ID from the input data exactly
+✓ Return ONLY valid JSON, no additional text or commentary

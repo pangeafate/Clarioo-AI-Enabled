@@ -755,7 +755,7 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
                         className="bg-primary hover:bg-primary/90 text-white gap-2"
                       >
                         <Sparkles className="h-4 w-4" />
-                        Executive Summary
+                        Pre-demo brief
                       </Button>
                     </div>
                   )}
