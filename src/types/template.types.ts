@@ -81,16 +81,6 @@ export interface TemplateCardProps {
 }
 
 /**
- * CriteriaPreviewModal component props
- */
-export interface CriteriaPreviewModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  template: Template;
-  onUseTemplate: () => void;
-}
-
-/**
  * Category color mappings for visual consistency
  * Keys match template_category field (uppercase)
  */

@@ -6,7 +6,7 @@
  * - Category filter showing only categories with templates
  * - Carousel with 3 cards visible on desktop, 1 on mobile
  * - Same navigation pattern as CardCarousel (arrows + dots, manual only)
- * - Clicking card opens CriteriaPreviewModal (same as TemplatesModal)
+ * - Clicking card opens TemplatePreviewModal (same as TemplatesModal)
  *
  * @integration Inserted above CardCarousel in LandingPage
  */
@@ -20,7 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { TYPOGRAPHY } from '@/styles/typography-config';
 import { CategoryFilter } from '../templates/CategoryFilter';
 import { TemplateCard } from '../templates/TemplateCard';
-import { CriteriaPreviewModal } from '../templates/CriteriaPreviewModal';
+import { TemplatePreviewModal } from '../templates/TemplatePreviewModal';
 import { EmailCollectionModal } from '../email/EmailCollectionModal';
 import { createProjectFromTemplate, getTemplatesFromN8n } from '@/services/templateService';
 import { hasSubmittedEmail } from '@/services/n8nService';
@@ -66,9 +66,9 @@ export const TemplateCarouselSection: React.FC<TemplateCarouselSectionProps> = (
   // State for selected categories (default to "All")
   const [selectedCategories, setSelectedCategories] = useState<string[]>(['All']);
 
-  // State for criteria preview modal
+  // State for template preview modal
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
-  const [isCriteriaPreviewOpen, setIsCriteriaPreviewOpen] = useState(false);
+  const [isTemplatePreviewOpen, setIsTemplatePreviewOpen] = useState(false);
 
   // State for email collection modal
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
@@ -153,10 +153,10 @@ export const TemplateCarouselSection: React.FC<TemplateCarouselSectionProps> = (
     }
   }, [emblaApi, selectedCategories, filteredTemplates.length]);
 
-  // Handle template card click - opens criteria preview modal
+  // Handle template card click - opens template preview modal
   const handleTemplateClick = (template: Template) => {
     setSelectedTemplate(template);
-    setIsCriteriaPreviewOpen(true);
+    setIsTemplatePreviewOpen(true);
   };
 
   // Handle "Use These Criteria" button click
@@ -167,7 +167,7 @@ export const TemplateCarouselSection: React.FC<TemplateCarouselSectionProps> = (
     if (!hasSubmittedEmail()) {
       // Show email collection modal first
       setTemplateToCreate(selectedTemplate);
-      setIsCriteriaPreviewOpen(false);
+      setIsTemplatePreviewOpen(false);
       setIsEmailModalOpen(true);
       return;
     }
@@ -194,7 +194,7 @@ export const TemplateCarouselSection: React.FC<TemplateCarouselSectionProps> = (
 
       if (success) {
         // Close modals
-        setIsCriteriaPreviewOpen(false);
+        setIsTemplatePreviewOpen(false);
 
         // Show success toast
         toast({
@@ -357,11 +357,11 @@ export const TemplateCarouselSection: React.FC<TemplateCarouselSectionProps> = (
         </div>
       </section>
 
-      {/* Criteria Preview Modal */}
+      {/* Template Preview Modal */}
       {selectedTemplate && (
-        <CriteriaPreviewModal
-          isOpen={isCriteriaPreviewOpen}
-          onClose={() => setIsCriteriaPreviewOpen(false)}
+        <TemplatePreviewModal
+          isOpen={isTemplatePreviewOpen}
+          onClose={() => setIsTemplatePreviewOpen(false)}
           template={selectedTemplate}
           onUseTemplate={handleUseTemplate}
         />

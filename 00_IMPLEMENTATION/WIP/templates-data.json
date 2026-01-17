@@ -1,0 +1,109 @@
+{
+  "templates": [
+    {
+      "id": "pm-agency-001",
+      "category": "Project Management",
+      "companyType": "Lightweight PM with Billing & Resource Planning",
+      "companyDetails": "Agency – 10-100 employees",
+      "keyFeatures": ["Resource planning", "Time tracking", "Client billing", "Portfolio visibility"],
+      "painQuote": "Clear deadlines, easy visibility into who's available, accurate client billing",
+      "criteriaCount": 8,
+      "inputCompany": "We are a rapidly growing digital marketing agency based in Europe. We currently have about 45 employees and manage around 30 simultaneous client projects.",
+      "inputNeed": "Currently, we use a mix of free Trello boards and Google Sheets for project tracking, but it's total chaos. We are missing deadlines and can't see who is available for new work. We need better resource planning, time tracking for client billing, and high-level visibility across all projects. We are afraid of complex enterprise tools that take months to set up."
+    },
+    {
+      "id": "crm-saas-002",
+      "category": "CRM",
+      "companyType": "Sales CRM for Growing SaaS Teams",
+      "companyDetails": "B2B SaaS – 20-50 employees",
+      "keyFeatures": ["Pipeline management", "Email tracking", "Sales reporting", "Forecasting"],
+      "painQuote": "Clear pipeline visibility, every deal tracked, ready to scale with the team",
+      "criteriaCount": 9,
+      "inputCompany": "We are a B2B SaaS startup based in the US with 35 employees. We sell project management software to mid-market companies. Our sales team has 8 account executives and 4 SDRs. We closed $2M ARR last year and targeting $5M this year.",
+      "inputNeed": "We've outgrown HubSpot free tier and spreadsheets for tracking deals. We need a proper CRM that can handle our sales pipeline, track customer interactions, and integrate with our email (Google Workspace) and calendar. Key requirements: deal pipeline management, email tracking, reporting on sales metrics, and ability to scale as we grow. We don't need marketing automation — just sales CRM."
+    },
+    {
+      "id": "erp-manufacturing-003",
+      "category": "ERP",
+      "companyType": "Modern ERP for Mid-Size Manufacturing",
+      "companyDetails": "Manufacturing – 200-500 employees",
+      "keyFeatures": ["Inventory management", "Production planning", "Supply chain", "Financials"],
+      "painQuote": "Unified system, real-time inventory, seamless data flow across all facilities",
+      "criteriaCount": 12,
+      "inputCompany": "We are a mid-size manufacturing company in Germany producing industrial equipment. 450 employees across 3 facilities. We have complex supply chain with 200+ suppliers and sell to distributors across Europe. Annual revenue ~€80M.",
+      "inputNeed": "Our current setup is a nightmare — SAP Business One that's 15 years old, disconnected inventory spreadsheets, and a separate accounting system. We need a modern ERP that unifies production planning, inventory management, procurement, and financials. Must handle multi-site operations, BOM management, and integrate with our existing shop floor systems. German/EU data residency required for compliance."
+    },
+    {
+      "id": "ats-agency-004",
+      "category": "ATS & Recruiting",
+      "companyType": "Agency-First ATS with Client Portal",
+      "companyDetails": "Recruiting Agency – 50-100 employees",
+      "keyFeatures": ["Duplicate prevention", "Client portal", "CV parsing", "LinkedIn sync"],
+      "painQuote": "Zero duplicate submissions, seamless client collaboration, never lose a candidate",
+      "criteriaCount": 11,
+      "inputCompany": "Our London-based specialized tech recruiting agency (85 employees) currently manages ~150 open roles and 3,000+ applications per month using LinkedIn Recruiter, email and Notion.",
+      "inputNeed": "We're drowning in tracking chaos, duplicate submissions to clients, and poor collaboration with our startup/scale-up clients across the UK & Europe. We require a turnkey Applicant Tracking System tailored to an agency business model, with intuitive UI for non-technical recruiters. Key constraints: automated CV parsing, LinkedIn & major job-board integrations, client-facing collaboration portal, duplicate-submission prevention, GDPR compliance, EU data residency."
+    },
+    {
+      "id": "support-ecommerce-005",
+      "category": "Customer Support",
+      "companyType": "Helpdesk for E-commerce with Shopify Integration",
+      "companyDetails": "E-commerce – 100-200 employees",
+      "keyFeatures": ["Shared inbox", "Live chat", "Ticket management", "Shopify sync"],
+      "painQuote": "Every message tracked, fast response times, happy customers across all channels",
+      "criteriaCount": 10,
+      "inputCompany": "We are a growing e-commerce company based in the UK selling home goods. 120 employees, processing about 50,000 orders per month. Our customer base is primarily in UK and EU.",
+      "inputNeed": "Customer emails are getting lost in our shared Gmail inbox. No way to track response times or see conversation history across channels. We also get inquiries via Instagram and our website chat. We need a proper helpdesk with shared inbox, live chat, ticket management, and Shopify integration. Worried about tools that require dedicated support staff to configure and maintain."
+    },
+    {
+      "id": "ai-meeting-006",
+      "category": "AI Meeting Assistant",
+      "companyType": "Enterprise AI Notetaker with CRM Sync",
+      "companyDetails": "Consulting – 100-200 employees",
+      "keyFeatures": ["Transcription", "Action items", "CRM sync", "Multi-language"],
+      "painQuote": "Automatic notes, action items captured, everything synced to CRM instantly",
+      "criteriaCount": 9,
+      "inputCompany": "We are a management consulting firm based in Germany with 180 employees. Our teams are multilingual (German, English, French) and we have clients across Europe. Heavy meeting culture with 20+ client meetings per consultant per week.",
+      "inputNeed": "Our consultants waste hours writing meeting notes manually. Action items get lost between meetings, and nothing syncs back to our CRM (Salesforce) automatically. We need an AI meeting assistant that can transcribe in multiple languages, extract action items automatically, and integrate with Salesforce. Enterprise security is a must — SSO, EU data residency, SOC2 compliance."
+    }
+  ],
+
+  "categoryStyles": {
+    "Project Management": {
+      "color": "blue",
+      "bgClass": "bg-blue-500",
+      "textClass": "text-blue-600",
+      "glow": "#3b82f6"
+    },
+    "CRM": {
+      "color": "emerald",
+      "bgClass": "bg-emerald-500",
+      "textClass": "text-emerald-600",
+      "glow": "#10b981"
+    },
+    "ERP": {
+      "color": "amber",
+      "bgClass": "bg-amber-500",
+      "textClass": "text-amber-600",
+      "glow": "#f59e0b"
+    },
+    "ATS & Recruiting": {
+      "color": "purple",
+      "bgClass": "bg-purple-500",
+      "textClass": "text-purple-600",
+      "glow": "#a855f7"
+    },
+    "Customer Support": {
+      "color": "rose",
+      "bgClass": "bg-rose-500",
+      "textClass": "text-rose-600",
+      "glow": "#f43f5e"
+    },
+    "AI Meeting Assistant": {
+      "color": "cyan",
+      "bgClass": "bg-cyan-500",
+      "textClass": "text-cyan-600",
+      "glow": "#06b6d4"
+    }
+  }
+}
