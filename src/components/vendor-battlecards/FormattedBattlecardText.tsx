@@ -20,13 +20,18 @@ export const FormattedBattlecardText: React.FC<FormattedBattlecardTextProps> = (
   text,
   className = '',
 }) => {
+  // Handle undefined/null text
+  if (!text) {
+    return <div className={className}></div>;
+  }
+
   return (
     <div className={className}>
       {text.split('\n').map((line, lineIdx) => (
-        <React.Fragment key={lineIdx}>
+        <span key={lineIdx}>
           {lineIdx > 0 && <br />}
           {parseLine(line)}
-        </React.Fragment>
+        </span>
       ))}
     </div>
   );
@@ -49,9 +54,9 @@ function parseLine(line: string): React.ReactNode {
     if (match.index > lastIndex) {
       const beforeText = line.substring(lastIndex, match.index);
       parts.push(
-        <React.Fragment key={`text-${partKey++}`}>
+        <span key={`text-${partKey++}`}>
           {formatBullets(beforeText)}
-        </React.Fragment>
+        </span>
       );
     }
 
@@ -69,9 +74,9 @@ function parseLine(line: string): React.ReactNode {
   if (lastIndex < line.length) {
     const remainingText = line.substring(lastIndex);
     parts.push(
-      <React.Fragment key={`text-${partKey++}`}>
+      <span key={`text-${partKey++}`}>
         {formatBullets(remainingText)}
-      </React.Fragment>
+      </span>
     );
   }
 
@@ -80,6 +85,7 @@ function parseLine(line: string): React.ReactNode {
 
 /**
  * Format bullet points (•) with blue color
+ * FIXED: Use span wrapper instead of React.Fragment to avoid prop warnings
  */
 function formatBullets(text: string): React.ReactNode {
   const bulletParts = text.split('•');
@@ -90,9 +96,9 @@ function formatBullets(text: string): React.ReactNode {
   }
 
   return bulletParts.map((part, idx) => (
-    <React.Fragment key={idx}>
+    <span key={idx}>
       {idx > 0 && <span className="text-blue-600">•</span>}
       {part}
-    </React.Fragment>
+    </span>
   ));
 }

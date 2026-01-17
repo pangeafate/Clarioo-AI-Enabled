@@ -22,11 +22,10 @@ import { CategoryFilter } from '../templates/CategoryFilter';
 import { TemplateCard } from '../templates/TemplateCard';
 import { CriteriaPreviewModal } from '../templates/CriteriaPreviewModal';
 import { EmailCollectionModal } from '../email/EmailCollectionModal';
-import { createProjectFromTemplate } from '@/services/templateService';
+import { createProjectFromTemplate, getTemplatesFromN8n } from '@/services/templateService';
 import { hasSubmittedEmail } from '@/services/n8nService';
 import type { Template } from '@/types/template.types';
 import { Project } from '../VendorDiscovery';
-import templatesData from '@/data/templates/templates.json';
 
 interface TemplateCarouselSectionProps {
   onTemplateProjectCreated?: (project: Project) => void;
@@ -35,14 +34,32 @@ interface TemplateCarouselSectionProps {
 export const TemplateCarouselSection: React.FC<TemplateCarouselSectionProps> = ({
   onTemplateProjectCreated,
 }) => {
-  // Load templates from JSON
-  const templates = templatesData as Template[];
+  // SP_028: Load templates from n8n
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
+
+  // SP_028: Load templates from n8n on mount
+  useEffect(() => {
+    const loadTemplates = async () => {
+      setIsLoadingTemplates(true);
+      try {
+        const templatesFromN8n = await getTemplatesFromN8n();
+        setTemplates(templatesFromN8n);
+      } catch (error) {
+        console.error('[TemplateCarouselSection] Failed to load templates:', error);
+      } finally {
+        setIsLoadingTemplates(false);
+      }
+    };
+
+    loadTemplates();
+  }, []);
 
   // Extract unique categories from templates (excluding "All")
   const categories = useMemo(() => {
-    const uniqueCategories = new Set(templates.map(t => t.category));
+    const uniqueCategories = new Set(templates.map(t => t.templateCategory));
     return ['All', ...Array.from(uniqueCategories)];
-  }, []); // Empty deps since templates is static import
+  }, [templates]);
 
   const { toast } = useToast();
 
@@ -62,7 +79,7 @@ export const TemplateCarouselSection: React.FC<TemplateCarouselSectionProps> = (
     if (selectedCategories.includes('All')) {
       return templates;
     }
-    return templates.filter(t => selectedCategories.includes(t.category));
+    return templates.filter(t => selectedCategories.includes(t.templateCategory));
   }, [templates, selectedCategories]);
 
   // Embla Carousel setup - same configuration for 2+ cards
@@ -182,7 +199,7 @@ export const TemplateCarouselSection: React.FC<TemplateCarouselSectionProps> = (
         // Show success toast
         toast({
           title: 'Project created from template',
-          description: `${template.lookingFor} with ${template.criteria.length} criteria loaded`,
+          description: `${template.projectName} with ${template.criteria.length} criteria loaded`,
           duration: 3000,
         });
 
@@ -190,12 +207,12 @@ export const TemplateCarouselSection: React.FC<TemplateCarouselSectionProps> = (
         if (onTemplateProjectCreated) {
           const newProject = {
             id: projectId,
-            name: template.lookingFor,
-            description: template.lookingFor,
+            name: template.projectName,
+            description: template.projectDescription || template.searchedBy || template.projectName,
             status: 'draft' as const,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-            category: template.category,
+            category: template.templateCategory,
           };
           onTemplateProjectCreated(newProject);
         }
@@ -238,8 +255,17 @@ export const TemplateCarouselSection: React.FC<TemplateCarouselSectionProps> = (
             />
           </div>
 
-          {/* Carousel or Single Card */}
-          {filteredTemplates.length > 0 ? (
+          {/* Loading State */}
+          {isLoadingTemplates ? (
+            <div className="text-center py-16">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue"></div>
+              <p className={`${TYPOGRAPHY.body.default} text-gray-500 mt-4`}>
+                Loading templates...
+              </p>
+            </div>
+          ) : (
+          /* Carousel or Single Card */
+          filteredTemplates.length > 0 ? (
             filteredTemplates.length === 1 ? (
               // Single card - centered without carousel
               <div className="flex justify-center px-4">
@@ -326,6 +352,7 @@ export const TemplateCarouselSection: React.FC<TemplateCarouselSectionProps> = (
                 No templates found for selected categories
               </p>
             </div>
+          )
           )}
         </div>
       </section>

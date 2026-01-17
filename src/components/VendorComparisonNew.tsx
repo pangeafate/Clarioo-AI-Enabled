@@ -111,6 +111,7 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
     retryCellStage1,
     retryRowStage2,
     resetComparison,
+    generateSummariesForRow, // SP_025: For Continue button to trigger summarization
     projectId: hookProjectId,
   } = useTwoStageComparison({
     projectId: projectId || '',
@@ -391,6 +392,22 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
   const [executiveSummaryData, setExecutiveSummaryData] = useState<ExecutiveSummaryData | null>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
+
+  // Load executive summary from localStorage on mount
+  useEffect(() => {
+    if (hookProjectId) {
+      try {
+        // Use n8nService getter to handle unwrapping
+        const data = getExecutiveSummaryFromStorage(hookProjectId);
+        if (data) {
+          setExecutiveSummaryData(data);
+          console.log('[VendorComparisonNew] Loaded executive summary from localStorage:', data);
+        }
+      } catch (error) {
+        console.error('[VendorComparisonNew] Error loading executive summary:', error);
+      }
+    }
+  }, [hookProjectId]);
 
   // Check if comparison has incomplete data (needed before auto-generating)
   const hasIncompleteData = useMemo(() => {
@@ -682,8 +699,52 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
 
   // Listen for custom event from parent VendorDiscovery to continue comparison
   // Continue populates only pending cells, keeping completed/failed cells intact
+  // SP_025: Also triggers summarization for rows missing summaries
   useEffect(() => {
-    const handleContinueComparison = () => {
+    const handleContinueComparison = async () => {
+      // SP_025: Check for missing summaries in completed Stage 2 rows
+      const criteriaToSummarize: Array<{ id: string; name: string; explanation: string }> = [];
+
+      for (const [criterionId, row] of Object.entries(comparisonState.criteria)) {
+        // Check if Stage 2 is complete
+        if (row.stage2Status === 'completed') {
+          // Check if any cells are missing summaries
+          const hasMissingSummaries = Object.values(row.cells).some(cell => {
+            // Only check YES/STAR matches (NO/UNKNOWN don't get summaries)
+            return (cell.value === 'yes' || cell.value === 'star') && !cell.summary;
+          });
+
+          if (hasMissingSummaries) {
+            // Find the criterion details
+            const criterion = (workflowCriteria || []).find(c => c.id === criterionId);
+            if (criterion) {
+              criteriaToSummarize.push({
+                id: criterionId,
+                name: criterion.name,
+                explanation: criterion.explanation,
+              });
+            }
+          }
+        }
+      }
+
+      // Trigger summarization for rows with missing summaries
+      if (criteriaToSummarize.length > 0) {
+        console.log('[Continue] Found rows with missing summaries:', criteriaToSummarize.length);
+
+        for (const criterion of criteriaToSummarize) {
+          try {
+            console.log('[Continue] Generating summaries for:', criterion.name);
+            await generateSummariesForRow(criterion.id, criterion as any);
+          } catch (error) {
+            console.error('[Continue] Failed to generate summaries for:', criterion.name, error);
+            // Continue with other rows even if one fails
+          }
+        }
+
+        console.log('[Continue] Completed summarization for all missing rows');
+      }
+
       // Don't reset - just start/resume comparison which will skip completed/failed cells
       if (comparisonState.isPaused) {
         resumeComparison();
@@ -696,7 +757,7 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
     return () => {
       window.removeEventListener('continueComparison', handleContinueComparison);
     };
-  }, [startComparison, resumeComparison, comparisonState.isPaused]);
+  }, [startComparison, resumeComparison, comparisonState, generateSummariesForRow, workflowCriteria]);
 
   // Listen for custom event to stop generation
   useEffect(() => {

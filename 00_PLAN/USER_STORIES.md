@@ -4,10 +4,10 @@
 
 This document contains comprehensive user stories for the Clarioo platform, organized by user personas and mapped to specific features and implementation files.
 
-**Version**: 4.0.0
-**Last Updated**: December 11, 2024
-**Current Phase**: Phase 1 - n8n AI Integration (SP_021 Complete)
-**Latest Update**: Sprint 021 (Project Templates Feature) Complete - Category-based project templates with example projects for quick start. Documentation aligned across all planning and implementation files.
+**Version**: 4.7.0
+**Last Updated**: January 17, 2026
+**Current Phase**: Phase 1 - n8n AI Integration (SP_030 Complete)
+**Latest Update**: Sprint 030 (Template Preview Comparison View) Complete - Read-only template comparison view with full interactive navigation. Phase 1 n8n AI Integration completed with 12 active webhooks.
 
 ## Summary Statistics
 

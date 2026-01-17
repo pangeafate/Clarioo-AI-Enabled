@@ -1,12 +1,12 @@
 # Codebase Structure
 
-Version: 4.1.0
-Last Updated: January 10, 2026
-Status: Phase 1 - n8n AI Integration (SP_022 Complete)
+Version: 4.7.0
+Last Updated: January 17, 2026
+Status: Phase 1 - n8n AI Integration (SP_030 Complete - Phase 1 Complete)
 
 ## Overview
 
-This document provides a comprehensive overview of the Clarioo codebase organization. The project transitioned from Phase 0 (Visual Prototype, SP_006-SP_015) to **Phase 1 (n8n AI Integration, SP_016-SP_022 Complete)**. Core workflows now use 10 real n8n webhooks with GPT-4o-mini and Perplexity processing. All project data, criteria, workflow state, and comparison cache persist in localStorage. The structure follows a modular, feature-based organization optimized for React + TypeScript development with clear separation of concerns.
+This document provides a comprehensive overview of the Clarioo codebase organization. The project transitioned from Phase 0 (Visual Prototype, SP_006-SP_015) to **Phase 1 (n8n AI Integration, SP_016-SP_030 Complete - PHASE 1 COMPLETE)**. Core workflows now use 12 real n8n webhooks with GPT-4o-mini and Perplexity processing. All project data, criteria, workflow state, and comparison cache persist in localStorage. The structure follows a modular, feature-based organization optimized for React + TypeScript development with clear separation of concerns.
 
 ## Directory Structure
 
@@ -19,9 +19,12 @@ This document provides a comprehensive overview of the Clarioo codebase organiza
 │   │   ├── landing/              # Landing page components
 │   │   ├── vendor-discovery/     # Vendor discovery workflow components
 │   │   ├── vendor-comparison/    # Vendor comparison components
-│   │   ├── vendor-battlecards/   # Vendor battlecard components (SP_023)
-│   │   ├── email/                # Email collection components
-│   │   ├── templates/            # Template components (SP_021/SP_022)
+│   │   ├── vendor-battlecards/   # Vendor battlecard components (SP_023/SP_024)
+│   │   ├── vendor-scatterplot/   # Vendor positioning scatter plot (SP_026)
+│   │   ├── export/               # Export components (SP_027)
+│   │   ├── admin/                # Admin mode components (SP_029)
+│   │   ├── email/                # Email collection components (SP_017)
+│   │   ├── templates/            # Template components (SP_021/SP_022/SP_028/SP_030)
 │   │   └── shared/               # Shared components (chat, forms, etc.)
 │   ├── config/                   # Configuration files (webhook URLs, etc.)
 │   ├── constants/                # Application constants
@@ -100,7 +103,7 @@ This document provides a comprehensive overview of the Clarioo codebase organiza
 **Purpose**: Business logic and data access abstraction
 
 **Structure**:
-- `n8nService.ts` - **Real AI** via n8n webhooks (10 active endpoints)
+- `n8nService.ts` - **Real AI** via n8n webhooks (12 active endpoints)
   - **Project Creation** (SP_016): `createProjectWithAI()`, 120s timeout
   - **Criteria Chat** (SP_016): `sendCriteriaChat()`, 120s timeout
   - **Find Vendors** (SP_018): `findVendors()`, 180s timeout
@@ -109,11 +112,16 @@ This document provides a comprehensive overview of the Clarioo codebase organiza
   - **Compare Vendors** (SP_019): Single vendor comprehensive analysis, 180s timeout
   - **Executive Summary** (SP_019): `generateExecutiveSummary()`, 120s timeout
   - **Vendor Card Summary** (SP_019): Via Perplexity, 120s timeout
-  - **Email Collection** (SP_017): `collectEmail()`, 30s timeout to Google Sheets
-  - **Battlecard Row** (SP_023): `generateBattlecardRow()`, 60s timeout
+  - **Email Collection** (SP_017): `collectEmail()`, 120s timeout to Google Sheets
+  - **Battlecard Row** (SP_023/SP_024): `generateBattlecardRow()`, 90s timeout (10 rows)
+  - **Cell Summarization** (SP_025): `summarizeCriterionRow()`, 60s timeout
+  - **Vendor Scatterplot** (SP_026): `generateVendorScatterplot()`, 60s timeout
   - **Storage Functions**: `saveProjectToStorage()`, `getCriteriaFromStorage()`, localStorage cache management
   - **User/Session IDs**: `getUserId()` (localStorage), `getSessionId()` (sessionStorage)
-- `templateService.ts` - Template management (SP_021): `loadTemplates()`, `createProjectFromTemplate()`
+- `templateService.ts` - Template management (SP_021/SP_028): `loadTemplates()`, `createProjectFromTemplate()`, `getTemplatesFromN8n()`, `uploadTemplate()`
+- `excelExportService.ts` - Excel export (SP_027): 7-tab workbook generation with logos and screenshots
+- `jsonExportService.ts` - JSON export (SP_027): Complete project data export
+- `excelImportService.ts` - Excel import (SP_029): Reverse engineering for template upload
 - `storageService.ts` - Browser localStorage abstraction layer with type safety
 - `comparisonStorage.ts` - Two-stage comparison cache management (Stage 1 & 2)
 - **`/mock/`** - Mock service implementations for authentication and fallback

@@ -11,18 +11,39 @@ import type { Criterion } from './criteria.types';
 
 /**
  * Main template interface
- * Represents a project template with pre-configured criteria
- * Field names match Excel column headers (camelCase)
+ * Represents a complete project template with all 7 Excel tabs
+ * Field names match n8n Data Table schema (camelCase)
+ *
+ * Updated schema (v2):
+ * - searchedBy → projectDescription
+ * - lookingFor → projectName
+ * - summaryData → executiveSummary
+ * - Added: softwareCategory, detailedMatching
  */
 export interface Template {
   templateId: string;
-  category: string;
-  companyType: string;
-  companyDetails: string;
+  templateCategory: string;
+  projectName: string;              // Main template title (from project_name column)
+  searchedBy: string;               // Company description for "SEARCHED BY" display (from searched_by column)
+  projectDescription?: string;      // Additional project context (from project_description column)
+  softwareCategory?: string;        // Specific software type (optional)
+  keyFeatures: string;              // Comma-separated list
+  clientQuote: string | null;
   currentTool: string | null;
-  painQuote: string | null;
-  lookingFor: string;
-  criteria: Criterion[];
+  criteria: Criterion[];            // Tab 1: Evaluation Criteria
+  vendors?: any[];                  // Tab 2: Vendor List (optional)
+  comparisonMatrix?: any;           // Tab 3: Comparison Matrix (optional)
+  detailedMatching?: any;           // Tab 4: Detailed Matching (optional)
+  battlecards?: any;                // Tab 5: Battlecards (optional)
+  executiveSummary?: any;           // Tab 6: Executive Summary (was summaryData)
+  positioningData?: any;            // Tab 7: Vendor Positioning (optional)
+  vendorSummaries?: Record<string, {
+    vendor_name: string;
+    killerFeature?: string;
+    executiveSummary?: string;
+    keyFeatures?: string[];
+  }>;                               // Vendor summary details (killerFeature, executiveSummary, keyFeatures)
+  template_data_json?: string;      // SP_030: Complete JSON export data (JSONExportData or ExportProjectData)
 }
 
 /**
@@ -50,10 +71,13 @@ export interface CategoryFilterProps {
 
 /**
  * TemplateCard component props
+ * SP_028: Added admin mode props for delete functionality
  */
 export interface TemplateCardProps {
   template: Template;
   onClick: () => void;
+  isAdminMode?: boolean;
+  onDelete?: (templateId: string) => void;
 }
 
 /**
@@ -68,15 +92,16 @@ export interface CriteriaPreviewModalProps {
 
 /**
  * Category color mappings for visual consistency
+ * Keys match template_category field (uppercase)
  */
 export const CATEGORY_COLORS: Record<string, string> = {
-  'CX Platform': '#10b981', // green
-  'Project Management': '#3b82f6', // blue
+  'CX PLATFORM': '#10b981', // green
+  'PROJECT MANAGEMENT': '#3b82f6', // blue
   'CRM': '#8b5cf6', // purple
   'ERP': '#f59e0b', // orange
-  'ATS & Recruiting': '#ef4444', // red
-  'Customer Support': '#06b6d4', // cyan
-  'AI Meeting Assistant': '#ec4899', // pink
+  'ATS & RECRUITING': '#ef4444', // red
+  'CUSTOMER SUPPORT': '#06b6d4', // cyan
+  'AI MEETING ASSISTANT': '#ec4899', // pink
 } as const;
 
 /**

@@ -223,8 +223,12 @@ export const VendorPositioningScatterPlot: React.FC<VendorPositioningScatterPlot
 
       <div className="w-full flex flex-col items-center px-4 md:px-6 pb-6 overflow-x-hidden">
 
-      {/* Chart Container */}
-      <div className="relative bg-white rounded-xl border-2 border-gray-200 shadow-sm overflow-hidden w-full max-w-full" style={{ maxWidth: dimensions.width }}>
+      {/* Chart Container - ID for screenshot capture in Excel export */}
+      <div
+        id="scatter-plot-chart"
+        className="relative bg-white rounded-xl border-2 border-gray-200 shadow-sm overflow-hidden w-full max-w-full"
+        style={{ maxWidth: dimensions.width }}
+      >
         {/* SVG Chart with Axes */}
         <svg
           width={dimensions.width}

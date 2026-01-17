@@ -19,7 +19,9 @@ import {
   Trash2,
   MessageSquare,
   Grid3x3,
-  ScatterChart
+  ScatterChart,
+  Share2,
+  ArrowRight
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { TechRequest, Criteria, Vendor } from "../VendorDiscovery";
@@ -27,6 +29,7 @@ import { useVendorDiscovery } from "@/hooks/useVendorDiscovery";
 import { TYPOGRAPHY } from "@/styles/typography-config";
 import { VendorDiscoveryLoader } from "@/components/shared/loading/VendorDiscoveryLoader";
 import { VendorPositioningScatterPlot } from "@/components/vendor-scatterplot/VendorPositioningScatterPlot";
+import { ShareDialog } from "./ShareDialog";
 
 interface VendorSelectionProps {
   criteria: Criteria[];
@@ -50,6 +53,7 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
   const [showAddVendor, setShowAddVendor] = useState(false);
   const [showGrid, setShowGrid] = useState(true); // SP_026: Toggle grid view visibility
   const [showChart, setShowChart] = useState(true); // SP_026: Toggle scatter plot visibility
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false); // SP_027: Share dialog state
   const [newVendor, setNewVendor] = useState({
     name: '',
     description: '',
@@ -648,24 +652,45 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
         />
       )}
 
-      {/* Summary & Continue */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="space-y-1 text-center md:text-left">
-              <p className={TYPOGRAPHY.body.default}>
-                {selectedVendorIds.size} of {vendors.length} vendors selected
-              </p>
-              <p className={TYPOGRAPHY.muted.small}>
-                Ready to proceed with detailed comparison analysis
-              </p>
-            </div>
-            <Button onClick={handleComplete} disabled={selectedVendorIds.size === 0} className="w-full md:w-auto">
-              Continue to Comparison
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Summary & Centered Action Buttons - Matching Vendor Comparison layout */}
+      <div className="flex flex-col items-center gap-4 mt-6">
+        <div className="space-y-1 text-center">
+          <p className={TYPOGRAPHY.body.default}>
+            {selectedVendorIds.size} of {vendors.length} vendors selected
+          </p>
+          <p className={TYPOGRAPHY.muted.small}>
+            Ready to proceed with detailed comparison analysis
+          </p>
+        </div>
+
+        <div className="flex flex-col items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={() => setIsShareDialogOpen(true)}
+            className={`${TYPOGRAPHY.button.default} gap-2 min-w-[240px]`}
+          >
+            <Share2 className="h-4 w-4" />
+            Download or Share
+          </Button>
+
+          <Button
+            onClick={handleComplete}
+            disabled={selectedVendorIds.size === 0}
+            className={`${TYPOGRAPHY.button.default} gap-2 min-w-[240px]`}
+          >
+            Continue to Comparison
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Share Dialog */}
+      <ShareDialog
+        isOpen={isShareDialogOpen}
+        onClose={() => setIsShareDialogOpen(false)}
+        criteria={criteria}
+        projectId={projectId}
+      />
     </div>
   );
 };

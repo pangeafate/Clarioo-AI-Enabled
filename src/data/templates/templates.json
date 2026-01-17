@@ -1,12 +1,12 @@
 [
   {
     "templateId": "luxury-fashion-retailer-001",
-    "category": "CX Platform",
-    "companyType": "Luxury Fashion Retailer",
-    "companyDetails": "30+ boutiques • E-commerce • Europe",
-    "currentTool": "Not clearly specified",
-    "painQuote": "Our tools don't give us a unified, luxury-grade view of each customer",
+    "templateCategory": "CX PLATFORM",
+    "searchedBy": "Luxury Fashion Retailer – 30+ boutiques",
     "lookingFor": "Customer experience platform. Advanced clienteling, omnichannel CX, in-store appointments, analytics",
+    "keyFeatures": "Unified 360° Customer Profile, Advanced Clienteling Workspace for Associates, In-Store + Online Wishlist Synchronization, Appointment Booking for Boutique Consultations",
+    "clientQuote": "Our tools don't give us a unified, luxury-grade view of each customer",
+    "currentTool": "Not clearly specified",
     "criteria": [
       {
         "id": "crit_001",
@@ -180,12 +180,12 @@
   },
   {
     "templateId": "b2b-saas-crm-002",
-    "category": "CRM",
-    "companyType": "B2B SaaS Company",
-    "companyDetails": "150 employees • Enterprise software • North America",
-    "currentTool": "Salesforce with heavy customization",
-    "painQuote": "Our sales team spends more time fighting the CRM than selling—it's overcomplicated and disconnected from our actual workflow",
+    "templateCategory": "CRM",
+    "searchedBy": "B2B SaaS Company – 150 employees",
     "lookingFor": "Sales pipeline management, contact tracking, email automation, forecasting, mobile access",
+    "keyFeatures": "Visual Pipeline Management with Drag-and-Drop, Automatic Activity Logging from Email & Calendar, Built-In Email Sequences and Templates, Smart Lead Scoring and Qualification",
+    "clientQuote": "Our sales team spends more time fighting the CRM than selling—it's overcomplicated and disconnected from our actual workflow",
+    "currentTool": "Salesforce with heavy customization",
     "criteria": [
       {
         "id": "crm_001",
@@ -303,12 +303,12 @@
   },
   {
     "templateId": "tech-startup-ats-003",
-    "category": "ATS & Recruiting",
-    "companyType": "Fast-Growing Tech Startup",
-    "companyDetails": "80 employees • Series B funded • Remote-first",
-    "currentTool": "Greenhouse with limited customization",
-    "painQuote": "We're hiring aggressively but our ATS doesn't support our distributed team structure and candidate experience expectations",
+    "templateCategory": "ATS & RECRUITING",
+    "searchedBy": "Fast-Growing Tech Startup – 80 employees",
     "lookingFor": "Applicant tracking, candidate sourcing, interview scheduling, collaborative hiring, analytics",
+    "keyFeatures": "Multi-Stage Pipeline with Customizable Workflows, Integrated Sourcing Tools and Chrome Extension, Self-Service Interview Scheduling, Collaborative Feedback and Scorecards",
+    "clientQuote": "We're hiring aggressively but our ATS doesn't support our distributed team structure and candidate experience expectations",
+    "currentTool": "Greenhouse with limited customization",
     "criteria": [
       {
         "id": "ats_001",
@@ -434,12 +434,12 @@
   },
   {
     "templateId": "manufacturing-erp-004",
-    "category": "ERP",
-    "companyType": "Mid-Size Manufacturing Company",
-    "companyDetails": "300 employees • 3 facilities • Midwest USA",
-    "currentTool": "Legacy on-premise ERP and spreadsheets",
-    "painQuote": "We have zero real-time visibility into inventory across facilities and our production planning is still done in Excel",
+    "templateCategory": "ERP",
+    "searchedBy": "Mid-Size Manufacturing Company – 300 employees",
     "lookingFor": "Inventory management, production planning, procurement, financial reporting, multi-location support",
+    "keyFeatures": "Real-Time Multi-Location Inventory Tracking, Material Requirements Planning (MRP), Bill of Materials (BOM) Management, Production Scheduling and Shop Floor Control",
+    "clientQuote": "We have zero real-time visibility into inventory across facilities and our production planning is still done in Excel",
+    "currentTool": "Legacy on-premise ERP and spreadsheets",
     "criteria": [
       {
         "id": "erp_001",
@@ -565,12 +565,12 @@
   },
   {
     "templateId": "agency-project-mgmt-005",
-    "category": "Project Management",
-    "companyType": "Digital Marketing Agency",
-    "companyDetails": "45 employees • Multiple client accounts • Hybrid work",
-    "currentTool": "Monday.com and scattered Google Docs",
-    "painQuote": "Client work is scattered across tools, we constantly miss deadlines, and we have no clear visibility into team capacity",
+    "templateCategory": "PROJECT MANAGEMENT",
+    "searchedBy": "Digital Marketing Agency – 45 employees",
     "lookingFor": "Task management, time tracking, resource allocation, client portals, budget tracking",
+    "keyFeatures": "Multi-Project Dashboard with Timeline View, Customizable Task Workflows and Statuses, Built-In Time Tracking with Timer, Resource Capacity Planning and Allocation",
+    "clientQuote": "Client work is scattered across tools, we constantly miss deadlines, and we have no clear visibility into team capacity",
+    "currentTool": "Monday.com and scattered Google Docs",
     "criteria": [
       {
         "id": "pm_001",

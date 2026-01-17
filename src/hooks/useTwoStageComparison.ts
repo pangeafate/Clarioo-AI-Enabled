@@ -1216,6 +1216,7 @@ export const useTwoStageComparison = ({
     retryCellStage1,
     retryRowStage2,
     resetComparison,
+    generateSummariesForRow, // SP_025: Export for Continue button to trigger summarization
     // Export projectId for persistence layer
     projectId,
   };

@@ -16,6 +16,7 @@ import { SPACING } from '@/styles/spacing-config';
 import { TYPOGRAPHY } from '@/styles/typography-config';
 import { getCriteriaFromStorage, getProjectByIdFromStorage, needsEmailRetry, retryEmailCollection } from '@/services/n8nService';
 import { loadComparisonState } from '@/utils/comparisonStorage';
+import { AdminModeToggle } from './admin/AdminModeToggle';
 
 /**
  * GAP-1: Workflow State Persistence Structure
@@ -834,6 +835,11 @@ const VendorDiscovery = ({ project, onBackToProjects, isEmbedded = false }: Vend
                 </CardContent>
               </Card>
             )}
+
+            {/* SP_028: Admin Mode Toggle at bottom of page */}
+            <div className="mt-8 flex justify-end">
+              <AdminModeToggle />
+            </div>
           </div>
         </div>
       </div>
