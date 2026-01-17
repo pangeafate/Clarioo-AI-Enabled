@@ -21,7 +21,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ShareDialog } from '@/components/vendor-discovery/ShareDialog';
+import { useToast } from '@/hooks/use-toast';
 import { AccordionSection } from '@/components/vendor-discovery/AccordionSection';
 import { TemplateComparisonView } from '@/components/templates/TemplateComparisonView';
 import { TemplateBattlecardsView } from '@/components/templates/TemplateBattlecardsView';
@@ -164,8 +164,8 @@ export const TemplatePreviewModal: React.FC<TemplatePreviewModalProps> = ({
     return 'criteria'; // Default fallback to criteria
   };
 
+  const { toast } = useToast();
   const [currentStage, setCurrentStage] = useState<PreviewStage>(getInitialStage());
-  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['feature']));
 
   // Group criteria by category
@@ -564,7 +564,12 @@ export const TemplatePreviewModal: React.FC<TemplatePreviewModalProps> = ({
                     {/* Download/Share Button */}
                     <Button
                       variant="outline"
-                      onClick={() => setIsShareDialogOpen(true)}
+                      onClick={() => {
+                        toast({
+                          title: 'First, use this template to create a project, then you can download and share it',
+                          duration: 3000,
+                        });
+                      }}
                       className="w-full justify-center gap-2"
                     >
                       <Download className="h-4 w-4" />
@@ -583,18 +588,6 @@ export const TemplatePreviewModal: React.FC<TemplatePreviewModalProps> = ({
               </div>
             </ScrollArea>
           </motion.div>
-
-          {/* Share Dialog */}
-          <ShareDialog
-            isOpen={isShareDialogOpen}
-            onClose={() => setIsShareDialogOpen(false)}
-            criteria={template.criteria}
-            projectId={template.templateId}
-            title="Download Template"
-            description="Download the template data or share via link"
-            downloadButtonText="Download Template"
-            downloadDescription="Download as Excel file (.xlsx)"
-          />
         </>
       )}
     </AnimatePresence>
