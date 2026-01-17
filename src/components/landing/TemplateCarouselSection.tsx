@@ -38,21 +38,37 @@ export const TemplateCarouselSection: React.FC<TemplateCarouselSectionProps> = (
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(true);
 
-  // SP_028: Load templates from n8n on mount
+  // SP_028: Load templates from n8n
+  const loadTemplates = async () => {
+    setIsLoadingTemplates(true);
+    try {
+      const templatesFromN8n = await getTemplatesFromN8n();
+      setTemplates(templatesFromN8n);
+    } catch (error) {
+      console.error('[TemplateCarouselSection] Failed to load templates:', error);
+    } finally {
+      setIsLoadingTemplates(false);
+    }
+  };
+
+  // Load templates on mount
   useEffect(() => {
-    const loadTemplates = async () => {
-      setIsLoadingTemplates(true);
-      try {
-        const templatesFromN8n = await getTemplatesFromN8n();
-        setTemplates(templatesFromN8n);
-      } catch (error) {
-        console.error('[TemplateCarouselSection] Failed to load templates:', error);
-      } finally {
-        setIsLoadingTemplates(false);
-      }
+    loadTemplates();
+  }, []);
+
+  // Listen for template changes (deletion/upload) from TemplatesModal
+  useEffect(() => {
+    const handleTemplateChange = () => {
+      loadTemplates();
     };
 
-    loadTemplates();
+    window.addEventListener('templateDeleted', handleTemplateChange);
+    window.addEventListener('templateUploaded', handleTemplateChange);
+
+    return () => {
+      window.removeEventListener('templateDeleted', handleTemplateChange);
+      window.removeEventListener('templateUploaded', handleTemplateChange);
+    };
   }, []);
 
   // Extract unique categories from templates (excluding "All")

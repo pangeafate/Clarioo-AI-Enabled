@@ -162,6 +162,13 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
     }
   };
 
+  // Handle upload success - reload templates and notify carousel
+  const handleUploadSuccess = async () => {
+    await loadTemplates();
+    // Notify other components (e.g., TemplateCarouselSection) about upload
+    window.dispatchEvent(new CustomEvent('templateUploaded'));
+  };
+
   // SP_028: Handle template deletion (admin only)
   const handleDeleteTemplate = async (templateId: string) => {
     const userId = getUserId();
@@ -177,6 +184,9 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
         });
         // Reload templates
         await loadTemplates();
+
+        // Notify other components (e.g., TemplateCarouselSection) about deletion
+        window.dispatchEvent(new CustomEvent('templateDeleted', { detail: { templateId } }));
       } else {
         throw new Error(result.error || 'Delete failed');
       }
@@ -298,7 +308,7 @@ export const TemplatesModal: React.FC<TemplatesModalProps> = ({
                   {/* SP_028: Admin Upload Button */}
                   {isAdminMode && (
                     <div className="mt-4">
-                      <TemplateUploadButton onUploadSuccess={loadTemplates} />
+                      <TemplateUploadButton onUploadSuccess={handleUploadSuccess} />
                     </div>
                   )}
                 </div>
