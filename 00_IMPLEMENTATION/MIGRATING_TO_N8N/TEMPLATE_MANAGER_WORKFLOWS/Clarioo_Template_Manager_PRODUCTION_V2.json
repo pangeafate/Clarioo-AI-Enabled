@@ -1,0 +1,902 @@
+{
+  "name": "Clarioo Template Manager (PRODUCTION) v2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "template-manager-production",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "webhook-template-manager-prod",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "position": [240, 300],
+      "webhookId": "template-manager-production",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// SP_028: Input Validation\nconst query = items[0].json.query || {};\nconst body = items[0].json.body || {};\nconst action = query.action || body.action;\n\nconst errors = [];\n\nif (!action || !['list', 'get', 'upload', 'delete'].includes(action)) {\n  errors.push('action must be one of: list, get, upload, delete');\n}\n\nif (action === 'get' && !query.template_id && !body.template_id) {\n  errors.push('template_id is required for get action');\n}\n\nif (action === 'upload' && !body.user_id) {\n  errors.push('user_id is required for upload action');\n}\n\nif (action === 'delete') {\n  if (!body.template_id) errors.push('template_id is required for delete');\n  if (!body.user_id) errors.push('user_id is required for delete');\n}\n\nif (errors.length > 0) {\n  return [{\n    json: {\n      validation_error: true,\n      error_code: 'INVALID_INPUT',\n      error_message: errors.join(', ')\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    validation_error: false,\n    action,\n    query,\n    body,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "input-validation-prod",
+      "name": "Input Validation",
+      "type": "n8n-nodes-base.code",
+      "position": [460, 300],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "validation-check",
+              "leftValue": "={{ $json.validation_error }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "check-validation-prod",
+      "name": "Check Validation",
+      "type": "n8n-nodes-base.if",
+      "position": [680, 300],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  success: false,\n  error: {\n    code: $json.error_code,\n    message: $json.error_message\n  }\n} }}",
+        "options": {
+          "responseCode": 400,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-validation-error-prod",
+      "name": "Return Validation Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [900, 140],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "list",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "list"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "get",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "get"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "upload",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "upload"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "delete",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "delete"
+            }
+          ]
+        }
+      },
+      "id": "switch-operation-prod",
+      "name": "Switch Operation",
+      "type": "n8n-nodes-base.switch",
+      "position": [900, 460],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "clarioo_templates",
+          "mode": "list"
+        },
+        "options": {
+          "returnAll": true
+        }
+      },
+      "id": "get-all-templates-prod",
+      "name": "Get All Templates",
+      "type": "n8n-nodes-base.dataTable",
+      "position": [1140, 240],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter by is_active and category, then format response\nconst allTemplates = items;\nconst category = $node[\"Switch Operation\"].json.query?.category;\n\nlet filteredTemplates = allTemplates.filter(item => item.json.is_active === true);\n\nif (category && category !== 'all') {\n  filteredTemplates = filteredTemplates.filter(\n    item => item.json.template_category?.toUpperCase() === category.toUpperCase()\n  );\n}\n\nconst templates = filteredTemplates.map(item => ({\n  templateId: item.json.template_id,\n  templateCategory: item.json.template_category,\n  searchedBy: item.json.searched_by,\n  lookingFor: item.json.looking_for,\n  keyFeatures: item.json.key_features,\n  clientQuote: item.json.client_quote,\n  currentTool: item.json.current_tool,\n  criteria: typeof item.json.criteria === 'string' ? JSON.parse(item.json.criteria) : item.json.criteria,\n  vendors: typeof item.json.vendors === 'string' ? JSON.parse(item.json.vendors) : item.json.vendors,\n  comparisonMatrix: typeof item.json.comparison_matrix === 'string' ? JSON.parse(item.json.comparison_matrix) : item.json.comparison_matrix,\n  battlecards: typeof item.json.battlecards === 'string' ? JSON.parse(item.json.battlecards) : item.json.battlecards,\n  positioningData: typeof item.json.positioning_data === 'string' ? JSON.parse(item.json.positioning_data) : item.json.positioning_data,\n  summaryData: typeof item.json.summary_data === 'string' ? JSON.parse(item.json.summary_data) : item.json.summary_data\n}));\n\nreturn [{\n  json: {\n    success: true,\n    templates,\n    count: templates.length,\n    category: category || 'all'\n  }\n}];"
+      },
+      "id": "format-list-response-prod",
+      "name": "Format List Response",
+      "type": "n8n-nodes-base.code",
+      "position": [1380, 240],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-list-response-prod",
+      "name": "Return List",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [1620, 240],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "clarioo_templates",
+          "mode": "list"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "template_id",
+              "condition": "equals",
+              "keyValue": "={{ $json.query?.template_id || $json.body?.template_id }}"
+            }
+          ]
+        },
+        "options": {
+          "returnAll": false,
+          "limit": 1
+        }
+      },
+      "id": "get-template-by-id-prod",
+      "name": "Get Template By ID",
+      "type": "n8n-nodes-base.dataTable",
+      "position": [1140, 380],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format single template response\nif (items.length === 0) {\n  return [{\n    json: {\n      success: false,\n      error: {\n        code: 'TEMPLATE_NOT_FOUND',\n        message: 'Template not found or has been deleted'\n      }\n    }\n  }];\n}\n\nconst template = items[0].json;\n\nif (!template.is_active) {\n  return [{\n    json: {\n      success: false,\n      error: {\n        code: 'TEMPLATE_NOT_FOUND',\n        message: 'Template has been deleted'\n      }\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    success: true,\n    template: {\n      templateId: template.template_id,\n      templateCategory: template.template_category,\n      searchedBy: template.searched_by,\n      lookingFor: template.looking_for,\n      keyFeatures: template.key_features,\n      clientQuote: template.client_quote,\n      currentTool: template.current_tool,\n      criteria: typeof template.criteria === 'string' ? JSON.parse(template.criteria) : template.criteria,\n      vendors: typeof template.vendors === 'string' ? JSON.parse(template.vendors) : template.vendors,\n      comparisonMatrix: typeof template.comparison_matrix === 'string' ? JSON.parse(template.comparison_matrix) : template.comparison_matrix,\n      battlecards: typeof template.battlecards === 'string' ? JSON.parse(template.battlecards) : template.battlecards,\n      positioningData: typeof template.positioning_data === 'string' ? JSON.parse(template.positioning_data) : template.positioning_data,\n      summaryData: typeof template.summary_data === 'string' ? JSON.parse(template.summary_data) : template.summary_data\n    }\n  }\n}];"
+      },
+      "id": "format-get-response-prod",
+      "name": "Format Get Response",
+      "type": "n8n-nodes-base.code",
+      "position": [1380, 380],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-get-response-prod",
+      "name": "Return Get",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [1620, 380],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.body.file }}",
+        "options": {
+          "headerRow": 0
+        }
+      },
+      "id": "parse-excel-file-prod",
+      "name": "Parse Excel File",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "position": [1140, 520],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// SP_028: Parse Excel tabs 0-2 (INDEX, Criteria, Vendors)\nconst sheetData = items[0].json.data;\nconst userId = $node[\"Switch Operation\"].json.body.user_id;\n\nif (!sheetData || !Array.isArray(sheetData)) {\n  throw new Error('Invalid Excel file format');\n}\n\n// Tab 0: INDEX - Extract metadata\nconst indexTab = sheetData[0];\nif (!indexTab || indexTab.length < 2) {\n  throw new Error('INDEX tab is missing or invalid');\n}\n\nconst indexData = {};\nfor (let i = 1; i < indexTab.length; i++) {\n  const row = indexTab[i];\n  if (row && row.length >= 2) {\n    indexData[row[0]] = row[1];\n  }\n}\n\nconst templateId = 'tpl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);\nconst templateCategory = indexData['Category']?.toUpperCase() || 'UNCATEGORIZED';\nconst searchedBy = indexData['Searched By'] || '';\nconst lookingFor = indexData['Looking For'] || '';\nlet keyFeatures = indexData['Key Features'] || '';\nconst clientQuote = indexData['Client Quote'] || null;\nconst currentTool = indexData['Current Tool'] || null;\n\n// Tab 1: Criteria\nconst criteriaTab = sheetData[1];\nconst criteria = [];\n\nif (criteriaTab && criteriaTab.length > 1) {\n  for (let i = 1; i < criteriaTab.length; i++) {\n    const row = criteriaTab[i];\n    if (row && row[0]) {\n      criteria.push({\n        name: row[0] || '',\n        importance: row[1] || 'Medium',\n        description: row[2] || ''\n      });\n    }\n  }\n}\n\nif (!keyFeatures && criteria.length > 0) {\n  keyFeatures = criteria.slice(0, 4).map(c => c.name).join(', ');\n}\n\n// Tab 2: Vendors\nconst vendorsTab = sheetData[2];\nconst vendors = [];\n\nif (vendorsTab && vendorsTab.length > 1) {\n  for (let i = 1; i < vendorsTab.length; i++) {\n    const row = vendorsTab[i];\n    if (row && row[0]) {\n      vendors.push({\n        name: row[0] || '',\n        website: row[1] || '',\n        description: row[2] || ''\n      });\n    }\n  }\n}\n\nreturn [{\n  json: {\n    template_id: templateId,\n    template_category: templateCategory,\n    searched_by: searchedBy,\n    looking_for: lookingFor,\n    key_features: keyFeatures,\n    client_quote: clientQuote,\n    current_tool: currentTool,\n    criteria: JSON.stringify(criteria),\n    vendors: JSON.stringify(vendors),\n    comparison_matrix: JSON.stringify({}),\n    battlecards: JSON.stringify({}),\n    positioning_data: JSON.stringify({}),\n    summary_data: JSON.stringify({}),\n    uploaded_by: userId,\n    is_active: true,\n    created_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "transform-excel-data-prod",
+      "name": "Transform Excel Data",
+      "type": "n8n-nodes-base.code",
+      "position": [1380, 520],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "clarioo_templates",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "template_id",
+              "displayName": "template_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "template_category",
+              "displayName": "template_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "searched_by",
+              "displayName": "searched_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "looking_for",
+              "displayName": "looking_for",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "key_features",
+              "displayName": "key_features",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "client_quote",
+              "displayName": "client_quote",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "current_tool",
+              "displayName": "current_tool",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "criteria",
+              "displayName": "criteria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "vendors",
+              "displayName": "vendors",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "comparison_matrix",
+              "displayName": "comparison_matrix",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "battlecards",
+              "displayName": "battlecards",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "positioning_data",
+              "displayName": "positioning_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "summary_data",
+              "displayName": "summary_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "uploaded_by",
+              "displayName": "uploaded_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "is_active",
+              "displayName": "is_active",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ]
+        }
+      },
+      "id": "insert-template-prod",
+      "name": "Insert Template",
+      "type": "n8n-nodes-base.dataTable",
+      "position": [1620, 520],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "const template = items[0].json;\nconst criteria = typeof template.criteria === 'string' ? JSON.parse(template.criteria) : template.criteria;\nconst vendors = typeof template.vendors === 'string' ? JSON.parse(template.vendors) : template.vendors;\n\nreturn [{\n  json: {\n    success: true,\n    template_id: template.template_id,\n    message: 'Template uploaded successfully',\n    criteria_count: criteria.length,\n    vendor_count: vendors.length,\n    template_category: template.template_category\n  }\n}];"
+      },
+      "id": "format-upload-response-prod",
+      "name": "Format Upload Response",
+      "type": "n8n-nodes-base.code",
+      "position": [1860, 520],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-upload-response-prod",
+      "name": "Return Upload",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [2100, 520],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "clarioo_templates",
+          "mode": "list"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "template_id",
+              "condition": "equals",
+              "keyValue": "={{ $json.body.template_id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "is_active": false
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "is_active",
+              "displayName": "is_active",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            }
+          ]
+        }
+      },
+      "id": "soft-delete-template-prod",
+      "name": "Soft Delete Template",
+      "type": "n8n-nodes-base.dataTable",
+      "position": [1140, 660],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    success: true,\n    message: 'Template deleted successfully',\n    template_id: $node[\"Switch Operation\"].json.body.template_id\n  }\n}];"
+      },
+      "id": "format-delete-response-prod",
+      "name": "Format Delete Response",
+      "type": "n8n-nodes-base.code",
+      "position": [1380, 660],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-delete-response-prod",
+      "name": "Return Delete",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [1620, 660],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  success: false,\n  error: {\n    code: 'PROCESSING_ERROR',\n    message: $json.error?.message || 'An error occurred while processing your request'\n  }\n} }}",
+        "options": {
+          "responseCode": 500,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-error-prod",
+      "name": "Return Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [1620, 800],
+      "typeVersion": 1.4
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Input Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Validation": {
+      "main": [
+        [
+          {
+            "node": "Check Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Validation": {
+      "main": [
+        [
+          {
+            "node": "Return Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch Operation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Operation": {
+      "main": [
+        [
+          {
+            "node": "Get All Templates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Template By ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse Excel File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Soft Delete Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Templates": {
+      "main": [
+        [
+          {
+            "node": "Format List Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format List Response": {
+      "main": [
+        [
+          {
+            "node": "Return List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Template By ID": {
+      "main": [
+        [
+          {
+            "node": "Format Get Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Get Response": {
+      "main": [
+        [
+          {
+            "node": "Return Get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Excel File": {
+      "main": [
+        [
+          {
+            "node": "Transform Excel Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Excel Data": {
+      "main": [
+        [
+          {
+            "node": "Insert Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Template": {
+      "main": [
+        [
+          {
+            "node": "Format Upload Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Upload Response": {
+      "main": [
+        [
+          {
+            "node": "Return Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Soft Delete Template": {
+      "main": [
+        [
+          {
+            "node": "Format Delete Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Delete Response": {
+      "main": [
+        [
+          {
+            "node": "Return Delete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Templates": {
+      "error": [
+        [
+          {
+            "node": "Return Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Template By ID": {
+      "error": [
+        [
+          {
+            "node": "Return Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Excel File": {
+      "error": [
+        [
+          {
+            "node": "Return Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Excel Data": {
+      "error": [
+        [
+          {
+            "node": "Return Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Template": {
+      "error": [
+        [
+          {
+            "node": "Return Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Soft Delete Template": {
+      "error": [
+        [
+          {
+            "node": "Return Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "template-manager-v2-production",
+  "meta": {
+    "instanceId": "clarioo-template-manager-v2-production"
+  },
+  "id": "ClariooTemplateManagerV2Production",
+  "tags": [],
+  "notes": "SP_028: Template Manager (PRODUCTION) v2 - Core Operations\n\n✅ Correct Data Table node type (n8n-nodes-base.dataTable)\n✅ Proper resource locator structure (__rl: true)\n✅ 4 operations: LIST, GET, UPLOAD, DELETE\n✅ No usage tracking (per requirements)\n✅ Excel parsing for tabs 0-2\n✅ Soft delete with is_active flag\n✅ Proper error handling\n✅ CORS headers on all responses\n\nWebhook: https://n8n.lakestrom.com/webhook/template-manager-production\n\nAPI Examples:\n\n1. List all templates:\n   POST { \"action\": \"list\" }\n\n2. List by category:\n   POST { \"action\": \"list\", \"category\": \"CX PLATFORM\" }\n\n3. Get single template:\n   POST { \"action\": \"get\", \"template_id\": \"luxury-fashion-retailer-001\" }\n\n4. Upload template:\n   POST { \"action\": \"upload\", \"user_id\": \"admin_001\", \"file\": <binary> }\n\n5. Delete template:\n   POST { \"action\": \"delete\", \"template_id\": \"tpl_123\", \"user_id\": \"admin_001\" }"
+}

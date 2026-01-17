@@ -1,0 +1,825 @@
+{
+  "name": "Clarioo Template Manager - LIST & CREATE (TESTING) v4 - 7 Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "template-manager",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "8d4b1122-20a2-41e3-bdb7-cef1547f0340",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -2064,
+        -240
+      ],
+      "webhookId": "template-manager",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Determine action from query or body\nconst query = items[0].json.query || {};\nconst body = items[0].json.body || {};\nconst action = query.action || body.action || 'list';\n\n// IMPORTANT: Pass through binary data (uploaded file)\nreturn [{\n  json: {\n    action: action,\n    query: query,\n    body: body,\n    originalData: items[0].json\n  },\n  binary: items[0].binary || {}\n}];"
+      },
+      "id": "8cb91418-249d-4b34-ac39-3fdbc4a67f24",
+      "name": "Route Action",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -1840,
+        -240
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "list",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "list"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "upload",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "upload"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e1f1013d-4fc2-4afa-9e4c-109ee81ed1fe",
+      "name": "Switch Action",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        -1616,
+        -240
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "cw1Hh3CEdlMSBdaF",
+          "mode": "list",
+          "cachedResultName": "clarioo_templatesv2",
+          "cachedResultUrl": "/projects/91hVWc99MqH0rduN/datatables/cw1Hh3CEdlMSBdaF"
+        },
+        "returnAll": true
+      },
+      "id": "68f4f648-a0f9-4929-9d4a-fd3d4ef80bca",
+      "name": "Get All Templates",
+      "type": "n8n-nodes-base.dataTable",
+      "position": [
+        -1392,
+        -624
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter active templates and format response\nconst allTemplates = items;\n\nlet activeTemplates = allTemplates.filter(item => item.json.is_active === true);\n\nconst templates = activeTemplates.map(item => {\n  const template = item.json;\n\n  return {\n    templateId: template.template_id,\n    templateCategory: template.template_category,\n\n    // Map database columns to frontend fields\n    projectName: template.project_name || template.looking_for || '',\n    searchedBy: template.searched_by || '',                                // ✅ NEW: Map searched_by column to searchedBy field\n    projectDescription: template.project_description || '',\n    softwareCategory: template.software_category || '',\n\n    keyFeatures: template.key_features,\n    clientQuote: template.client_quote,\n    currentTool: template.current_tool,\n\n    // Parse JSON fields\n    criteria: typeof template.criteria === 'string' ? JSON.parse(template.criteria) : (template.criteria || []),\n    vendors: typeof template.vendors === 'string' ? JSON.parse(template.vendors) : (template.vendors || []),\n    comparisonMatrix: typeof template.comparison_matrix === 'string' ? JSON.parse(template.comparison_matrix) : (template.comparison_matrix || {}),\n    detailedMatching: typeof template.detailed_matching === 'string' ? JSON.parse(template.detailed_matching) : (template.detailed_matching || {}),\n    battlecards: typeof template.battlecards === 'string' ? JSON.parse(template.battlecards) : (template.battlecards || []),\n    executiveSummary: typeof template.executive_summary === 'string' ? JSON.parse(template.executive_summary) : (template.summary_data ? (typeof template.summary_data === 'string' ? JSON.parse(template.summary_data) : template.summary_data) : {}),\n    positioningData: typeof template.positioning_data === 'string' ? JSON.parse(template.positioning_data) : (template.positioning_data || null)\n  };\n});\n\nreturn [{\n  json: {\n    success: true,\n    templates: templates,\n    count: templates.length\n  }\n}];"
+      },
+      "id": "0cc7b9ee-1859-4d4a-962f-8fb64c8478b5",
+      "name": "Format List Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -1168,
+        -624
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "1c4d1c22-b5b0-49a1-98a6-e5653012f758",
+      "name": "Return List",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -944,
+        -624
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract file and user_id from webhook data\nconst body = items[0].json.body || {};\nconst query = items[0].json.query || {};\n\n// Get user_id from body or query\nconst userId = body.user_id || query.user_id || 'unknown';\n\n// Check if binary data exists\nif (!items[0].binary || !items[0].binary.file) {\n  throw new Error('No file uploaded. Please provide an Excel file in the \"file\" field.');\n}\n\n// Pass through the binary data\nreturn [{\n  json: {\n    user_id: userId,\n    filename: items[0].binary.file.fileName || 'uploaded_file.xlsx',\n    mimeType: items[0].binary.file.mimeType || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'\n  },\n  binary: {\n    file: items[0].binary.file\n  }\n}];"
+      },
+      "id": "e9067155-ef10-4f4b-9aa4-c6fffb589119",
+      "name": "Extract File",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -1392,
+        192
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "file",
+        "options": {
+          "sheetName": "INDEX"
+        }
+      },
+      "id": "09c22cad-20da-40dc-93d2-bc26d8372b56",
+      "name": "Extract Sheet: INDEX",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        -1168,
+        -432
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "file",
+        "options": {
+          "sheetName": "1. Evaluation Criteria"
+        }
+      },
+      "id": "ef5b33bd-87d8-4387-bd81-63adb19fdd9c",
+      "name": "Extract Sheet: Criteria",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        -1168,
+        -240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "file",
+        "options": {
+          "sheetName": "2. Vendor List"
+        }
+      },
+      "id": "bf534f90-6d24-41f2-80c4-694ccde7e9c7",
+      "name": "Extract Sheet: Vendors",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        -1168,
+        -48
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "file",
+        "options": {
+          "sheetName": "3. Vendor Evaluation"
+        }
+      },
+      "id": "ed9d2cc8-4c87-46e8-92bf-2bbff628dcd8",
+      "name": "Extract Sheet: Evaluation",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        -1168,
+        144
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "file",
+        "options": {
+          "sheetName": "4. Detailed Matching"
+        }
+      },
+      "id": "da44948b-eb98-46de-afa5-416d027b19fa",
+      "name": "Extract Sheet: Matching",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        -1168,
+        336
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "file",
+        "options": {
+          "sheetName": "5. Battlecards"
+        }
+      },
+      "id": "055cf886-5a6a-4aec-b81d-2115a6aa2ddf",
+      "name": "Extract Sheet: Battlecards",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        -1168,
+        528
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "file",
+        "options": {
+          "sheetName": "6. Pre-Demo Brief"
+        }
+      },
+      "id": "67e8e703-2b9c-4638-b147-4953ef46b471",
+      "name": "Extract Sheet: Pre-Demo",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        -1168,
+        720
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "numberInputs": 7
+      },
+      "id": "addcc86f-5206-4290-93ac-086bec9e7698",
+      "name": "Merge All Sheets",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        -944,
+        64
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================================\n// TRANSFORM EXCEL DATA v8 - COMPLETE PARSING\n// Parses all 7 sheets into full project format for template cloning\n// ============================================================================\n\nconst userId = $node[\"Extract File\"].json.user_id || 'unknown';\n\nif (!items || items.length === 0) {\n  throw new Error('No Excel data received');\n}\n\n// ============================================================================\n// STEP 1: GROUP ROWS BY SHEET (detect by column name)\n// ============================================================================\n\nconst sheets = {\n  INDEX: [],\n  CRITERIA: [],\n  VENDORS: [],\n  EVALUATION: [],\n  MATCHING: [],\n  BATTLECARDS: [],\n  PREDEMO: []\n};\n\nfor (const item of items) {\n  const row = item.json;\n\n  if (row.CLARIOO !== undefined) {\n    sheets.INDEX.push(row);\n  } else if (row['EVALUATION CRITERIA'] !== undefined) {\n    sheets.CRITERIA.push(row);\n  } else if (row['SHORTLISTED VENDORS'] !== undefined) {\n    sheets.VENDORS.push(row);\n  } else if (row['CRITERIA VS VENDORS'] !== undefined) {\n    sheets.EVALUATION.push(row);\n  } else if (row[\"VENDORS' DETAILED CRITERIA MATCHING\"] !== undefined) {\n    sheets.MATCHING.push(row);\n  } else if (row['VENDOR BATTLECARDS'] !== undefined) {\n    sheets.BATTLECARDS.push(row);\n  } else if (row['PRE-DEMO BRIEF'] !== undefined) {\n    sheets.PREDEMO.push(row);\n  }\n}\n\n// ============================================================================\n// STEP 2: PARSE INDEX SHEET → Project Metadata\n// ============================================================================\n\nconst indexData = {};\nfor (const row of sheets.INDEX) {\n  const key = row.CLARIOO || '';\n  const value = row.__EMPTY || '';\n\n  if (key && typeof key === 'string' && key.trim() !== '') {\n    const cleanKey = key.trim().replace(/:$/, '');\n    if (value && value !== '') {\n      indexData[cleanKey] = value;\n    }\n  }\n}\n\nconst templateId = 'tpl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);\n\nconst projectName = indexData['Project Name'] || indexData['Looking For'] || 'Untitled Template';\nconst projectDescription = indexData['Description'] || '';\nconst softwareCategory = indexData['Software Category'] || indexData['Category'] || '';\nconst templateCategory = softwareCategory || 'UNCATEGORIZED';\n\nlet keyFeatures = indexData['Key Features'] || indexData['Features'] || '';\nconst clientQuote = indexData['Client Quote'] || indexData['Quote'] || null;\nconst currentTool = indexData['Current Tool'] || indexData['Current Tools'] || indexData['Existing Solution'] || null;\n\n// ============================================================================\n// STEP 3: PARSE CRITERIA SHEET → TransformedCriterion[]\n// ============================================================================\n\nconst criteria = [];\n\nfor (const row of sheets.CRITERIA) {\n  const criterionNum = row['EVALUATION CRITERIA'];\n  const criterionName = row.__EMPTY || '';\n\n  // Skip header rows\n  if (criterionName && typeof criterionName === 'string' &&\n      criterionName.toLowerCase().includes('criterion')) {\n    continue;\n  }\n\n  if (typeof criterionNum !== 'number') continue;\n\n  if (criterionName && typeof criterionName === 'string' && criterionName.trim() !== '') {\n    const explanation = row.__EMPTY_1 || '';\n    const importanceRaw = (row.__EMPTY_2 || 'Medium').toString().toLowerCase();\n    const importance = importanceRaw === 'high' ? 'high' :\n                       importanceRaw === 'low' ? 'low' : 'medium';\n    const type = (row.__EMPTY_3 || 'feature').toString().toLowerCase();\n\n    criteria.push({\n      id: 'crit_' + String(criteria.length + 1).padStart(3, '0'),\n      name: criterionName.trim(),\n      explanation: explanation,\n      importance: importance,\n      type: type,\n      isArchived: false\n    });\n  }\n}\n\n// Auto-generate key features if not provided\nif (!keyFeatures && criteria.length > 0) {\n  keyFeatures = criteria.slice(0, 4).map(c => c.name).join(', ');\n}\n\n// ============================================================================\n// STEP 4: PARSE VENDORS SHEET → Vendor[]\n// ============================================================================\n\nconst vendors = [];\n\nfor (const row of sheets.VENDORS) {\n  const vendorNum = row['SHORTLISTED VENDORS'];\n  const vendorName = row.__EMPTY_1 || '';\n\n  if (typeof vendorNum !== 'number') continue;\n\n  if (vendorName && typeof vendorName === 'string' && vendorName.trim() !== '') {\n    const description = row.__EMPTY_2 || '';\n    const website = row.__EMPTY_3 || '';\n\n    vendors.push({\n      id: 'vendor_' + String(vendors.length + 1).padStart(3, '0'),\n      name: vendorName.trim(),\n      website: website,\n      description: description,\n      matchPercentage: null // Will be calculated from comparison matrix\n    });\n  }\n}\n\n// ============================================================================\n// STEP 5: PARSE COMPARISON MATRIX → ComparisonMatrixData\n// ============================================================================\n\nconst stage1Results = {};\nconst stage2Results = {};\nconst cellSummaries = {};\n\n// Symbol mapping\nconst symbolToStatus = {\n  '⭐': 'star',\n  '✓': 'yes',\n  'X': 'no',\n  '?': 'unknown',\n  '+/-': 'partial',\n  '🔄': 'unknown'\n};\n\n// Parse comparison matrix rows\nlet headerRow = null;\nlet vendorColumns = [];\n\nfor (let i = 0; i < sheets.EVALUATION.length; i++) {\n  const row = sheets.EVALUATION[i];\n  const category = row['CRITERIA VS VENDORS'];\n  const criterionName = row.__EMPTY || '';\n\n  // Find header row with vendor names\n  if (!headerRow && criterionName && criterionName.toLowerCase().includes('criteria')) {\n    headerRow = row;\n    // Extract vendor column keys (__EMPTY_1, __EMPTY_2, etc.)\n    vendorColumns = Object.keys(row)\n      .filter(key => key.startsWith('__EMPTY_') || key === '__EMPTY_1')\n      .sort();\n    continue;\n  }\n\n  // Skip non-data rows\n  if (!criterionName || typeof category !== 'string') continue;\n  if (criterionName.toLowerCase().includes('criteria')) continue;\n\n  // Find matching criterion\n  const criterion = criteria.find(c => c.name === criterionName.trim());\n  if (!criterion) continue;\n\n  const criterionId = criterion.id;\n\n  // Initialize rankings for stage 2\n  const rankings = [];\n\n  // Parse each vendor column\n  vendorColumns.forEach((colKey, vendorIndex) => {\n    const vendor = vendors[vendorIndex];\n    if (!vendor) return;\n\n    const vendorId = vendor.id;\n    const symbol = row[colKey] || '?';\n    const matchStatus = symbolToStatus[symbol] || 'unknown';\n\n    // Stage 1: Individual cell result\n    const resultKey = `${vendorId}:${criterionId}`;\n    stage1Results[resultKey] = {\n      vendor_id: vendorId,\n      criterion_id: criterionId,\n      match_status: matchStatus === 'star' ? 'yes' : matchStatus,\n      evidence_description: `${vendor.name} ${matchStatus} for ${criterionName}`,\n      research_notes: '',\n      source_urls: [],\n      timestamp: new Date().toISOString()\n    };\n\n    // Stage 2: Ranking based on status\n    const rank = matchStatus === 'star' ? 1 :\n                 matchStatus === 'yes' ? 2 :\n                 matchStatus === 'partial' ? 3 :\n                 matchStatus === 'no' ? 4 : 5;\n\n    rankings.push({\n      vendor_id: vendorId,\n      rank: rank,\n      final_match_status: matchStatus,\n      comparative_notes: `Ranked ${rank} for ${criterionName}`\n    });\n  });\n\n  // Stage 2: Criterion rankings\n  stage2Results[criterionId] = {\n    criterion_id: criterionId,\n    rankings: rankings.sort((a, b) => a.rank - b.rank),\n    comparative_summary: `Comparison completed for ${criterionName}`,\n    timestamp: new Date().toISOString()\n  };\n}\n\n// ============================================================================\n// STEP 6: PARSE DETAILED MATCHING → Enhance Stage 1 Results\n// ============================================================================\n\nfor (const row of sheets.MATCHING) {\n  const category = row[\"VENDORS' DETAILED CRITERIA MATCHING\"];\n  const vendorName = row.__EMPTY || '';\n  const criterionName = row.__EMPTY_1 || '';\n  const status = row.__EMPTY_2 || '';\n  const evidence = row.__EMPTY_3 || '';\n  const sources = row.__EMPTY_4 || '';\n\n  // Skip header rows\n  if (!vendorName || vendorName.toLowerCase().includes('vendor')) continue;\n\n  // Find matching vendor and criterion\n  const vendor = vendors.find(v => v.name === vendorName.trim());\n  const criterion = criteria.find(c => c.name === criterionName.trim());\n\n  if (vendor && criterion) {\n    const resultKey = `${vendor.id}:${criterion.id}`;\n    if (stage1Results[resultKey]) {\n      stage1Results[resultKey].evidence_description = evidence || stage1Results[resultKey].evidence_description;\n      stage1Results[resultKey].source_urls = sources ? sources.split(',').map(s => s.trim()) : [];\n    }\n  }\n}\n\n// ============================================================================\n// STEP 7: PARSE BATTLECARDS → BattlecardRowState[]\n// ============================================================================\n\nconst battlecardRows = [];\nlet battlecardHeaderRow = null;\nlet battlecardVendorColumns = [];\n\nfor (let i = 0; i < sheets.BATTLECARDS.length; i++) {\n  const row = sheets.BATTLECARDS[i];\n  const category = row['VENDOR BATTLECARDS'];\n\n  // Find header row\n  if (!battlecardHeaderRow && Object.values(row).some(v =>\n      typeof v === 'string' && vendors.some(vendor => v.includes(vendor.name)))) {\n    battlecardHeaderRow = row;\n    battlecardVendorColumns = Object.keys(row)\n      .filter(key => key.startsWith('__EMPTY'))\n      .sort();\n    continue;\n  }\n\n  // Skip non-data rows\n  if (!category || typeof category !== 'string') continue;\n  if (category.toLowerCase().includes('category')) continue;\n\n  // Parse battlecard row\n  const cells = [];\n\n  battlecardVendorColumns.forEach((colKey, vendorIndex) => {\n    const vendor = vendors[vendorIndex];\n    if (!vendor) return;\n\n    const content = row[colKey] || '';\n    if (content && content !== '') {\n      cells.push({\n        vendor_id: vendor.id,\n        vendor_name: vendor.name,\n        content: content,\n        sources: []\n      });\n    }\n  });\n\n  if (cells.length > 0) {\n    battlecardRows.push({\n      row_id: 'bc_row_' + String(battlecardRows.length + 1).padStart(3, '0'),\n      category_title: category,\n      category_definition: '',\n      cells: cells,\n      status: 'completed',\n      timestamp: new Date().toISOString()\n    });\n  }\n}\n\n// ============================================================================\n// STEP 8: PARSE EXECUTIVE SUMMARY → ExecutiveSummaryData\n// ============================================================================\n\nconst executiveSummary = {\n  overview: {\n    projectGoal: projectDescription,\n    keyRequirements: criteria.slice(0, 7).map(c => c.name),\n    evaluationCriteria: criteria.length\n  },\n  vendorAnalysis: [],\n  recommendation: {\n    topPick: '',\n    reason: '',\n    considerations: []\n  }\n};\n\n// Parse vendor recommendations\nlet currentVendor = null;\nlet section = null;\n\nfor (const row of sheets.PREDEMO) {\n  const text = row['PRE-DEMO BRIEF'] || '';\n\n  // Detect vendor recommendation sections (e.g., \"1. Yotpo - 84% Match\")\n  const vendorMatch = text.match(/^\\d+\\.\\s+(.+?)\\s*-\\s*(\\d+)%\\s*Match/);\n  if (vendorMatch) {\n    if (currentVendor) {\n      executiveSummary.vendorAnalysis.push(currentVendor);\n    }\n    currentVendor = {\n      vendorName: vendorMatch[1],\n      matchPercentage: parseInt(vendorMatch[2]),\n      overallAssessment: '',\n      strengths: [],\n      weaknesses: [],\n      bestFor: ''\n    };\n    // Set top pick as first vendor\n    if (!executiveSummary.recommendation.topPick) {\n      executiveSummary.recommendation.topPick = vendorMatch[1];\n    }\n    continue;\n  }\n\n  if (!currentVendor) continue;\n\n  // Parse vendor sections\n  if (text.includes('Key Strengths:')) {\n    section = 'strengths';\n  } else if (text.includes('Key Weaknesses:')) {\n    section = 'weaknesses';\n  } else if (text.includes('Best For:')) {\n    section = 'bestFor';\n  } else if (text.startsWith('•') && section) {\n    const bulletText = text.replace(/^•\\s*/, '').trim();\n    if (section === 'strengths') {\n      currentVendor.strengths.push(bulletText);\n    } else if (section === 'weaknesses') {\n      currentVendor.weaknesses.push(bulletText);\n    }\n  } else if (section === 'bestFor' && text.trim() !== '') {\n    currentVendor.bestFor = text.trim();\n    section = null;\n  } else if (!section && currentVendor.overallAssessment === '' && text.trim() !== '') {\n    currentVendor.overallAssessment = text.trim();\n  }\n}\n\n// Add last vendor\nif (currentVendor) {\n  executiveSummary.vendorAnalysis.push(currentVendor);\n}\n\n// Set recommendation reason (first vendor's overall assessment)\nif (executiveSummary.vendorAnalysis.length > 0) {\n  executiveSummary.recommendation.reason = executiveSummary.vendorAnalysis[0].overallAssessment;\n}\n\n// ============================================================================\n// STEP 9: CALCULATE VENDOR MATCH PERCENTAGES\n// ============================================================================\n\nvendors.forEach(vendor => {\n  const vendorResults = Object.values(stage1Results).filter(r => r.vendor_id === vendor.id);\n  if (vendorResults.length === 0) return;\n\n  const yesCount = vendorResults.filter(r => r.match_status === 'yes' || r.match_status === 'star').length;\n  vendor.matchPercentage = Math.round((yesCount / vendorResults.length) * 100);\n});\n\n// ============================================================================\n// STEP 10: RETURN COMPLETE TEMPLATE\n// ============================================================================\n\nconst comparisonMatrix = {\n  stage1_results: {\n    projectId: '', // Will be set when cloned\n    results: stage1Results,\n    timestamp: new Date().toISOString()\n  },\n  stage2_results: {\n    projectId: '',\n    results: stage2Results,\n    timestamp: new Date().toISOString()\n  }\n};\n\nreturn [{\n  json: {\n    // Core metadata\n    template_id: templateId,\n    template_category: templateCategory.toUpperCase(),\n\n    // Project metadata\n    project_name: projectName,\n    project_description: projectDescription,\n    software_category: softwareCategory,\n    key_features: keyFeatures,\n    client_quote: clientQuote,\n    current_tool: currentTool,\n\n    // Arrays\n    criteria: JSON.stringify(criteria),\n    vendors: JSON.stringify(vendors),\n\n    // Comparison data\n    comparison_matrix: JSON.stringify(comparisonMatrix),\n    detailed_matching: JSON.stringify({ parsed: true }), // Already merged into stage1\n\n    // Analysis data\n    battlecards: JSON.stringify(battlecardRows),\n    executive_summary: JSON.stringify(executiveSummary),\n\n    // Positioning (null for now, can be added later)\n    positioning_data: JSON.stringify(null),\n\n    // Template admin\n    uploaded_by: userId,\n    is_active: true,\n    created_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "22970bcf-56fe-4ce8-9286-23df3529ab7e",
+      "name": "Transform Excel Data",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -720,
+        144
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "cw1Hh3CEdlMSBdaF",
+          "mode": "list",
+          "cachedResultName": "clarioo_templatesv2",
+          "cachedResultUrl": "/projects/91hVWc99MqH0rduN/datatables/cw1Hh3CEdlMSBdaF"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "is_active": false
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "template_id",
+              "displayName": "template_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "template_category",
+              "displayName": "template_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "project_name",
+              "displayName": "project_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "project_description",
+              "displayName": "project_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "software_category",
+              "displayName": "software_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "key_features",
+              "displayName": "key_features",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "client_quote",
+              "displayName": "client_quote",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "current_tool",
+              "displayName": "current_tool",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "criteria",
+              "displayName": "criteria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "vendors",
+              "displayName": "vendors",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "comparison_matrix",
+              "displayName": "comparison_matrix",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "detailed_matching",
+              "displayName": "detailed_matching",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "battlecards",
+              "displayName": "battlecards",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "executive_summary",
+              "displayName": "executive_summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "positioning_data",
+              "displayName": "positioning_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "uploaded_by",
+              "displayName": "uploaded_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "is_active",
+              "displayName": "is_active",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "d7c6dab5-30d8-48cc-a56c-7a2e4d3e6df2",
+      "name": "Insert Template",
+      "type": "n8n-nodes-base.dataTable",
+      "position": [
+        -496,
+        144
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "const template = items[0].json;\nconst criteria = typeof template.criteria === 'string' ? JSON.parse(template.criteria) : template.criteria;\nconst vendors = typeof template.vendors === 'string' ? JSON.parse(template.vendors) : template.vendors;\n\nreturn [{\n  json: {\n    success: true,\n    template_id: template.template_id,\n    message: 'Template uploaded successfully',\n    criteria_count: criteria.length,\n    vendor_count: vendors.length,\n    template_category: template.template_category\n  }\n}];"
+      },
+      "id": "8bd44fda-854e-4ac1-af0d-842dbe4f2ecd",
+      "name": "Format Upload Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -272,
+        144
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "ca48c72b-338a-4ef6-bc31-2e51d0fee486",
+      "name": "Return Upload",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -48,
+        144
+      ],
+      "typeVersion": 1.4
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Route Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Action": {
+      "main": [
+        [
+          {
+            "node": "Switch Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Action": {
+      "main": [
+        [
+          {
+            "node": "Get All Templates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Templates": {
+      "main": [
+        [
+          {
+            "node": "Format List Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format List Response": {
+      "main": [
+        [
+          {
+            "node": "Return List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract File": {
+      "main": [
+        [
+          {
+            "node": "Extract Sheet: INDEX",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Sheet: Criteria",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Sheet: Vendors",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Sheet: Evaluation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Sheet: Matching",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Sheet: Battlecards",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Sheet: Pre-Demo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Sheet: INDEX": {
+      "main": [
+        [
+          {
+            "node": "Merge All Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Sheet: Criteria": {
+      "main": [
+        [
+          {
+            "node": "Merge All Sheets",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge All Sheets": {
+      "main": [
+        [
+          {
+            "node": "Transform Excel Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Excel Data": {
+      "main": [
+        [
+          {
+            "node": "Insert Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Template": {
+      "main": [
+        [
+          {
+            "node": "Format Upload Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Upload Response": {
+      "main": [
+        [
+          {
+            "node": "Return Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Sheet: Vendors": {
+      "main": [
+        [
+          {
+            "node": "Merge All Sheets",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Extract Sheet: Evaluation": {
+      "main": [
+        [
+          {
+            "node": "Merge All Sheets",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Extract Sheet: Matching": {
+      "main": [
+        [
+          {
+            "node": "Merge All Sheets",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Extract Sheet: Battlecards": {
+      "main": [
+        [
+          {
+            "node": "Merge All Sheets",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Extract Sheet: Pre-Demo": {
+      "main": [
+        [
+          {
+            "node": "Merge All Sheets",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e67187ab-864c-4c4b-84f0-5dbceb7342d4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d8d0f3a1b5452865880018369d00dbc23f6a859a8ab8f3d9720659ce3799163c"
+  },
+  "id": "ulNIRT8rKXIELN7N",
+  "tags": []
+}

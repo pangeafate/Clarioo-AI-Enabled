@@ -1,0 +1,386 @@
+{
+  "name": "Clarioo Template Manager (TESTING)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "=={{ $json.body?.action === 'delete' ? 'DELETE' : ($json.body?.action === 'upload' || $json.body?.action === 'track_usage' ? 'POST' : 'GET') }}",
+        "path": "template-manager-testing",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, POST, DELETE, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "webhook-template-manager-test",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -1248,
+        -32
+      ],
+      "webhookId": "template-manager-testing",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// SP_028 MVP: Template Manager - Input Validation\n// Supports 5 operations: list, get, upload, delete, track_usage\n\nconst query = items[0].json.query || {};\nconst body = items[0].json.body || {};\nconst action = query.action || body.action;\n\nconst errors = [];\n\n// Validate action\nif (!action || !['list', 'get', 'upload', 'delete', 'track_usage'].includes(action)) {\n  errors.push('action must be one of: list, get, upload, delete, track_usage');\n}\n\n// Validation by action type\nif (action === 'get') {\n  if (!query.template_id) {\n    errors.push('template_id is required for get action');\n  }\n}\n\nif (action === 'upload') {\n  if (!body.user_id) {\n    errors.push('user_id is required for upload action');\n  }\n  // Excel file validation will be done by Spreadsheet File node\n}\n\nif (action === 'delete') {\n  if (!body.template_id) {\n    errors.push('template_id is required for delete action');\n  }\n  if (!body.user_id) {\n    errors.push('user_id is required for delete action');\n  }\n}\n\nif (action === 'track_usage') {\n  if (!body.template_id) {\n    errors.push('template_id is required for track_usage action');\n  }\n  if (!body.user_id) {\n    errors.push('user_id is required for track_usage action');\n  }\n  if (!body.project_id) {\n    errors.push('project_id is required for track_usage action');\n  }\n}\n\n// Return validation result\nif (errors.length > 0) {\n  return [{\n    json: {\n      validation_error: true,\n      error_code: 'INVALID_INPUT',\n      error_message: errors.join(', ')\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    validation_error: false,\n    action,\n    query,\n    body,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "input-validation-template-test",
+      "name": "Input Validation",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -1024,
+        -32
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "validation-check",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "leftValue": "={{ $json.validation_error }}",
+              "rightValue": true
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-validation-template-test",
+      "name": "Check Validation",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -800,
+        -32
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  success: false,\n  error: {\n    code: $json.error_code,\n    message: $json.error_message\n  }\n} }}",
+        "options": {
+          "responseCode": 400,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, POST, DELETE, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-validation-error-template-test",
+      "name": "Return Validation Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -512,
+        -176
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// SP_028 MVP: Route to appropriate operation\n// Operations: list, get, upload, delete, track_usage\n\nconst action = items[0].json.action;\n\nreturn [{\n  json: {\n    ...items[0].json,\n    route: action\n  }\n}];"
+      },
+      "id": "route-operation-template-test",
+      "name": "Route Operation",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -576,
+        128
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  success: true,\n  templates: [\n    // PLACEHOLDER: Will be populated by Data Tables Read node\n    // For MVP, return static structure\n  ],\n  count: 0,\n  message: 'MVP: List templates from n8n Data Tables (not yet implemented)'\n} }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, POST, DELETE, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-list-templates-test",
+      "name": "Return List Templates",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -176,
+        -80
+      ],
+      "typeVersion": 1.4,
+      "notes": "MVP Placeholder: Will integrate with Data Tables"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  success: true,\n  template: {\n    // PLACEHOLDER: Will be populated by Data Tables Read node\n  },\n  message: 'MVP: Get single template from n8n Data Tables (not yet implemented)'\n} }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, POST, DELETE, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-get-template-test",
+      "name": "Return Get Template",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -176,
+        48
+      ],
+      "typeVersion": 1.4,
+      "notes": "MVP Placeholder: Will integrate with Data Tables"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  success: true,\n  template_id: 'tpl_' + Date.now(),\n  message: 'MVP: Excel upload parsed (tabs 0-2), template created in Data Tables (not yet implemented)',\n  criteria_count: 0,\n  vendor_count: 0\n} }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, POST, DELETE, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-upload-success-test",
+      "name": "Return Upload Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -176,
+        176
+      ],
+      "typeVersion": 1.4,
+      "notes": "MVP Placeholder: Will add Excel parser + Data Tables Insert"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  success: true,\n  message: 'MVP: Template soft-deleted in Data Tables (not yet implemented)'\n} }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, POST, DELETE, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-delete-success-test",
+      "name": "Return Delete Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -176,
+        304
+      ],
+      "typeVersion": 1.4,
+      "notes": "MVP Placeholder: Will add Data Tables Update (is_active=false)"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  success: true,\n  usage_count: 1,\n  message: 'MVP: Usage tracked in Data Tables (not yet implemented)'\n} }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET, POST, DELETE, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-track-usage-test",
+      "name": "Return Track Usage",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -176,
+        432
+      ],
+      "typeVersion": 1.4,
+      "notes": "MVP Placeholder: Will add Data Tables Insert + Update"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Input Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input Validation": {
+      "main": [
+        [
+          {
+            "node": "Check Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Validation": {
+      "main": [
+        [
+          {
+            "node": "Return Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route Operation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Operation": {
+      "main": [
+        [
+          {
+            "node": "Return List Templates",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Return Get Template",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Return Upload Success",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Return Delete Success",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Return Track Usage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "template-manager-v1-test",
+  "meta": {
+    "instanceId": "clarioo-template-manager-test"
+  },
+  "id": "ClariooTemplateManagerTest",
+  "tags": [],
+  "notes": "SP_028 MVP: Template Manager (Testing)\n\nOperations:\n1. LIST - Get all templates (with optional category filter)\n2. GET - Get single template by ID\n3. UPLOAD - Upload Excel file, parse tabs 0-2, create template\n4. DELETE - Soft delete template (is_active=false)\n5. TRACK_USAGE - Track template usage for analytics\n\nMVP Scope:\n- Parses Excel tabs 0-2 only (INDEX, Criteria, Vendors)\n- No AI functionality\n- Basic validation\n- Placeholder responses (Data Tables integration pending)"
+}

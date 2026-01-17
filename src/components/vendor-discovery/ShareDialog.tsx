@@ -22,11 +22,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Download, Link2, Copy, Check } from 'lucide-react';
+import { Download, Link2, Copy, Check, FileSpreadsheet, FileJson } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Criteria } from '../VendorDiscovery';
 import { TYPOGRAPHY } from '@/styles/typography-config';
 import * as XLSX from 'xlsx';
+import { exportProjectToExcel } from '@/services/excelExportService';
+import { exportProjectToJSON } from '@/services/jsonExportService';
+import { ExportLoadingModal } from '@/components/export/ExportLoadingModal';
 
 export interface ShareDialogProps {
   isOpen: boolean;
@@ -52,6 +55,8 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({
 }) => {
   const { toast } = useToast();
   const [linkCopied, setLinkCopied] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'excel' | 'json'>('excel');
 
   /**
    * Generate shareable link for criteria
@@ -64,35 +69,27 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({
   };
 
   /**
-   * Copy share link to clipboard
+   * Copy share link to clipboard - Feature in development
    */
   const handleCopyLink = async () => {
-    const shareUrl = generateShareLink();
-
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setLinkCopied(true);
-
-      toast({
-        title: '✅ Link copied',
-        description: 'Share link has been copied to clipboard',
-        duration: 2000
-      });
-
-      // Reset copied state after 3 seconds
-      setTimeout(() => setLinkCopied(false), 3000);
-    } catch (error) {
-      toast({
-        title: '⚠️ Copy failed',
-        description: 'Could not copy link to clipboard',
-        variant: 'destructive',
-        duration: 2000
-      });
-    }
+    toast({
+      title: 'Feature in development, coming up soon!',
+      duration: 2000
+    });
   };
 
   /**
-   * Download criteria as Excel file
+   * Handle input field interaction - Feature in development
+   */
+  const handleInputInteraction = () => {
+    toast({
+      title: 'Feature in development, coming up soon!',
+      duration: 2000
+    });
+  };
+
+  /**
+   * Download criteria as Excel file (basic)
    */
   const handleDownload = () => {
     try {
@@ -144,11 +141,121 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({
     }
   };
 
+  /**
+   * Export full project to Excel (SP_027)
+   */
+  const handleExportExcel = async () => {
+    setIsExporting(true);
+    setExportFormat('excel');
+
+    try {
+      // Get project name from clarioo_projects array
+      const projectsData = localStorage.getItem('clarioo_projects');
+      let projectName = 'Project';
+
+      if (projectsData) {
+        try {
+          const projects = JSON.parse(projectsData);
+          const project = projects.find((p: any) => p.id === projectId);
+          if (project && project.name) {
+            projectName = project.name;
+          }
+        } catch (error) {
+          console.error('[ShareDialog] Failed to parse clarioo_projects:', error);
+        }
+      }
+
+      const result = await exportProjectToExcel({
+        projectId,
+        projectName,
+      });
+
+      setIsExporting(false);
+
+      if (result.success) {
+        toast({
+          title: '✅ Excel exported',
+          description: `Downloaded ${result.filename}`,
+          duration: 3000,
+        });
+      } else {
+        throw new Error(result.error || 'Export failed');
+      }
+    } catch (error) {
+      setIsExporting(false);
+      console.error('Excel export error:', error);
+      toast({
+        title: '⚠️ Export failed',
+        description: error instanceof Error ? error.message : 'Could not generate Excel file',
+        variant: 'destructive',
+        duration: 3000,
+      });
+    }
+  };
+
+  /**
+   * Export full project to JSON (SP_027)
+   */
+  const handleExportJSON = async () => {
+    setIsExporting(true);
+    setExportFormat('json');
+
+    try {
+      // Get project name from clarioo_projects array
+      const projectsData = localStorage.getItem('clarioo_projects');
+      let projectName = 'Project';
+
+      if (projectsData) {
+        try {
+          const projects = JSON.parse(projectsData);
+          const project = projects.find((p: any) => p.id === projectId);
+          if (project && project.name) {
+            projectName = project.name;
+          }
+        } catch (error) {
+          console.error('[ShareDialog] Failed to parse clarioo_projects:', error);
+        }
+      }
+
+      const result = await exportProjectToJSON({
+        projectId,
+        projectName,
+      });
+
+      setIsExporting(false);
+
+      if (result.success) {
+        toast({
+          title: '✅ JSON exported',
+          description: `Downloaded ${result.filename}`,
+          duration: 3000,
+        });
+      } else {
+        throw new Error(result.error || 'Export failed');
+      }
+    } catch (error) {
+      setIsExporting(false);
+      console.error('JSON export error:', error);
+      toast({
+        title: '⚠️ Export failed',
+        description: error instanceof Error ? error.message : 'Could not generate JSON file',
+        variant: 'destructive',
+        duration: 3000,
+      });
+    }
+  };
+
   const shareUrl = generateShareLink();
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+    <>
+      <ExportLoadingModal
+        isOpen={isExporting}
+        format={exportFormat}
+      />
+
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className={TYPOGRAPHY.heading.h6}>
             {title}
@@ -159,19 +266,34 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Download Option */}
-          <div className="space-y-2">
-            <Label className={TYPOGRAPHY.label.default}>Download File</Label>
+          {/* SP_027: Full Project Export Options */}
+          <div className="space-y-2 pt-2 border-t">
+            <Label className={TYPOGRAPHY.label.default}>Full Project Export</Label>
+
+            {/* Export to Excel */}
             <Button
-              onClick={handleDownload}
+              onClick={handleExportExcel}
               variant="outline"
               className="w-full justify-start gap-2"
+              disabled={isExporting}
             >
-              <Download className="h-4 w-4" />
-              {downloadButtonText}
+              <FileSpreadsheet className="h-4 w-4" />
+              Export Complete Project (Excel)
             </Button>
+
+            {/* Export to JSON */}
+            <Button
+              onClick={handleExportJSON}
+              variant="outline"
+              className="w-full justify-start gap-2"
+              disabled={isExporting}
+            >
+              <FileJson className="h-4 w-4" />
+              Export Project Data (JSON)
+            </Button>
+
             <p className={`${TYPOGRAPHY.muted.small} text-gray-500`}>
-              {downloadDescription}
+              Export all project data including vendors, criteria, and evaluations
             </p>
           </div>
 
@@ -182,7 +304,10 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({
               <Input
                 value={shareUrl}
                 readOnly
-                className={`${TYPOGRAPHY.body.default} flex-1`}
+                onClick={handleInputInteraction}
+                onFocus={handleInputInteraction}
+                onSelect={handleInputInteraction}
+                className={`${TYPOGRAPHY.body.default} flex-1 select-none cursor-pointer`}
               />
               <Button
                 onClick={handleCopyLink}
@@ -204,6 +329,7 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 };
 

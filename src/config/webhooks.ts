@@ -50,6 +50,7 @@ const PRODUCTION_WEBHOOKS = {
   BATTLECARD_ROW: 'https://n8n.lakestrom.com/webhook/clarioo-battlecard-row', // Battlecard row generator (Production)
   SUMMARIZE_CRITERION_ROW: 'https://n8n.lakestrom.com/webhook/summarize-criterion-row-production', // SP_025: Cell summaries (Production)
   VENDOR_SCATTERPLOT: 'https://n8n.lakestrom.com/webhook/clarioo-vendor-scatterplot', // SP_026: Vendor positioning scatter plot (Production)
+  TEMPLATES: 'https://n8n.lakestrom.com/webhook/templates', // SP_028/SP_029/SP_030: Template Manager (Production)
 } as const;
 
 const TESTING_WEBHOOKS = {
@@ -65,6 +66,7 @@ const TESTING_WEBHOOKS = {
   BATTLECARD_ROW: 'https://n8n.lakestrom.com/webhook/e08eae12-70d9-4669-8ee5-f31ffe5b1407', // Testing webhook UUID
   SUMMARIZE_CRITERION_ROW: 'https://n8n.lakestrom.com/webhook/summarize-criterion-row-testing', // SP_025: Cell summaries (Testing)
   VENDOR_SCATTERPLOT: 'https://n8n.lakestrom.com/webhook/3f7a9e2b-4c8d-4f1a-9b6e-7d3c5e8f1a2b', // SP_026: Vendor positioning scatter plot (Testing)
+  TEMPLATES: 'https://n8n.lakestrom.com/webhook/4d8f2b1a-9c7e-4a3b-8d5f-2e6a1c9b3d7f', // SP_028/SP_029/SP_030: Template Manager (Testing)
 } as const;
 
 // ===========================================
@@ -124,3 +126,4 @@ export const getEmailCollectionUrl = () => getWebhookUrl('EMAIL_COLLECTION');
 export const getBattlecardRowUrl = () => getWebhookUrl('BATTLECARD_ROW'); // Battlecard row generator
 export const getSummarizeCriterionRowUrl = () => getWebhookUrl('SUMMARIZE_CRITERION_ROW'); // SP_025: Cell summaries
 export const getVendorScatterplotUrl = () => getWebhookUrl('VENDOR_SCATTERPLOT'); // SP_026: Vendor positioning scatter plot
+export const getTemplatesUrl = () => getWebhookUrl('TEMPLATES'); // SP_028/SP_029/SP_030: Template Manager

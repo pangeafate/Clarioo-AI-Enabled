@@ -1,0 +1,859 @@
+{
+  "name": "Clarioo Template Manager - Upload JSON (SP_029)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "templates",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "105f70fc-588f-40e3-bb73-1a96d1f89067",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -160,
+        -480
+      ],
+      "webhookId": "templates",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract action from body (POST only)\nconst body = $input.item.json.body || {};\nconst action = body.action || 'list';\n\nreturn {\n  json: {\n    action: action,\n    body: body\n  }\n};"
+      },
+      "id": "f4a3f105-e750-457a-9fb8-4d10bba39e3a",
+      "name": "Route Action",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        80,
+        -480
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "list",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "list"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "upload_json",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "upload_json"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "delete",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "delete"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "get",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "get"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "96215748-73fc-4c56-a61f-9bdb5524985e",
+      "name": "Switch Action",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        320,
+        -480
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "SZbl6LEAAufx0kM6",
+          "mode": "list",
+          "cachedResultName": "clarioo_templates",
+          "cachedResultUrl": "/projects/91hVWc99MqH0rduN/datatables/SZbl6LEAAufx0kM6"
+        },
+        "returnAll": true
+      },
+      "id": "182d09c5-78ef-4243-9703-29b843c8cb84",
+      "name": "Get All Templates",
+      "type": "n8n-nodes-base.dataTable",
+      "position": [
+        560,
+        -896
+      ],
+      "typeVersion": 1,
+      "notes": "Fetches all templates from Data Table. Update dataTableId after creating the table."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format templates for frontend consumption\nconst allTemplates = $input.all();\n\nconst templates = allTemplates.map(item => {\n  const template = item.json;\n  \n  return {\n    templateId: template.template_id,\n    templateName: template.template_name,\n    templateCategory: template.template_category,\n    searchedBy: template.searched_by || '',\n    softwareCategory: template.software_category || '',\n    keyFeatures: template.key_features || '',\n    clientQuote: template.client_quote || '',\n    currentTools: template.current_tools || '',\n    criteriaCount: template.criteria_count || 0,\n    vendorsCount: template.vendors_count || 0,\n    hasComparisonMatrix: template.has_comparison_matrix || false,\n    hasBattlecards: template.has_battlecards || false,\n    hasExecutiveSummary: template.has_executive_summary || false,\n    projectStage: template.project_stage || 'criteria_only',\n    templateData: template.template_data_json, // Keep as string\n    uploadedAt: template.uploaded_at\n  };\n});\n\nreturn {\n  json: {\n    success: true,\n    templates: templates,\n    count: templates.length\n  }\n};"
+      },
+      "id": "f5812d75-6e84-4789-b6a9-2b43a566bae7",
+      "name": "Format List Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        800,
+        -896
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "4a20f38d-e2be-4a02-b707-30c9cfcd33db",
+      "name": "Return List",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        1040,
+        -896
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract template data from request body\nconst body = $input.item.json.body || {};\nconst template = body.template || {};\n\nif (!template.template_id) {\n  throw new Error('Missing required field: template_id');\n}\n\nif (!template.template_name) {\n  throw new Error('Missing required field: template_name');\n}\n\nif (!template.template_data_json) {\n  throw new Error('Missing required field: template_data_json');\n}\n\n// Return template data ready for Data Table insert\nreturn {\n  json: {\n    template_id: template.template_id,\n    template_name: template.template_name,\n    template_category: template.template_category || 'Uncategorized',\n    searched_by: template.searched_by || null,\n    software_category: template.software_category || null,\n    key_features: template.key_features || null,\n    client_quote: template.client_quote || null,\n    current_tools: template.current_tools || null,\n    criteria_count: template.criteria_count || 0,\n    vendors_count: template.vendors_count || 0,\n    has_comparison_matrix: template.has_comparison_matrix || false,\n    has_battlecards: template.has_battlecards || false,\n    has_executive_summary: template.has_executive_summary || false,\n    project_stage: template.project_stage || 'criteria_only',\n    template_data_json: template.template_data_json,\n    user_id: template.user_id || 'unknown',\n    uploaded_at: template.uploaded_at || new Date().toISOString(),\n    updated_at: template.updated_at || new Date().toISOString()\n  }\n};"
+      },
+      "id": "db998269-231d-4b44-bc24-fd8b3a59e7e8",
+      "name": "Extract Template JSON",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        560,
+        -528
+      ],
+      "typeVersion": 2,
+      "notes": "Extracts and validates template data from upload_json request"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "SZbl6LEAAufx0kM6",
+          "mode": "list",
+          "cachedResultName": "clarioo_templates",
+          "cachedResultUrl": "/projects/91hVWc99MqH0rduN/datatables/SZbl6LEAAufx0kM6"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "template_id",
+              "displayName": "template_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "template_name",
+              "displayName": "template_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "project_description",
+              "displayName": "project_description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "template_category",
+              "displayName": "template_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "software_category",
+              "displayName": "software_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "searched_by",
+              "displayName": "searched_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "key_features",
+              "displayName": "key_features",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "client_quote",
+              "displayName": "client_quote",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "current_tools",
+              "displayName": "current_tools",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "company_context",
+              "displayName": "company_context",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "solution_requirements",
+              "displayName": "solution_requirements",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "criteria_count",
+              "displayName": "criteria_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "vendors_count",
+              "displayName": "vendors_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "has_comparison_matrix",
+              "displayName": "has_comparison_matrix",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "has_battlecards",
+              "displayName": "has_battlecards",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "has_executive_summary",
+              "displayName": "has_executive_summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "project_stage",
+              "displayName": "project_stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "template_data_json",
+              "displayName": "template_data_json",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "uploaded_at",
+              "displayName": "uploaded_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "7b82f919-202d-4d21-a42e-48c10bc0643a",
+      "name": "Insert Template",
+      "type": "n8n-nodes-base.dataTable",
+      "position": [
+        800,
+        -528
+      ],
+      "typeVersion": 1,
+      "notes": "Inserts template into Data Table. Update dataTableId after creating the table."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format upload success response\nconst template = $input.item.json;\n\nreturn {\n  json: {\n    success: true,\n    template_id: template.template_id,\n    message: 'Template uploaded successfully',\n    warnings: [] // Frontend can add warnings if needed\n  }\n};"
+      },
+      "id": "e71ae6bf-6acd-4182-a664-58166fb71765",
+      "name": "Format Upload Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1040,
+        -528
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "ff138304-c519-40b3-a7b6-f2ba3f108fba",
+      "name": "Return Upload",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        1280,
+        -528
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract template_id and user_id from request\nconst body = $input.item.json.body || {};\n\nif (!body.template_id) {\n  throw new Error('Missing required field: template_id');\n}\n\nreturn {\n  json: {\n    template_id: body.template_id,\n    user_id: body.user_id || 'unknown'\n  }\n};"
+      },
+      "id": "6972539b-a0ab-4a2b-9c3b-af3511dc8c61",
+      "name": "Extract Delete Params",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        560,
+        -176
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "value": "SZbl6LEAAufx0kM6",
+          "mode": "list",
+          "cachedResultName": "clarioo_templates",
+          "cachedResultUrl": "/projects/91hVWc99MqH0rduN/datatables/SZbl6LEAAufx0kM6"
+        },
+        "options": {}
+      },
+      "id": "9bb7b48e-85b7-4418-bb1d-3a8e67b244dc",
+      "name": "Delete Template",
+      "type": "n8n-nodes-base.dataTable",
+      "position": [
+        800,
+        -176
+      ],
+      "typeVersion": 1,
+      "notes": "Deletes template by template_id. Update dataTableId after creating the table."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format delete success response\nconst params = $node['Extract Delete Params'].json;\n\nreturn {\n  json: {\n    success: true,\n    template_id: params.template_id,\n    message: 'Template deleted successfully'\n  }\n};"
+      },
+      "id": "4fa5ce7d-3bff-46c1-95f4-9d7e8fea1eac",
+      "name": "Format Delete Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1040,
+        -176
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "619ac0e6-45b1-489b-897c-85bd4b624b5a",
+      "name": "Return Delete",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        1280,
+        -176
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract template_id from query\nconst query = $input.item.json.query || {};\n\nif (!query.template_id) {\n  throw new Error('Missing required parameter: template_id');\n}\n\nreturn {\n  json: {\n    template_id: query.template_id\n  }\n};"
+      },
+      "id": "368d96ce-c5ef-4f6f-8e4a-4ffce8759599",
+      "name": "Extract Get Params",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        560,
+        192
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "SZbl6LEAAufx0kM6",
+          "mode": "list",
+          "cachedResultName": "clarioo_templates",
+          "cachedResultUrl": "/projects/91hVWc99MqH0rduN/datatables/SZbl6LEAAufx0kM6"
+        }
+      },
+      "id": "92736f05-1278-46b9-8317-0e5f8d2fac23",
+      "name": "Get Single Template",
+      "type": "n8n-nodes-base.dataTable",
+      "position": [
+        800,
+        192
+      ],
+      "typeVersion": 1,
+      "notes": "Fetches single template by ID. Update dataTableId after creating the table."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format single template response\nconst templates = $input.all();\n\nif (templates.length === 0) {\n  throw new Error('Template not found');\n}\n\nconst template = templates[0].json;\n\nreturn {\n  json: {\n    success: true,\n    template: {\n      templateId: template.template_id,\n      templateName: template.template_name,\n      templateCategory: template.template_category,\n      searchedBy: template.searched_by || '',\n      softwareCategory: template.software_category || '',\n      keyFeatures: template.key_features || '',\n      clientQuote: template.client_quote || '',\n      currentTools: template.current_tools || '',\n      criteriaCount: template.criteria_count || 0,\n      vendorsCount: template.vendors_count || 0,\n      hasComparisonMatrix: template.has_comparison_matrix || false,\n      hasBattlecards: template.has_battlecards || false,\n      hasExecutiveSummary: template.has_executive_summary || false,\n      projectStage: template.project_stage || 'criteria_only',\n      templateData: template.template_data_json,\n      uploadedAt: template.uploaded_at\n    }\n  }\n};"
+      },
+      "id": "351489e3-85fb-4349-a133-0f5cb687f20a",
+      "name": "Format Get Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1040,
+        192
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "982a81e0-6614-46ab-8cd8-96efaa633dea",
+      "name": "Return Get",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        1280,
+        192
+      ],
+      "typeVersion": 1.4
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Route Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Action": {
+      "main": [
+        [
+          {
+            "node": "Switch Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Action": {
+      "main": [
+        [
+          {
+            "node": "Get All Templates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Template JSON",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Delete Params",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Get Params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Templates": {
+      "main": [
+        [
+          {
+            "node": "Format List Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format List Response": {
+      "main": [
+        [
+          {
+            "node": "Return List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Template JSON": {
+      "main": [
+        [
+          {
+            "node": "Insert Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Template": {
+      "main": [
+        [
+          {
+            "node": "Format Upload Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Upload Response": {
+      "main": [
+        [
+          {
+            "node": "Return Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Delete Params": {
+      "main": [
+        [
+          {
+            "node": "Delete Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Template": {
+      "main": [
+        [
+          {
+            "node": "Format Delete Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Delete Response": {
+      "main": [
+        [
+          {
+            "node": "Return Delete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Get Params": {
+      "main": [
+        [
+          {
+            "node": "Get Single Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Single Template": {
+      "main": [
+        [
+          {
+            "node": "Format Get Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Get Response": {
+      "main": [
+        [
+          {
+            "node": "Return Get",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "bd507a98-6cdf-41e1-8d27-ff809f48f3dc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d8d0f3a1b5452865880018369d00dbc23f6a859a8ab8f3d9720659ce3799163c"
+  },
+  "id": "ulNIRT8rKXIELN7N",
+  "tags": []
+}

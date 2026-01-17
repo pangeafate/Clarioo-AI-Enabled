@@ -1,0 +1,137 @@
+{
+  "name": "Clarioo Template Manager - LIST ONLY (TESTING)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "template-manager-list-only",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "1a2b3c4d-webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [240, 300],
+      "webhookId": "template-manager-list-only",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "clarioo_templates",
+          "mode": "list"
+        },
+        "options": {
+          "returnAll": true
+        }
+      },
+      "id": "2b3c4d5e-get-templates",
+      "name": "Get All Templates",
+      "type": "n8n-nodes-base.dataTable",
+      "position": [460, 300],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter active templates and format response\nconst allTemplates = items;\n\n// Filter only active templates\nlet activeTemplates = allTemplates.filter(item => item.json.is_active === true);\n\n// Format templates for frontend\nconst templates = activeTemplates.map(item => {\n  const template = item.json;\n  \n  return {\n    templateId: template.template_id,\n    templateCategory: template.template_category,\n    searchedBy: template.searched_by,\n    lookingFor: template.looking_for,\n    keyFeatures: template.key_features,\n    clientQuote: template.client_quote,\n    currentTool: template.current_tool,\n    criteria: typeof template.criteria === 'string' ? JSON.parse(template.criteria) : (template.criteria || []),\n    vendors: typeof template.vendors === 'string' ? JSON.parse(template.vendors) : (template.vendors || []),\n    comparisonMatrix: typeof template.comparison_matrix === 'string' ? JSON.parse(template.comparison_matrix) : (template.comparison_matrix || {}),\n    battlecards: typeof template.battlecards === 'string' ? JSON.parse(template.battlecards) : (template.battlecards || {}),\n    positioningData: typeof template.positioning_data === 'string' ? JSON.parse(template.positioning_data) : (template.positioning_data || {}),\n    summaryData: typeof template.summary_data === 'string' ? JSON.parse(template.summary_data) : (template.summary_data || {})\n  };\n});\n\nreturn [{\n  json: {\n    success: true,\n    templates: templates,\n    count: templates.length\n  }\n}];"
+      },
+      "id": "3c4d5e6f-format",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "position": [680, 300],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "4d5e6f7g-response",
+      "name": "Return Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [900, 300],
+      "typeVersion": 1.4
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get All Templates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Templates": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Return Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "list-only-v1",
+  "meta": {
+    "instanceId": "template-manager-list-only"
+  },
+  "id": "TemplateManagerListOnly",
+  "tags": [],
+  "notes": "Minimal workflow - LIST templates only\n\nFlow: Webhook → Get All Templates → Format Response → Return\n\nWebhook URL: http://localhost:8080/webhook/template-manager-list-only\n\nTest:\ncurl -X POST http://localhost:8080/webhook/template-manager-list-only\n\nExpected Response:\n{\n  \"success\": true,\n  \"templates\": [...],\n  \"count\": 5\n}"
+}

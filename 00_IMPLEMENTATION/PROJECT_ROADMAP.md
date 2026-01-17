@@ -4,22 +4,22 @@
 
 **🚀 PROJECT STATUS: PHASE 1 - n8n AI INTEGRATION (ACTIVE)**
 
-**Current State**: Production-ready core features with 9 active n8n AI webhooks, localStorage persistence, and fully integrated vendor discovery workflow.
+**Current State**: Production-ready core features with 12 active n8n AI webhooks, localStorage persistence, and fully integrated vendor discovery workflow with advanced visualization and analysis features.
 
 **Vision**: Intelligent, AI-powered software vendor selection platform that eliminates 90% of routine evaluation work through GPT-4o-mini processing via n8n workflows.
 
-**Current Sprint**: SP_024 IN PROGRESS (Battlecards 10-Row Expansion)
-**Next Sprint**: SP_026 PLANNED (Vendor Positioning Scatter Plot)
-**Last Updated**: January 11, 2026 (v4.4.0 - SP_026 planning complete)
+**Current Sprint**: None (Awaiting next sprint planning)
+**Next Sprint**: TBD (Future enhancements)
+**Last Updated**: January 17, 2026 (v4.7.0 - SP_030 complete)
 
 ---
 
 ## Product Development Phases
 
-### Phase 1: n8n AI Integration (Q4 2024) 🚀 **ACTIVE**
+### Phase 1: n8n AI Integration (Q4 2024 - Q1 2026) 🚀 **COMPLETE**
 
-**Status**: In Progress (9/9 webhooks operational)
-**Timeline**: November 23, 2024 - Present
+**Status**: Complete (12/12 webhooks operational)
+**Timeline**: November 23, 2024 - January 14, 2026
 **Purpose**: Transform visual prototype into production-ready platform with real AI integration
 
 #### Phase 1 Objectives
@@ -53,80 +53,198 @@
 
 ---
 
+#### Sprint 29: Excel Template Upload with Reverse Engineering (SP_029)
+**Status**: 📋 PLANNED
+**Type**: Feature Implementation + Excel Reverse Engineering + n8n Integration
+**Estimated Duration**: 3-4 days
+**Priority**: HIGH
+**Dependencies**: SP_027 (Excel Export Service), SP_028 (Admin Mode Toggle - partial)
+
+**Objective**: Enable admin users to upload Excel files exported by the system, reverse-engineer them back into `ExportProjectData` JSON format, and store them as templates in n8n Data Tables for public browsing.
+
+**Key Innovation**: **Zero transformation approach** - Excel exports become templates directly, eliminating multi-step transformation bugs.
+
+**Key Deliverables**:
+- Excel import service (`excelImportService.ts`) - Reverse engineer all 7 Excel tabs
+- JSON export format matching `excelExportService.ts` exactly (ExportProjectData)
+- Admin-only upload button in TemplatesModal
+- n8n Data Tables integration (`uploadTemplate` function)
+- Updated `templateService.ts` to use JSON directly (zero transformations)
+- Validation and error handling
+- Progress indicators and toast notifications
+- Round-trip testing (Export → Upload → Clone → Export = identical)
+
+**Technical Approach**:
+- Frontend parses Excel using ExcelJS
+- Build ExportProjectData JSON matching export format exactly
+- Upload complete JSON to n8n Data Tables
+- Frontend uses template JSON directly (NO transformations)
+- Eliminates all transformation bugs permanently
+
+**Impact**:
+- 🎯 Zero transformation bugs (one consistent data structure)
+- 🎯 Easy template creation (export any project → save as template)
+- 🎯 Perfect round-trip fidelity
+- 🎯 Admin-only feature with passcode protection
+- 🎯 Partial upload support with warnings
+
+**Sprint Document**: [SP_029_Excel_Template_Upload.md](./SPRINTS/SP_029_Excel_Template_Upload.md)
+
+---
+
+### ✅ COMPLETED SPRINTS
+
+#### Sprint 30: Template Preview Comparison View Simplification (SP_030)
+**Date**: January 17, 2026
+**Status**: ✅ COMPLETE
+**Type**: Component Cloning + UI Simplification
+**Duration**: 1 day
+**Priority**: HIGH
+**Dependencies**: SP_029 (Template Upload), VendorComparisonNew component
+
+**Objective**: Clone VendorComparisonNew component and create simplified read-only version for template preview, removing all modification controls while preserving display and interactive navigation features.
+
+**Key Deliverables**:
+- ✅ New component: TemplateComparisonView (cloned from VendorComparisonNew)
+  - 1,176 lines → 480 lines (59% reduction)
+  - Removed 15 useState hooks → 6 remaining
+  - Removed 5 useEffect hooks → 0 remaining
+- ✅ Removed all modification controls (add, edit, delete buttons, n8n calls, localStorage)
+- ✅ Kept all display features (cell clicks, navigation, accordion, animations)
+- ✅ Integrated with TemplatePreviewModal
+- ✅ Battlecards section underneath comparison matrix
+- ✅ Mobile-first responsive design preserved
+
+**Technical Implementation**:
+- Cloned VendorComparisonNew.tsx → TemplateComparisonView.tsx
+- Removed edit, add, delete, copy, archive, generate buttons
+- Kept cell click handlers, navigation arrows, accordion, vendor cards
+- Simplified props to template + comparisonVendors only
+- Cleaned up state management (removed editing modes)
+- Preserved all animations and responsive layouts
+
+**Results**:
+- ✅ Professional template preview experience
+- ✅ Consistent with main project workflow
+- ✅ No code duplication (reused battle-tested component)
+- ✅ Fast implementation (completed in 1 day)
+- ✅ No compilation or TypeScript errors
+- ✅ Successfully hot-reloaded in dev server
+
+**Sprint Document**: [SP_030_Template_Preview_Comparison_View.md](./SPRINTS/SP_030_Template_Preview_Comparison_View.md)
+
+---
+
+#### Sprint 27: Excel & JSON Export Feature (SP_027)
+**Date**: January 14, 2026
+**Status**: ✅ COMPLETE
+**Duration**: 1 day
+**Type**: Feature Implementation - Data Export
+
+**Objective**: Implement comprehensive Excel export with 7 formatted tabs and JSON export for complete project state backup.
+
+**Key Deliverables**:
+- Excel Export Service (`excelExportService.ts`, ~1,140 lines)
+- 7-tab workbook structure (INDEX, Criteria, Vendors, Evaluation, Matching, Battlecards, Summary)
+- Vendor logos (40x40px circular) and scatter plot screenshot (600x400px)
+- JSON Export Service (`jsonExportService.ts`, ~230 lines)
+- Image processing utilities (logo fetching, circular cropping, compression)
+- Screenshot capture utilities (html2canvas integration)
+- Progressive export based on project stage
+- Incomplete data detection and gray-out styling
+- Export buttons in ShareDialog
+- File naming: `{ProjectName10}_Clarioo_{YY_MM_DD}.{xlsx|json}`
+
+**Impact**:
+- ✅ Professional Excel exports with 7 formatted tabs
+- ✅ JSON exports for project state backup
+- ✅ Vendor logos and scatter plot screenshots embedded
+- ✅ Progressive export shows only completed tabs
+- ✅ Foundation for Sprint 29 (Excel template upload)
+
+**Sprint Document**: [SP_027_Excel_JSON_Export_Feature.md](./SPRINTS/SP_027_Excel_JSON_Export_Feature.md)
+
+---
+
+---
+
 #### Sprint 26: Vendor Positioning Scatter Plot (SP_026)
-**Date**: January 11, 2026
-**Status**: 🟢 PLANNED
-**Duration**: 5-7 days
+**Date**: January 11-14, 2026
+**Status**: ✅ COMPLETE
+**Duration**: 3 days
 **Type**: Feature Implementation + n8n AI Integration
 
 **Objective**: Add interactive 2x2 scatter plot visualization to Vendor Discovery page positioning vendor logos along two strategic dimensions using AI analysis.
 
 **Key Deliverables**:
-1. **VendorPositioningScatterPlot Component** (`src/components/vendor-discovery/VendorPositioningScatterPlot.tsx`, 400-500 lines)
-   - Nivo ResponsiveScatterPlot integration
-   - Circular loading animation (logos circle in center)
-   - Fly-to-position animation (1.2s spring easing)
-   - Collision detection (min 80px distance)
-   - Selection synchronization with vendor cards
-
-2. **AnimatedVendorLogo Component** (`src/components/vendor-discovery/AnimatedVendorLogo.tsx`, 150-200 lines)
-   - 66x66px circular logo containers
-   - Dual animation modes: circling + fly-to-position
-   - Selection halo (blue glow, 8px border)
-   - Hover effects (desktop: scale 1.1, enhanced shadow)
-   - Fallback to vendor initials if no logo
-
-3. **n8n AI Positioning Workflows** (60s timeout)
-   - **Production**: `clarioo-vendor-scatterplot` webhook
-   - **Testing**: UUID-based testing webhook
-   - GPT-4o-mini analysis (temperature 0.3, max tokens 4000)
-   - Returns 0-100 scores for two dimensions per vendor:
-     - X-Axis: Solution Scope (Single-Purpose ↔ Multi-Function)
-     - Y-Axis: Industry Focus (Vertical-Specific ↔ General Purpose)
-
-4. **useVendorScatterplot Hook** (`src/hooks/useVendorScatterplot.ts`, 200-250 lines)
-   - Calls n8n webhook with full vendor objects
-   - Auto-retry logic (2 attempts, exponential backoff)
-   - localStorage caching: `vendor_scatterplot_positions_{projectId}`
-   - Loading/error state management
-
-5. **Positioning Utilities** (`src/utils/scatterPlotPositioning.ts`, 150-200 lines)
-   - Coordinate normalization (0-100 scores → pixel coordinates)
-   - Collision detection algorithm
-   - Logo nudging (maintain relative positioning)
-   - Edge constraint validation (min 40px from chart edges)
-
-6. **Responsive Design**
-   - **Desktop**: Rectangular chart (~1200px width, 500px height)
-   - **Mobile**: Square chart (full width, equal height)
-   - Smaller logos on mobile
-   - Touch interactions: tap to select, long-press for details
-
-7. **TypeScript Types** (`src/types/vendorScatterplot.types.ts`, 50-80 lines)
-   - `VendorScatterplotRequest` / `VendorScatterplotResponse`
-   - `VendorPosition` interface
-   - Component prop types
-
-**Technical Implementation**:
-- **Axis Labels**: Always visible, consistent typography
-  - X: "Single-Purpose" (left) ↔ "Multi-Function" (right)
-  - Y: "Vertical-Specific" (bottom) ↔ "General Purpose" (top)
-- **Selection Sync**: Shared `selectedVendorIds` state with vendor cards
-- **Performance**: 60fps animations on desktop, 30fps on mobile
-- **Error Handling**: Show error message, hide chart, manual retry button
+- VendorPositioningScatterPlot component with Nivo integration
+- AnimatedVendorLogo component with dual animation modes
+- n8n AI positioning workflow (production + testing)
+- useVendorScatterplot hook with auto-retry and caching
+- Positioning utilities (collision detection, coordinate normalization)
+- TypeScript types for scatterplot data structures
 
 **Impact**:
+- ✅ 12th n8n webhook operational (vendor positioning analysis)
 - ✅ Visual vendor differentiation through strategic positioning
 - ✅ Enhanced user understanding of vendor landscape
 - ✅ Polished, animation-rich user experience
-- ✅ 11th n8n webhook operational (vendor scatterplot analysis)
 - ✅ Seamless integration with existing vendor discovery workflow
 
 **Sprint Document**: [SP_026_Vendor_Positioning_Scatter_Plot.md](./SPRINTS/SP_026_Vendor_Positioning_Scatter_Plot.md)
 
 ---
 
-### ✅ COMPLETED SPRINTS
+#### Sprint 25: Comparison Matrix Cell Summaries (SP_025)
+**Date**: January 10-11, 2026
+**Status**: ✅ COMPLETE
+**Duration**: 1 day
+**Type**: Enhancement - Comparison Matrix Scannability
+
+**Objective**: Add AI-generated 2-3 word summaries under ✓/⭐ icons in comparison matrix cells to improve scannability without requiring users to click and read full explanations.
+
+**Key Deliverables**:
+- n8n summarization workflow (production + testing)
+- Type system updates (CellState.summary field)
+- Service layer integration (summarizeCriterionRow function)
+- Hook integration (automatic trigger after Stage 2)
+- Storage integration (persist summaries with Stage 2 results)
+- UI updates (display summaries in grey text under icons)
+
+**Impact**:
+- ✅ 11th n8n webhook operational (cell summarization)
+- ✅ Improved comparison matrix scannability
+- ✅ AI-powered smart summary selection (not all cells)
+- ✅ Strict 3-word enforcement for visual consistency
+- ✅ Low cost enhancement (<$0.01 per row)
+
+**Sprint Document**: [SP_025_Comparison_Matrix_Cell_Summaries.md](./SPRINTS/SP_025_Comparison_Matrix_Cell_Summaries.md)
+
+---
+
+#### Sprint 24: Battlecards 10-Row Expansion (SP_024)
+**Date**: January 10-11, 2026
+**Status**: ✅ COMPLETE
+**Duration**: 1 day
+**Type**: Enhancement - Battlecards Feature Expansion
+
+**Objective**: Expand battlecards from 3 mandatory rows to exactly 10 rows (7 mandatory + 3 AI-generated dynamic) for comprehensive vendor comparison.
+
+**Key Deliverables**:
+- Expanded MANDATORY_BATTLECARD_CATEGORIES from 3 to 7 items
+- Updated DEFAULT_BATTLECARDS_CONFIG (min_rows: 10, max_rows: 10)
+- Updated n8n workflow prompts (production + testing)
+- New mandatory categories: Ideal For, Pricing Model, Company Stage, Primary Geo
+- Removed redundant categories from dynamic pool
+
+**Impact**:
+- ✅ Richer vendor comparison data (3.3x more comprehensive)
+- ✅ Better alignment with real-world buying decisions
+- ✅ Structured information architecture (7 mandatory + 3 dynamic)
+- ✅ Backward-compatible cache migration
+- ✅ No breaking changes to UI/UX
+
+**Sprint Document**: [SP_024_Battlecards_10_Row_Expansion.md](./SPRINTS/SP_024_Battlecards_10_Row_Expansion.md)
 
 ---
 
@@ -817,83 +935,7 @@ These sprints established the UI/UX and component architecture:
 
 ---
 
-## 📋 ACTIVE SPRINTS
-
-### Sprint 24: Battlecards 10-Row Expansion (SP_024)
-**Status**: 🚀 IN PROGRESS
-**Type**: Feature Enhancement + n8n Prompt Engineering
-**Estimated Duration**: 2 hours
-
-**Objective**: Expand battlecards from 3 mandatory rows to exactly 10 rows (7 mandatory + 3 AI-generated) for comprehensive vendor comparison.
-
-**Key Changes**:
-- **7 Mandatory Categories** (in order):
-  1. Ideal For (NEW) - Primary use cases and ideal customer scenarios
-  2. Target Verticals (existing)
-  3. Key Customers (existing)
-  4. Pricing Model (NEW - moved from dynamic pool)
-  5. Company Stage (NEW) - Company maturity and market position
-  6. Primary Geo (NEW) - Geographic markets and headquarters
-  7. Main Integrations (existing)
-
-- **3 AI-Generated Categories**: Dynamic selection based on vendor context, must not duplicate mandatory categories
-
-**Technical Implementation**:
-- Updated `MANDATORY_BATTLECARD_CATEGORIES` array from 3 to 7 items
-- Updated `DEFAULT_BATTLECARDS_CONFIG`: min_rows: 10, max_rows: 10
-- Updated both PRODUCTION and TESTING n8n workflow prompts
-- Added detailed category definitions and search patterns
-- Removed duplicates from dynamic pool (Pricing Model, Company Size/Maturity, Geographic Focus)
-
-**Expected Impact**:
-- Richer vendor comparison data (3.3x more comprehensive)
-- Generation time: 3-4 min → 10-15 min (acceptable with progressive reveal)
-- Cost per project: ~$0.27 → ~$0.90 (justified by richer insights)
-- No breaking changes to existing functionality
-
-**Sprint Document**: [SP_024_Battlecards_10_Row_Expansion.md](./SPRINTS/SP_024_Battlecards_10_Row_Expansion.md)
-
----
-
 ## 📋 PLANNED SPRINTS
-
-### Sprint 25: Comparison Matrix Cell Summaries (SP_025)
-**Status**: 📋 PLANNED
-**Type**: Enhancement - Comparison Matrix Scannability
-**Estimated Duration**: 2-3 days
-
-**Objective**: Add AI-generated 2-3 word summaries under ✓/⭐ icons in comparison matrix cells to improve scannability without requiring users to click and read full explanations.
-
-**Key Features**:
-- **New n8n workflow**: `Clarioo_AI_Summarize_Criterion_Row` (PRODUCTION + TESTING)
-- **Automatic trigger**: After Stage 2 completes for each criterion row
-- **Smart AI selection**: Only shows summaries when meaningful (not all cells)
-- **UI enhancement**: Grey text under match icons (`text-xs text-gray-500`)
-- **Storage**: Persists in localStorage with Stage 2 results
-
-**Example Output**:
-```
-Criterion: "Real-time Inventory Visibility"
-Vendor A: ✓
-          Real-time omnichannel inventory
-          ^^^^^^^^ (2-3 words, grey)
-```
-
-**Technical Approach**:
-- Row-by-row processing after Stage 2 completion
-- AI decides if summary adds value (returns null if generic)
-- Strict 3-word maximum enforced by n8n prompt
-- No manual buttons - fully automatic
-
-**Expected Impact**:
-- Faster decision-making (users see key differentiators at a glance)
-- Reduced popup opens (target: 20% reduction)
-- Better scannability without cluttering UI
-- Low cost (<$0.01 per row, no web search needed)
-
-**Sprint Document**: [SP_025_Comparison_Matrix_Cell_Summaries.md](./SPRINTS/SP_025_Comparison_Matrix_Cell_Summaries.md)
-
----
 
 ### Sprint 23: Vendor Battlecards (SP_023)
 **Status**: ✅ COMPLETE
@@ -946,7 +988,7 @@ Vendor A: ✓
 
 ## 🎯 Current Implementation Status
 
-### Real n8n AI Integrations (9 Active Webhooks)
+### Real n8n AI Integrations (12 Active Webhooks)
 
 | Webhook | Function | Timeout | Status | Sprint |
 |---------|----------|---------|--------|--------|
@@ -959,6 +1001,9 @@ Vendor A: ✓
 | `clarioo-executive-summary` | Executive summary generation | 120s | ✅ ACTIVE | SP_019 |
 | `Vendor-Card-Summary` | Vendor card summary (Perplexity) | 120s | ✅ ACTIVE | SP_019 |
 | `clarioo-email-collection` | Email to Google Sheets | 120s | ✅ ACTIVE | SP_017 |
+| `clarioo-battlecard-row` | Battlecard row generation (10 rows) | 90s | ✅ ACTIVE | SP_023/SP_024 |
+| `summarize-criterion-row` | Comparison matrix cell summaries | 60s | ✅ ACTIVE | SP_025 |
+| `clarioo-vendor-scatterplot` | Vendor positioning scatter plot | 60s | ✅ ACTIVE | SP_026 |
 
 **AI Model**: GPT-4o-mini (temperature: 0.3, max tokens: 6000)
 **Webhook Modes**: Production & Testing (user-switchable)
@@ -1051,6 +1096,9 @@ Vendor A: ✓
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 4.4.0 | Jan 14, 2026 | System | SP_026 complete - Vendor Positioning Scatter Plot with AI-powered strategic positioning analysis. Interactive 2x2 scatter plot, animated vendor logos, collision detection, selection sync. 12th n8n webhook operational. 6 new files created. |
+| 4.3.0 | Jan 11, 2026 | System | SP_025 complete - Comparison Matrix Cell Summaries. AI-generated 2-3 word summaries under icons, automatic trigger after Stage 2, smart selection logic. 11th n8n webhook operational. Enhanced comparison matrix scannability. |
+| 4.2.0 | Jan 11, 2026 | System | SP_024 complete - Battlecards 10-Row Expansion. Expanded from 3 to 7 mandatory categories + 3 dynamic (10 total). New categories: Ideal For, Pricing Model, Company Stage, Primary Geo. Richer vendor comparison data with backward-compatible cache migration. |
 | 4.1.0 | Jan 8, 2026 | System | SP_022 complete - Template Carousel Section on Landing Page with category filtering, responsive carousel (3 cards desktop/1 mobile), edge case handling (1-3 cards), and modal integrations |
 | 4.0.0 | Dec 11, 2024 | System | SP_021 complete - Project Templates Feature with read-only component reusability pattern and localStorage integration |
 | 3.9.0 | Dec 3, 2024 | System | Complete rewrite based on actual implementation. Module-by-module verification. Corrected all sprints with actual deliverables, timeouts, and results. |
@@ -1069,8 +1117,8 @@ Vendor A: ✓
 ---
 
 **Document Owner**: Engineering Team
-**Last Comprehensive Review**: January 8, 2026
-**Next Review**: Upon completion of SP_020
+**Last Comprehensive Review**: January 14, 2026
+**Next Review**: Upon completion of next sprint
 
 ---
 

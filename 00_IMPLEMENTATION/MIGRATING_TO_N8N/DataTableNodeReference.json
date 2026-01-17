@@ -1,0 +1,687 @@
+{
+  "name": "Clarioo Template Manager (TESTING) - COMPLETE",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "UINiFwvMVSZ6MInY",
+          "mode": "list",
+          "cachedResultName": "clarioo_templates",
+          "cachedResultUrl": "/projects/91hVWc99MqH0rduN/datatables/UINiFwvMVSZ6MInY"
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        768,
+        -352
+      ],
+      "id": "eaf080fb-62a9-439c-86aa-707010b1e673",
+      "name": "Get row(s)"
+    },
+    {
+      "parameters": {
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "value": "UINiFwvMVSZ6MInY",
+          "mode": "list",
+          "cachedResultName": "clarioo_templates",
+          "cachedResultUrl": "/projects/91hVWc99MqH0rduN/datatables/UINiFwvMVSZ6MInY"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        768,
+        -160
+      ],
+      "id": "29fd8848-6780-48c5-8cf8-c7c9849a6a1b",
+      "name": "Delete row(s)"
+    },
+    {
+      "parameters": {
+        "operation": "rowExists",
+        "dataTableId": {
+          "__rl": true,
+          "value": "UINiFwvMVSZ6MInY",
+          "mode": "list",
+          "cachedResultName": "clarioo_templates",
+          "cachedResultUrl": "/projects/91hVWc99MqH0rduN/datatables/UINiFwvMVSZ6MInY"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "template_category"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        768,
+        16
+      ],
+      "id": "ac7fae13-7144-4440-b23d-8b5e0e76d46e",
+      "name": "If row exists"
+    },
+    {
+      "parameters": {
+        "operation": "rowNotExists",
+        "dataTableId": {
+          "__rl": true,
+          "value": "UINiFwvMVSZ6MInY",
+          "mode": "list",
+          "cachedResultName": "clarioo_templates",
+          "cachedResultUrl": "/projects/91hVWc99MqH0rduN/datatables/UINiFwvMVSZ6MInY"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "template_category"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        768,
+        192
+      ],
+      "id": "e56f8b1f-89d9-4295-a1f5-5396d6bf16fa",
+      "name": "If row does not exist"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "UINiFwvMVSZ6MInY",
+          "mode": "list",
+          "cachedResultName": "clarioo_templates",
+          "cachedResultUrl": "/projects/91hVWc99MqH0rduN/datatables/UINiFwvMVSZ6MInY"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "is_active": false
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "template_id",
+              "displayName": "template_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "template_category",
+              "displayName": "template_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "searched_by",
+              "displayName": "searched_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "looking_for",
+              "displayName": "looking_for",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "key_features",
+              "displayName": "key_features",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "client_quote",
+              "displayName": "client_quote",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "current_tool",
+              "displayName": "current_tool",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "criteria",
+              "displayName": "criteria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "vendors",
+              "displayName": "vendors",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "comparison_matrix",
+              "displayName": "comparison_matrix",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "battlecards",
+              "displayName": "battlecards",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "positioning_data",
+              "displayName": "positioning_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "summary_data",
+              "displayName": "summary_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "uploaded_by",
+              "displayName": "uploaded_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "is_active",
+              "displayName": "is_active",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        768,
+        384
+      ],
+      "id": "bbc142cc-1e78-4dfe-813c-73d21127c693",
+      "name": "Insert row"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "UINiFwvMVSZ6MInY",
+          "mode": "list",
+          "cachedResultName": "clarioo_templates",
+          "cachedResultUrl": "/projects/91hVWc99MqH0rduN/datatables/UINiFwvMVSZ6MInY"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "is_active": false
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "template_id",
+              "displayName": "template_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "template_category",
+              "displayName": "template_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "searched_by",
+              "displayName": "searched_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "looking_for",
+              "displayName": "looking_for",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "key_features",
+              "displayName": "key_features",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "client_quote",
+              "displayName": "client_quote",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "current_tool",
+              "displayName": "current_tool",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "criteria",
+              "displayName": "criteria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "vendors",
+              "displayName": "vendors",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "comparison_matrix",
+              "displayName": "comparison_matrix",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "battlecards",
+              "displayName": "battlecards",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "positioning_data",
+              "displayName": "positioning_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "summary_data",
+              "displayName": "summary_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "uploaded_by",
+              "displayName": "uploaded_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "is_active",
+              "displayName": "is_active",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        752,
+        560
+      ],
+      "id": "96637d2a-885c-41d7-8e9e-e9cf503f7d3f",
+      "name": "Update row(s)"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "UINiFwvMVSZ6MInY",
+          "mode": "list",
+          "cachedResultName": "clarioo_templates",
+          "cachedResultUrl": "/projects/91hVWc99MqH0rduN/datatables/UINiFwvMVSZ6MInY"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "is_active": false
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "template_id",
+              "displayName": "template_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "template_category",
+              "displayName": "template_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "searched_by",
+              "displayName": "searched_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "looking_for",
+              "displayName": "looking_for",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "key_features",
+              "displayName": "key_features",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "client_quote",
+              "displayName": "client_quote",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "current_tool",
+              "displayName": "current_tool",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "criteria",
+              "displayName": "criteria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "vendors",
+              "displayName": "vendors",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "comparison_matrix",
+              "displayName": "comparison_matrix",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "battlecards",
+              "displayName": "battlecards",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "positioning_data",
+              "displayName": "positioning_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "summary_data",
+              "displayName": "summary_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "uploaded_by",
+              "displayName": "uploaded_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "is_active",
+              "displayName": "is_active",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        784,
+        752
+      ],
+      "id": "c1e39cf3-a77d-474f-91e8-2f7e58f55f2d",
+      "name": "Upsert row(s)"
+    }
+  ],
+  "pinData": {},
+  "connections": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b8c0475f-9e5a-47ce-b296-284e95c23bfc",
+  "meta": {
+    "instanceId": "d8d0f3a1b5452865880018369d00dbc23f6a859a8ab8f3d9720659ce3799163c"
+  },
+  "id": "ulNIRT8rKXIELN7N",
+  "tags": []
+}

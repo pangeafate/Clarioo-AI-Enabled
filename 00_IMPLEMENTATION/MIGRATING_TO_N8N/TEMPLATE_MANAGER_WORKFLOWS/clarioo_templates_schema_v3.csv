@@ -1,0 +1,2 @@
+template_id,template_name,project_description,template_category,software_category,searched_by,key_features,client_quote,current_tools,company_context,solution_requirements,criteria_count,vendors_count,has_comparison_matrix,has_battlecards,has_executive_summary,project_stage,template_data_json,user_id,uploaded_at,updated_at
+string,string,string,string,string,string,string,string,string,string,string,number,number,boolean,boolean,boolean,string,json,string,datetime,datetime

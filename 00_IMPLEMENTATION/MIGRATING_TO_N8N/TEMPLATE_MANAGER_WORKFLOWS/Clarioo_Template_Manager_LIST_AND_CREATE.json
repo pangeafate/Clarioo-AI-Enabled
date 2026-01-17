@@ -1,0 +1,567 @@
+{
+  "name": "Clarioo Template Manager - LIST & CREATE (TESTING)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "template-manager",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "webhook-node",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [240, 400],
+      "webhookId": "template-manager",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Determine action from query or body\nconst query = items[0].json.query || {};\nconst body = items[0].json.body || {};\nconst action = query.action || body.action || 'list';\n\nreturn [{\n  json: {\n    action: action,\n    query: query,\n    body: body,\n    originalData: items[0].json\n  }\n}];"
+      },
+      "id": "route-action",
+      "name": "Route Action",
+      "type": "n8n-nodes-base.code",
+      "position": [460, 400],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "list",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "list"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "upload",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "upload"
+            }
+          ]
+        }
+      },
+      "id": "switch-action",
+      "name": "Switch Action",
+      "type": "n8n-nodes-base.switch",
+      "position": [680, 400],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "clarioo_templates",
+          "mode": "list"
+        },
+        "options": {
+          "returnAll": true
+        }
+      },
+      "id": "get-all-templates",
+      "name": "Get All Templates",
+      "type": "n8n-nodes-base.dataTable",
+      "position": [920, 260],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter active templates and format response\nconst allTemplates = items;\n\nlet activeTemplates = allTemplates.filter(item => item.json.is_active === true);\n\nconst templates = activeTemplates.map(item => {\n  const template = item.json;\n  \n  return {\n    templateId: template.template_id,\n    templateCategory: template.template_category,\n    searchedBy: template.searched_by,\n    lookingFor: template.looking_for,\n    keyFeatures: template.key_features,\n    clientQuote: template.client_quote,\n    currentTool: template.current_tool,\n    criteria: typeof template.criteria === 'string' ? JSON.parse(template.criteria) : (template.criteria || []),\n    vendors: typeof template.vendors === 'string' ? JSON.parse(template.vendors) : (template.vendors || []),\n    comparisonMatrix: typeof template.comparison_matrix === 'string' ? JSON.parse(template.comparison_matrix) : (template.comparison_matrix || {}),\n    battlecards: typeof template.battlecards === 'string' ? JSON.parse(template.battlecards) : (template.battlecards || {}),\n    positioningData: typeof template.positioning_data === 'string' ? JSON.parse(template.positioning_data) : (template.positioning_data || {}),\n    summaryData: typeof template.summary_data === 'string' ? JSON.parse(template.summary_data) : (template.summary_data || {})\n  };\n});\n\nreturn [{\n  json: {\n    success: true,\n    templates: templates,\n    count: templates.length\n  }\n}];"
+      },
+      "id": "format-list-response",
+      "name": "Format List Response",
+      "type": "n8n-nodes-base.code",
+      "position": [1140, 260],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-list",
+      "name": "Return List",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [1360, 260],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract file from request\nconst originalData = $node[\"Route Action\"].json.originalData;\nconst body = originalData.body || {};\nconst files = originalData.files || {};\n\n// Get the uploaded file\nlet fileData = null;\n\nif (body.file) {\n  fileData = body.file;\n} else if (files.file) {\n  fileData = files.file;\n} else if (originalData.file) {\n  fileData = originalData.file;\n}\n\nif (!fileData) {\n  throw new Error('No file uploaded. Please provide an Excel file.');\n}\n\nreturn [{\n  json: {\n    file: fileData,\n    user_id: body.user_id || 'unknown'\n  },\n  binary: {\n    data: fileData\n  }\n}];"
+      },
+      "id": "extract-file",
+      "name": "Extract File",
+      "type": "n8n-nodes-base.code",
+      "position": [920, 540],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "merge-data",
+      "name": "Merge Data",
+      "type": "n8n-nodes-base.merge",
+      "position": [1140, 540],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "operation": "fromUrl",
+        "url": "={{ $json.file }}",
+        "options": {
+          "headerRow": 0
+        }
+      },
+      "id": "parse-excel",
+      "name": "Parse Excel File",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "position": [1360, 540],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Excel tabs 0-2 (INDEX, Criteria, Vendors)\nconst sheetData = items[0].json.data;\nconst userId = items[0].json.user_id;\n\nif (!sheetData || !Array.isArray(sheetData)) {\n  throw new Error('Invalid Excel file format');\n}\n\n// Tab 0: INDEX - Extract metadata\nconst indexTab = sheetData[0];\nif (!indexTab || indexTab.length < 2) {\n  throw new Error('INDEX tab is missing or invalid');\n}\n\nconst indexData = {};\nfor (let i = 1; i < indexTab.length; i++) {\n  const row = indexTab[i];\n  if (row && row.length >= 2) {\n    const key = String(row[0]).trim();\n    const value = row[1];\n    if (key) {\n      indexData[key] = value;\n    }\n  }\n}\n\nconst templateId = 'tpl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);\nconst templateCategory = (indexData['Category'] || indexData['category'] || 'UNCATEGORIZED').toUpperCase();\nconst searchedBy = indexData['Searched By'] || indexData['searched_by'] || '';\nconst lookingFor = indexData['Looking For'] || indexData['looking_for'] || '';\nlet keyFeatures = indexData['Key Features'] || indexData['key_features'] || '';\nconst clientQuote = indexData['Client Quote'] || indexData['client_quote'] || null;\nconst currentTool = indexData['Current Tool'] || indexData['current_tool'] || null;\n\n// Tab 1: Criteria\nconst criteriaTab = sheetData[1];\nconst criteria = [];\n\nif (criteriaTab && criteriaTab.length > 1) {\n  for (let i = 1; i < criteriaTab.length; i++) {\n    const row = criteriaTab[i];\n    if (row && row[0]) {\n      criteria.push({\n        id: 'crit_' + String(i).padStart(3, '0'),\n        name: row[0] || '',\n        importance: row[1] || 'Medium',\n        explanation: row[2] || '',\n        type: row[3] || 'feature',\n        isArchived: false\n      });\n    }\n  }\n}\n\nif (!keyFeatures && criteria.length > 0) {\n  keyFeatures = criteria.slice(0, 4).map(c => c.name).join(', ');\n}\n\n// Tab 2: Vendors\nconst vendorsTab = sheetData[2];\nconst vendors = [];\n\nif (vendorsTab && vendorsTab.length > 1) {\n  for (let i = 1; i < vendorsTab.length; i++) {\n    const row = vendorsTab[i];\n    if (row && row[0]) {\n      vendors.push({\n        name: row[0] || '',\n        website: row[1] || '',\n        description: row[2] || ''\n      });\n    }\n  }\n}\n\nreturn [{\n  json: {\n    template_id: templateId,\n    template_category: templateCategory,\n    searched_by: searchedBy,\n    looking_for: lookingFor,\n    key_features: keyFeatures,\n    client_quote: clientQuote,\n    current_tool: currentTool,\n    criteria: JSON.stringify(criteria),\n    vendors: JSON.stringify(vendors),\n    comparison_matrix: JSON.stringify({}),\n    battlecards: JSON.stringify({}),\n    positioning_data: JSON.stringify({}),\n    summary_data: JSON.stringify({}),\n    uploaded_by: userId,\n    is_active: true,\n    created_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "transform-excel-data",
+      "name": "Transform Excel Data",
+      "type": "n8n-nodes-base.code",
+      "position": [1580, 540],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "clarioo_templates",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "template_id",
+              "displayName": "template_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "template_category",
+              "displayName": "template_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "searched_by",
+              "displayName": "searched_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "looking_for",
+              "displayName": "looking_for",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "key_features",
+              "displayName": "key_features",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "client_quote",
+              "displayName": "client_quote",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "current_tool",
+              "displayName": "current_tool",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "criteria",
+              "displayName": "criteria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "vendors",
+              "displayName": "vendors",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "comparison_matrix",
+              "displayName": "comparison_matrix",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "battlecards",
+              "displayName": "battlecards",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "positioning_data",
+              "displayName": "positioning_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "summary_data",
+              "displayName": "summary_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "uploaded_by",
+              "displayName": "uploaded_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "is_active",
+              "displayName": "is_active",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ]
+        }
+      },
+      "id": "insert-template",
+      "name": "Insert Template",
+      "type": "n8n-nodes-base.dataTable",
+      "position": [1800, 540],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "const template = items[0].json;\nconst criteria = typeof template.criteria === 'string' ? JSON.parse(template.criteria) : template.criteria;\nconst vendors = typeof template.vendors === 'string' ? JSON.parse(template.vendors) : template.vendors;\n\nreturn [{\n  json: {\n    success: true,\n    template_id: template.template_id,\n    message: 'Template uploaded successfully',\n    criteria_count: criteria.length,\n    vendor_count: vendors.length,\n    template_category: template.template_category\n  }\n}];"
+      },
+      "id": "format-upload-response",
+      "name": "Format Upload Response",
+      "type": "n8n-nodes-base.code",
+      "position": [2020, 540],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "return-upload",
+      "name": "Return Upload",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [2240, 540],
+      "typeVersion": 1.4
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Route Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Action": {
+      "main": [
+        [
+          {
+            "node": "Switch Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Action": {
+      "main": [
+        [
+          {
+            "node": "Get All Templates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Templates": {
+      "main": [
+        [
+          {
+            "node": "Format List Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format List Response": {
+      "main": [
+        [
+          {
+            "node": "Return List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract File": {
+      "main": [
+        [
+          {
+            "node": "Merge Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Data",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Data": {
+      "main": [
+        [
+          {
+            "node": "Parse Excel File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Excel File": {
+      "main": [
+        [
+          {
+            "node": "Transform Excel Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Excel Data": {
+      "main": [
+        [
+          {
+            "node": "Insert Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Template": {
+      "main": [
+        [
+          {
+            "node": "Format Upload Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Upload Response": {
+      "main": [
+        [
+          {
+            "node": "Return Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "list-and-create-v1",
+  "meta": {
+    "instanceId": "template-manager-list-and-create"
+  },
+  "id": "TemplateManagerListAndCreate",
+  "tags": [],
+  "notes": "Template Manager - LIST & CREATE operations\n\nOperations:\n1. LIST - Get all active templates\n   POST /webhook/template-manager?action=list\n   or POST /webhook/template-manager (default)\n\n2. UPLOAD - Create new template from Excel\n   POST /webhook/template-manager?action=upload\n   Body: multipart/form-data with 'file' field\n\nFlow:\nWebhook → Route Action → Switch\n  ├─ [list] → Get Templates → Format → Return\n  └─ [upload] → Extract File → Parse Excel → Transform → Insert → Format → Return\n\nWebhook: https://n8n.lakestrom.com/webhook/template-manager"
+}

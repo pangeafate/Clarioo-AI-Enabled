@@ -1,0 +1,581 @@
+{
+  "name": "Clarioo Template Manager - LIST & CREATE (TESTING)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "template-manager",
+        "responseMode": "responseNode",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "POST, OPTIONS"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Content-Type, Authorization"
+              }
+            ]
+          }
+        }
+      },
+      "id": "79a429f7-950d-4efb-8ac2-016bfac8f6e0",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -400,
+        240
+      ],
+      "webhookId": "template-manager",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Determine action from query or body\nconst query = items[0].json.query || {};\nconst body = items[0].json.body || {};\nconst action = query.action || body.action || 'list';\n\n// IMPORTANT: Pass through binary data (uploaded file)\nreturn [{\n  json: {\n    action: action,\n    query: query,\n    body: body,\n    originalData: items[0].json\n  },\n  binary: items[0].binary || {}  // <-- THIS IS THE FIX!\n}];"
+      },
+      "id": "f8a21438-9f7e-4293-ac29-73ffac5bf555",
+      "name": "Route Action",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -176,
+        240
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "list",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "list"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action }}",
+                    "rightValue": "upload",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "upload"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e12c3b7a-efeb-46c2-a791-51aa5b9545e9",
+      "name": "Switch Action",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        48,
+        240
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "UINiFwvMVSZ6MInY",
+          "mode": "list",
+          "cachedResultName": "clarioo_templates",
+          "cachedResultUrl": "/projects/91hVWc99MqH0rduN/datatables/UINiFwvMVSZ6MInY"
+        },
+        "returnAll": true
+      },
+      "id": "d001d290-b5d9-4702-ace9-d0fd6e5bb03a",
+      "name": "Get All Templates",
+      "type": "n8n-nodes-base.dataTable",
+      "position": [
+        288,
+        96
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter active templates and format response\nconst allTemplates = items;\n\nlet activeTemplates = allTemplates.filter(item => item.json.is_active === true);\n\nconst templates = activeTemplates.map(item => {\n  const template = item.json;\n  \n  return {\n    templateId: template.template_id,\n    templateCategory: template.template_category,\n    searchedBy: template.searched_by,\n    lookingFor: template.looking_for,\n    keyFeatures: template.key_features,\n    clientQuote: template.client_quote,\n    currentTool: template.current_tool,\n    criteria: typeof template.criteria === 'string' ? JSON.parse(template.criteria) : (template.criteria || []),\n    vendors: typeof template.vendors === 'string' ? JSON.parse(template.vendors) : (template.vendors || []),\n    comparisonMatrix: typeof template.comparison_matrix === 'string' ? JSON.parse(template.comparison_matrix) : (template.comparison_matrix || {}),\n    battlecards: typeof template.battlecards === 'string' ? JSON.parse(template.battlecards) : (template.battlecards || {}),\n    positioningData: typeof template.positioning_data === 'string' ? JSON.parse(template.positioning_data) : (template.positioning_data || {}),\n    summaryData: typeof template.summary_data === 'string' ? JSON.parse(template.summary_data) : (template.summary_data || {})\n  };\n});\n\nreturn [{\n  json: {\n    success: true,\n    templates: templates,\n    count: templates.length\n  }\n}];"
+      },
+      "id": "12c6714f-ac4e-473c-a71d-c61a03d6b845",
+      "name": "Format List Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        512,
+        96
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "e3ca6da0-e690-4a1a-b102-74a4ed8a5867",
+      "name": "Return List",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        736,
+        96
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract file and user_id from webhook data\nconst body = items[0].json.body || {};\nconst query = items[0].json.query || {};\n\n// Get user_id from body or query\nconst userId = body.user_id || query.user_id || 'unknown';\n\n// Check if binary data exists\nif (!items[0].binary || !items[0].binary.file) {\n  throw new Error('No file uploaded. Please provide an Excel file in the \"file\" field.');\n}\n\n// Pass through the binary data\nreturn [{\n  json: {\n    user_id: userId,\n    filename: items[0].binary.file.fileName || 'uploaded_file.xlsx',\n    mimeType: items[0].binary.file.mimeType || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'\n  },\n  binary: {\n    file: items[0].binary.file\n  }\n}];"
+      },
+      "id": "3ac05bed-611b-4d8b-a22b-ad0aa6bd4ba3",
+      "name": "Extract File",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        288,
+        384
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "binaryPropertyName": "file",
+        "fileFormat": "xlsx",
+        "options": {}
+      },
+      "id": "bd88f843-e9ff-475f-9ae3-e45af7899f20",
+      "name": "Parse Excel File",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "position": [
+        704,
+        384
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Excel data - Parse Excel File outputs one item per row\n// Currently only getting INDEX sheet rows\nconst userId = $node[\"Extract File\"].json.user_id || 'unknown';\n\nif (!items || items.length === 0) {\n  throw new Error('No Excel data received');\n}\n\n// Parse INDEX sheet rows - each item is one row object\nconst indexData = {};\n\nfor (const item of items) {\n  const row = item.json;\n\n  // Look for key-value pairs in CLARIOO and __EMPTY columns\n  const key = row.CLARIOO || '';\n  const value = row.__EMPTY || '';\n\n  if (key && typeof key === 'string' && key.trim() !== '') {\n    const cleanKey = key.trim().replace(/:$/, ''); // Remove trailing colon\n\n    // Only store if there's a value in __EMPTY column\n    if (value && value !== '') {\n      indexData[cleanKey] = value;\n    }\n  }\n}\n\n// Extract template metadata from parsed INDEX data\nconst templateId = 'tpl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);\n\nconst templateCategory = (\n  indexData['Category'] ||\n  indexData['Software Category'] ||\n  indexData['Type'] ||\n  'UNCATEGORIZED'\n).toUpperCase();\n\nconst searchedBy =\n  indexData['Searched By'] ||\n  indexData['Company'] ||\n  indexData['Client'] ||\n  indexData['Description'] ||\n  '';\n\nconst lookingFor =\n  indexData['Looking For'] ||\n  indexData['Project Name'] ||\n  indexData['Objective'] ||\n  '';\n\nconst keyFeatures =\n  indexData['Key Features'] ||\n  indexData['Features'] ||\n  '';\n\nconst clientQuote =\n  indexData['Client Quote'] ||\n  indexData['Quote'] ||\n  null;\n\nconst currentTool =\n  indexData['Current Tool'] ||\n  indexData['Existing Solution'] ||\n  null;\n\n// NOTE: Criteria and Vendors will be empty until we configure Parse Excel\n// to read multiple sheets. For now, we only have INDEX sheet data.\nconst criteria = [];\nconst vendors = [];\n\n// Return formatted template\nreturn [{\n  json: {\n    template_id: templateId,\n    template_category: templateCategory,\n    searched_by: searchedBy,\n    looking_for: lookingFor,\n    key_features: keyFeatures,\n    client_quote: clientQuote,\n    current_tool: currentTool,\n    criteria: JSON.stringify(criteria),\n    vendors: JSON.stringify(vendors),\n    comparison_matrix: JSON.stringify({}),\n    battlecards: JSON.stringify({}),\n    positioning_data: JSON.stringify({}),\n    summary_data: JSON.stringify({}),\n    uploaded_by: userId,\n    is_active: true,\n    created_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "1d2a45d2-3b54-40af-9e4e-abde4fc3f253",
+      "name": "Transform Excel Data",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1168,
+        384
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "UINiFwvMVSZ6MInY",
+          "mode": "list",
+          "cachedResultName": "clarioo_templates",
+          "cachedResultUrl": "/projects/91hVWc99MqH0rduN/datatables/UINiFwvMVSZ6MInY"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "is_active": false
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "template_id",
+              "displayName": "template_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "template_category",
+              "displayName": "template_category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "searched_by",
+              "displayName": "searched_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "looking_for",
+              "displayName": "looking_for",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "key_features",
+              "displayName": "key_features",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "client_quote",
+              "displayName": "client_quote",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "current_tool",
+              "displayName": "current_tool",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "criteria",
+              "displayName": "criteria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "vendors",
+              "displayName": "vendors",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "comparison_matrix",
+              "displayName": "comparison_matrix",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "battlecards",
+              "displayName": "battlecards",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "positioning_data",
+              "displayName": "positioning_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "summary_data",
+              "displayName": "summary_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "uploaded_by",
+              "displayName": "uploaded_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "is_active",
+              "displayName": "is_active",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "4aef35dd-a06f-47ed-904a-38ea1b6f7859",
+      "name": "Insert Template",
+      "type": "n8n-nodes-base.dataTable",
+      "position": [
+        1376,
+        384
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "const template = items[0].json;\nconst criteria = typeof template.criteria === 'string' ? JSON.parse(template.criteria) : template.criteria;\nconst vendors = typeof template.vendors === 'string' ? JSON.parse(template.vendors) : template.vendors;\n\nreturn [{\n  json: {\n    success: true,\n    template_id: template.template_id,\n    message: 'Template uploaded successfully',\n    criteria_count: criteria.length,\n    vendor_count: vendors.length,\n    template_category: template.template_category\n  }\n}];"
+      },
+      "id": "ebba103a-0140-4888-a901-bdd4abf5a6a5",
+      "name": "Format Upload Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1600,
+        384
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "cfa10280-68ce-4859-b413-959e82c488cc",
+      "name": "Return Upload",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        1824,
+        384
+      ],
+      "typeVersion": 1.4
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Route Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Action": {
+      "main": [
+        [
+          {
+            "node": "Switch Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Action": {
+      "main": [
+        [
+          {
+            "node": "Get All Templates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Templates": {
+      "main": [
+        [
+          {
+            "node": "Format List Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format List Response": {
+      "main": [
+        [
+          {
+            "node": "Return List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract File": {
+      "main": [
+        [
+          {
+            "node": "Parse Excel File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Excel File": {
+      "main": [
+        [
+          {
+            "node": "Transform Excel Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Excel Data": {
+      "main": [
+        [
+          {
+            "node": "Insert Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Template": {
+      "main": [
+        [
+          {
+            "node": "Format Upload Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Upload Response": {
+      "main": [
+        [
+          {
+            "node": "Return Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "113edc2b-0a2a-415f-82a4-6c7959905bb4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d8d0f3a1b5452865880018369d00dbc23f6a859a8ab8f3d9720659ce3799163c"
+  },
+  "id": "ulNIRT8rKXIELN7N",
+  "tags": []
+}
