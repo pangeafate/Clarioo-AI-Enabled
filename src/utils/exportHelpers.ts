@@ -338,3 +338,214 @@ export const generateExportFilename = (
 
   return `vendor-comparison-${category}-${date}.${extension}`;
 };
+
+// ============================================================================
+// SP_027: Additional Export Helper Functions
+// ============================================================================
+
+/**
+ * Sanitize project name for use in filename (SP_027)
+ * - Removes special characters
+ * - Replaces spaces with empty string
+ * - Truncates to max length
+ *
+ * @param name - Raw project name
+ * @param maxLength - Maximum length (default: 10)
+ * @returns Sanitized project name
+ *
+ * @example
+ * sanitizeProjectName('CX Platform Selection!', 10) // 'CXPlatform'
+ * sanitizeProjectName('Test@#$%', 5) // 'Test'
+ */
+export function sanitizeProjectName(name: string, maxLength: number = 10): string {
+  // Remove special characters and spaces
+  const sanitized = name
+    .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special chars
+    .replace(/\s+/g, '');            // Remove all spaces
+
+  // Truncate to max length
+  return sanitized.slice(0, maxLength);
+}
+
+/**
+ * Format project name for filename using first two words with underscores
+ *
+ * Takes the first two words of the project name, capitalizes them,
+ * and joins with underscores. Removes special characters.
+ *
+ * @param name - Project name
+ * @returns Formatted name with underscores
+ *
+ * @example
+ * formatProjectNameForFile('Luxury Fashion CX Platform') // 'Luxury_Fashion'
+ * formatProjectNameForFile('CX Platform') // 'CX_Platform'
+ * formatProjectNameForFile('Test') // 'Test'
+ * formatProjectNameForFile('test-project name!') // 'Test_Project'
+ */
+export function formatProjectNameForFile(name: string): string {
+  // Remove special characters except spaces
+  const cleaned = name.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+
+  // Split into words and filter out empty strings
+  const words = cleaned.split(/\s+/).filter(word => word.length > 0);
+
+  // Take first two words (or just one if that's all there is)
+  const selectedWords = words.slice(0, 2);
+
+  // Capitalize first letter of each word and join with underscores
+  return selectedWords
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join('_');
+}
+
+/**
+ * Format date according to specified format (SP_027)
+ *
+ * @param date - Date to format
+ * @param format - Date format string (e.g., 'YY_MM_DD')
+ * @returns Formatted date string
+ *
+ * @example
+ * formatDate(new Date('2026-01-14'), 'YY_MM_DD') // '26_01_14'
+ * formatDate(new Date('2026-01-14'), 'DD/MM/YYYY') // '14/01/2026'
+ */
+export function formatDate(date: Date, format: string): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const yearShort = String(year).slice(2);
+
+  // Replace format tokens
+  return format
+    .replace('YYYY', String(year))
+    .replace('YY', yearShort)
+    .replace('MM', month)
+    .replace('DD', day);
+}
+
+/**
+ * Generate export filename with SP_027 naming convention
+ * Format: {First_Two_Words}_Clarioo_{YY_MM_DD}.{ext}
+ *
+ * @param projectName - Raw project name
+ * @param format - Export format ('excel' or 'json')
+ * @returns Formatted filename
+ *
+ * @example
+ * generateSP027Filename('Luxury Fashion CX Platform', 'excel')
+ * // 'Luxury_Fashion_Clarioo_26_01_17.xlsx'
+ * generateSP027Filename('CX Platform Selection', 'json')
+ * // 'CX_Platform_Clarioo_26_01_17.json'
+ */
+export function generateSP027Filename(
+  projectName: string,
+  format: 'excel' | 'json'
+): string {
+  const cleanName = formatProjectNameForFile(projectName);
+  const dateStr = formatDate(new Date(), 'YY_MM_DD');
+  const extension = format === 'excel' ? 'xlsx' : 'json';
+
+  return `${cleanName}_Clarioo_${dateStr}.${extension}`;
+}
+
+/**
+ * Generate initials from vendor name for badge fallback (SP_027)
+ *
+ * @param name - Vendor name
+ * @returns Initials (max 2 characters, uppercase)
+ *
+ * @example
+ * generateInitials('Tulip') // 'TU'
+ * generateInitials('Sales Floor') // 'SF'
+ * generateInitials('IBM Watson') // 'IW'
+ */
+export function generateInitials(name: string): string {
+  const words = name.trim().split(/\s+/);
+
+  if (words.length === 1) {
+    return words[0].slice(0, 2).toUpperCase();
+  }
+
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+
+/**
+ * Truncate text to max length with ellipsis (SP_027)
+ *
+ * @param text - Text to truncate
+ * @param maxLength - Maximum length
+ * @param ellipsis - Ellipsis string (default: '...')
+ * @returns Truncated text
+ */
+export function truncateText(text: string, maxLength: number, ellipsis: string = '...'): string {
+  if (text.length <= maxLength) {
+    return text;
+  }
+  return text.slice(0, maxLength - ellipsis.length) + ellipsis;
+}
+
+/**
+ * Format file size in human-readable format (SP_027)
+ *
+ * @param bytes - File size in bytes
+ * @returns Formatted file size string
+ */
+export function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+}
+
+/**
+ * Get all localStorage keys for a project (SP_027)
+ *
+ * @param projectId - Project ID
+ * @returns Array of localStorage keys
+ */
+export function getProjectLocalStorageKeys(projectId: string): string[] {
+  const keys: string[] = [];
+  // CORRECTED: Use actual localStorage keys from the application
+  const prefixes = [
+    `workflow_${projectId}`,
+    `comparison_state_${projectId}`,
+    `stage1_results_${projectId}`,
+    `stage2_results_${projectId}`, // Keep for backwards compatibility
+    `clarioo_executive_summary_${projectId}`, // New Pre-Demo Brief key
+    `compared_vendors_${projectId}`,
+    `clarioo_battlecards_state_${projectId}`,
+    `clarioo_battlecards_rows_${projectId}`,
+    `vendor_scatterplot_positions_${projectId}`, // Scatter plot positioning data
+  ];
+
+  // Global keys to include (not project-specific but needed for export)
+  const globalKeys = [
+    'clarioo_projects',     // All projects metadata
+    'clarioo_email',        // User email
+    'clarioo_user_id',      // User ID
+  ];
+
+  // Add project-specific keys
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && prefixes.some(prefix => key.startsWith(prefix))) {
+      keys.push(key);
+    }
+    // Also include vendor summaries (clarioo_vendor_summary_*)
+    if (key && key.startsWith('clarioo_vendor_summary_')) {
+      keys.push(key);
+    }
+  }
+
+  // Add global keys if they exist
+  globalKeys.forEach(globalKey => {
+    if (localStorage.getItem(globalKey)) {
+      keys.push(globalKey);
+    }
+  });
+
+  return keys;
+}
