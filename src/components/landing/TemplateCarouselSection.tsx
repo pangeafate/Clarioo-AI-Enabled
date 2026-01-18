@@ -228,7 +228,7 @@ export const TemplateCarouselSection: React.FC<TemplateCarouselSectionProps> = (
             status: 'draft' as const,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-            category: template.templateCategory,
+            category: template.softwareCategory || template.templateCategory || 'Software',
           };
           onTemplateProjectCreated(newProject);
         }
