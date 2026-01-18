@@ -154,7 +154,7 @@ export const useVendorDiscovery = (): UseVendorDiscoveryReturn => {
         project.id,
         project.name,
         project.description,
-        project.category,
+        project.category || 'Software', // Fallback to 'Software' if category is undefined
         n8nCriteria,
         maxVendors
       );
