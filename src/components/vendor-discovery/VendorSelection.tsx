@@ -69,6 +69,8 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
   const prevProjectIdRef = useRef(projectId);
   // Track if discovery has already been initiated (prevents double discovery on re-render)
   const discoveryStartedRef = useRef(false);
+  // Track if auto-discovery has been triggered (only once per discovery session)
+  const hasAutoDiscoveredRef = useRef(false);
 
   // Storage key for vendor persistence
   const vendorStorageKey = `vendors_${projectId}`;
@@ -88,6 +90,7 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
       console.log('[VendorSelection] Project changed, clearing vendors:', projectId);
       isClearingRef.current = true;
       discoveryStartedRef.current = false; // Reset discovery flag on project change
+      hasAutoDiscoveredRef.current = false; // Reset auto-discovery flag on project change
       setVendors([]);
       setSelectedVendorIds(new Set());
       setIsLoading(true);
@@ -217,6 +220,20 @@ const VendorSelection = ({ criteria, techRequest, onComplete, projectId, project
         description: `Found ${discoveredVendors.length} vendors for your ${techRequest.category} needs.`,
         duration: 2000
       });
+
+      // Auto-trigger "Discover More" if less than 6 vendors found (only once)
+      if (discoveredVendors.length < 6 && !hasAutoDiscoveredRef.current) {
+        hasAutoDiscoveredRef.current = true;
+
+        toast({
+          title: "Looking for more vendors...",
+          description: "It seems that only few vendors showed up, let me look for more",
+          duration: 3000
+        });
+
+        // Trigger discover more automatically
+        await handleDiscoverMore();
+      }
     } catch (error) {
       console.error('Vendor discovery failed:', error);
     } finally {
