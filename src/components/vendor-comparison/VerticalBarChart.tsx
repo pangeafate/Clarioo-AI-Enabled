@@ -18,6 +18,8 @@ import { TYPOGRAPHY } from '../../styles/typography-config';
 import { DesktopColumnHeader } from './DesktopColumnHeader';
 import { ComparisonState } from '../../types/vendorComparison.types';
 import { useCriteriaOrder } from '../../hooks/useCriteriaOrder';
+import { ValidationBadges } from './ValidationBadges';
+import { loadCellValidation } from '../../types/validation.types';
 
 interface VerticalBarChartProps {
   vendors: (ComparisonVendor | null)[];
@@ -63,11 +65,23 @@ const renderCriterionState = (
   state: CriterionState,
   criterionIndex: number,
   vendorIndex: number,
+  projectId: string | undefined,
+  vendorId: string,
+  criterionId: string,
   comparisonStatus?: 'pending' | 'loading' | 'completed' | 'failed',
   errorCode?: string,
   summary?: string | null // SP_025: Cell summary (2-3 words)
 ) => {
   const baseDelay = criterionIndex * 0.05 + vendorIndex * 0.1;
+
+  // Load validation state for this cell
+  const validation = projectId
+    ? loadCellValidation(projectId, vendorId, criterionId)
+    : { system: true, vendorValidation: false, buyerValidation: false, expertValidation: false };
+
+  // Check if validations are active (for brighter backgrounds and filled rings)
+  const hasActiveValidation = !validation.system &&
+    (validation.vendorValidation || validation.buyerValidation || validation.expertValidation);
 
   // Show loading spinner for vendors being researched
   if (comparisonStatus === 'loading') {
@@ -143,9 +157,20 @@ const renderCriterionState = (
         >
           {/* Icon container - fixed height ensures alignment */}
           <div className="flex items-center justify-center h-8 sm:h-9 mb-1">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 lg:bg-green-100/70 flex items-center justify-center flex-shrink-0">
-              <Check className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
-            </div>
+            <ValidationBadges
+              validation={validation}
+              iconSize={32}
+              iconColor="rgb(22, 163, 74)"
+              fillColor="rgb(220, 252, 231)"
+            >
+              {hasActiveValidation ? (
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/90 lg:bg-green-100/100 flex items-center justify-center flex-shrink-0">
+                  <Check className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                </div>
+              ) : (
+                <Check className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+              )}
+            </ValidationBadges>
           </div>
           {/* Text container - fixed min-height reserves space even when empty */}
           <div className="min-h-[16px] flex items-start justify-center w-full">
@@ -168,9 +193,20 @@ const renderCriterionState = (
         >
           {/* Icon container - fixed height ensures alignment with other states */}
           <div className="flex items-center justify-center h-8 sm:h-9 mb-1">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 lg:bg-gray-100/70 flex items-center justify-center flex-shrink-0">
-              <Minus className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
-            </div>
+            <ValidationBadges
+              validation={validation}
+              iconSize={32}
+              iconColor="rgb(156, 163, 175)"
+              fillColor="rgb(243, 244, 246)"
+            >
+              {hasActiveValidation ? (
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/90 lg:bg-gray-100/100 flex items-center justify-center flex-shrink-0">
+                  <Minus className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                </div>
+              ) : (
+                <Minus className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+              )}
+            </ValidationBadges>
           </div>
           {/* Empty space to match 'yes'/'star' layout */}
           <div className="min-h-[16px]"></div>
@@ -187,9 +223,20 @@ const renderCriterionState = (
         >
           {/* Icon container - fixed height ensures alignment with other states */}
           <div className="flex items-center justify-center h-8 sm:h-9 mb-1">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 lg:bg-gray-100/70 flex items-center justify-center flex-shrink-0">
-              <HelpCircle className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
-            </div>
+            <ValidationBadges
+              validation={validation}
+              iconSize={32}
+              iconColor="rgb(156, 163, 175)"
+              fillColor="rgb(243, 244, 246)"
+            >
+              {hasActiveValidation ? (
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/90 lg:bg-gray-100/100 flex items-center justify-center flex-shrink-0">
+                  <HelpCircle className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                </div>
+              ) : (
+                <HelpCircle className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+              )}
+            </ValidationBadges>
           </div>
           {/* Empty space to match 'yes'/'star' layout */}
           <div className="min-h-[16px]"></div>
@@ -206,9 +253,20 @@ const renderCriterionState = (
         >
           {/* Icon container - fixed height ensures alignment */}
           <div className="flex items-center justify-center h-8 sm:h-9 mb-1">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/70 lg:bg-yellow-100/70 flex items-center justify-center flex-shrink-0">
-              <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 fill-yellow-500" />
-            </div>
+            <ValidationBadges
+              validation={validation}
+              iconSize={32}
+              iconColor="rgb(234, 179, 8)"
+              fillColor="rgb(254, 252, 232)"
+            >
+              {hasActiveValidation ? (
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/90 lg:bg-yellow-100/100 flex items-center justify-center flex-shrink-0">
+                  <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 fill-yellow-500" />
+                </div>
+              ) : (
+                <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500 fill-yellow-500" />
+              )}
+            </ValidationBadges>
           </div>
           {/* Text container - fixed min-height reserves space even when empty */}
           <div className="min-h-[16px] flex items-start justify-center w-full">
@@ -686,7 +744,7 @@ export const VerticalBarChart: React.FC<VerticalBarChartProps> = ({
                                       }}
                                       title={isFailed ? (errorCode === 'TIMEOUT' ? 'Timeout - Click to retry' : 'Error - Click to retry') : (hasScoreDetails ? 'Click to view evidence' : undefined)}
                                     >
-                                      {renderCriterionState(state, criterionIndex, vendorIndex, comparisonStatus, errorCode, cellSummary)}
+                                      {renderCriterionState(state, criterionIndex, vendorIndex, projectId, vendor.id, criterion.id, comparisonStatus, errorCode, cellSummary)}
                                     </div>
                                   </div>
                                 );

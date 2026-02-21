@@ -4,9 +4,9 @@
 
 **Project**: Clarioo Vendor Analyst - AI-Powered Software Vendor Selection Platform
 **Current Phase**: Phase 1 - n8n AI Integration (Active Development)
-**Status**: 12 Active n8n Webhooks | localStorage Persistence | Excel/JSON Export | Template Preview Comparison View | Production-Ready
-**Version**: 4.7.0
-**Last Updated**: January 17, 2026
+**Status**: 12 Active n8n Webhooks | localStorage Persistence | Excel/JSON Export | Template Preview Comparison View | Validation Badges | Production-Ready
+**Version**: 4.8.0
+**Last Updated**: February 21, 2026
 
 ### Phase Overview
 
@@ -271,6 +271,18 @@
 ---
 
 ## 🚀 Completed Sprints
+
+### Sprint 31: Validation Badges for Vendor Comparison Matrix (SP_031)
+**Date**: February 21, 2026
+**Status**: ✅ COMPLETE
+**Type**: UI Enhancement / New Feature
+**Duration**: 1 day
+
+Per-cell validation badges for the vendor comparison matrix. Users can toggle Vendor (V), Buyer (B), and Expert (E) validation from the cell detail modal. Active badges appear as colored circles at 12/9/3 o'clock on an orbital SVG ring around the cell icon. Validation state persisted per-cell in localStorage. 2 new files created (`validation.types.ts`, `ValidationBadges.tsx`), 2 files modified (`VerticalBarChart.tsx`, `VendorComparisonNew.tsx`).
+
+**Sprint Document**: [SP_031_Validation_Badges_Feature.md](./SPRINTS/SP_031_Validation_Badges_Feature.md)
+
+---
 
 ### Sprint 30: Template Preview Comparison View Simplification (SP_030)
 **Date**: January 17, 2026

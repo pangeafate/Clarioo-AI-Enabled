@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Share2, ArrowRight, X, ExternalLink } from 'lucide-react';
 import { ComparisonVendor, VENDOR_COLOR_PALETTE, CriterionScoreDetail } from '../types/comparison.types';
 import { Criterion } from '../types';
+import { CellValidation, loadCellValidation, saveCellValidation, DEFAULT_VALIDATION } from '../types/validation.types';
 import { VendorCard } from './vendor-comparison/VendorCard';
 import { VerticalBarChart } from './vendor-comparison/VerticalBarChart';
 import { ShareDialog } from './vendor-discovery/ShareDialog';
@@ -347,8 +348,28 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
   const [selectedScoreDetail, setSelectedScoreDetail] = useState<{
     vendorName: string;
     criterionName: string;
+    vendorId: string;
+    criterionId: string;
     detail: CriterionScoreDetail;
   } | null>(null);
+
+  // Validation state for the currently selected cell
+  const [currentValidation, setCurrentValidation] = useState<CellValidation>(DEFAULT_VALIDATION);
+
+  // Key to force re-render of matrix when validation changes
+  const [validationKey, setValidationKey] = useState(0);
+
+  // Load validation state when modal opens
+  useEffect(() => {
+    if (selectedScoreDetail && projectId) {
+      const validation = loadCellValidation(
+        projectId,
+        selectedScoreDetail.vendorId,
+        selectedScoreDetail.criterionId
+      );
+      setCurrentValidation(validation);
+    }
+  }, [selectedScoreDetail, projectId]);
 
   // Standalone mode now returns empty - all data should come from n8n workflow
   const standaloneCriteria: Criterion[] = useMemo(() => {
@@ -806,8 +827,47 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
     setSelectedScoreDetail({
       vendorName,
       criterionName,
+      vendorId,
+      criterionId,
       detail
     });
+  };
+
+  // Handle validation toggle changes
+  const handleValidationToggle = (field: 'system' | 'vendorValidation' | 'buyerValidation' | 'expertValidation') => {
+    if (!selectedScoreDetail || !projectId) return;
+
+    let newValidation = { ...currentValidation };
+
+    if (field === 'system') {
+      // When toggling system ON, turn off other validations
+      newValidation.system = !newValidation.system;
+      if (newValidation.system) {
+        newValidation.vendorValidation = false;
+        newValidation.buyerValidation = false;
+        newValidation.expertValidation = false;
+      }
+    } else {
+      // When toggling vendor/buyer/expert validation, turn off system if it's on
+      if (currentValidation.system) {
+        newValidation.system = false;
+      }
+      newValidation[field] = !newValidation[field];
+    }
+
+    // Save to localStorage
+    saveCellValidation(
+      projectId,
+      selectedScoreDetail.vendorId,
+      selectedScoreDetail.criterionId,
+      newValidation
+    );
+
+    // Update state
+    setCurrentValidation(newValidation);
+
+    // Force matrix re-render to show/hide badges
+    setValidationKey(prev => prev + 1);
   };
 
   // === MOBILE STATE (3 vendor carousels) ===
@@ -1001,6 +1061,7 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
             transition={{ duration: 0.4, delay: 0.2 }}
           >
             <VerticalBarChart
+              key={validationKey}
               vendors={[vendor1, vendor2, vendor3].filter(Boolean)}
               criteria={criteria}
               projectId={projectId}
@@ -1021,6 +1082,7 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
             transition={{ duration: 0.4 }}
           >
             <VerticalBarChart
+              key={validationKey}
               vendors={desktopVendors}
               criteria={criteria}
               projectId={projectId}
@@ -1196,6 +1258,105 @@ export const VendorComparisonNew: React.FC<VendorComparisonNewProps> = ({
                   <p className="text-sm text-gray-700">
                     {selectedScoreDetail.detail.comment || 'No additional information available.'}
                   </p>
+                </div>
+
+                {/* Validation Toggles */}
+                <div className="mb-4 border-t border-gray-200 pt-4">
+                  <p className="text-xs font-medium text-gray-700 mb-2">Validation Status</p>
+                  <div className="space-y-2">
+                    {/* System Toggle */}
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <span className="text-sm text-gray-600 group-hover:text-gray-900">
+                        System Validated
+                      </span>
+                      <button
+                        onClick={() => handleValidationToggle('system')}
+                        className={`
+                          relative inline-flex h-5 w-9 items-center rounded-full transition-colors
+                          ${currentValidation.system ? 'bg-gray-600' : 'bg-gray-300'}
+                        `}
+                      >
+                        <span
+                          className={`
+                            inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+                            ${currentValidation.system ? 'translate-x-5' : 'translate-x-1'}
+                          `}
+                        />
+                      </button>
+                    </label>
+
+                    {/* Vendor Validation Toggle */}
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <span className="text-sm text-gray-600 group-hover:text-gray-900 flex items-center gap-2">
+                        <span className="inline-flex items-center justify-center w-4 h-4 bg-green-500 text-white rounded-full text-xs font-bold">
+                          V
+                        </span>
+                        Vendor Validated
+                      </span>
+                      <button
+                        onClick={() => handleValidationToggle('vendorValidation')}
+                        className={`
+                          relative inline-flex h-5 w-9 items-center rounded-full transition-colors
+                          ${currentValidation.vendorValidation ? 'bg-green-600' : 'bg-gray-300'}
+                        `}
+                      >
+                        <span
+                          className={`
+                            inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+                            ${currentValidation.vendorValidation ? 'translate-x-5' : 'translate-x-1'}
+                          `}
+                        />
+                      </button>
+                    </label>
+
+                    {/* Buyer Validation Toggle */}
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <span className="text-sm text-gray-600 group-hover:text-gray-900 flex items-center gap-2">
+                        <span className="inline-flex items-center justify-center w-4 h-4 bg-blue-500 text-white rounded-full text-xs font-bold">
+                          B
+                        </span>
+                        Buyer Validated
+                      </span>
+                      <button
+                        onClick={() => handleValidationToggle('buyerValidation')}
+                        className={`
+                          relative inline-flex h-5 w-9 items-center rounded-full transition-colors
+                          ${currentValidation.buyerValidation ? 'bg-blue-600' : 'bg-gray-300'}
+                        `}
+                      >
+                        <span
+                          className={`
+                            inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+                            ${currentValidation.buyerValidation ? 'translate-x-5' : 'translate-x-1'}
+                          `}
+                        />
+                      </button>
+                    </label>
+
+                    {/* Expert Validation Toggle */}
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <span className="text-sm text-gray-600 group-hover:text-gray-900 flex items-center gap-2">
+                        <span className="inline-flex items-center justify-center w-4 h-4 bg-orange-500 text-white rounded-full text-xs font-bold">
+                          E
+                        </span>
+                        Expert Validated
+                      </span>
+                      <button
+                        onClick={() => handleValidationToggle('expertValidation')}
+                        className={`
+                          relative inline-flex h-5 w-9 items-center rounded-full transition-colors
+                          ${currentValidation.expertValidation ? 'bg-orange-600' : 'bg-gray-300'}
+                        `}
+                      >
+                        <span
+                          className={`
+                            inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+                            ${currentValidation.expertValidation ? 'translate-x-5' : 'translate-x-1'}
+                          `}
+                        />
+                      </button>
+                    </label>
+                  </div>
                 </div>
 
                 {/* Evidence Link */}

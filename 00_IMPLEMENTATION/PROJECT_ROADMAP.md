@@ -10,7 +10,7 @@
 
 **Current Sprint**: None (Awaiting next sprint planning)
 **Next Sprint**: TBD (Future enhancements)
-**Last Updated**: January 17, 2026 (v4.7.0 - SP_030 complete)
+**Last Updated**: February 21, 2026 (v4.8.0 - SP_031 complete)
 
 ---
 
@@ -93,6 +93,27 @@
 ---
 
 ### ✅ COMPLETED SPRINTS
+
+#### Sprint 31: Validation Badges for Vendor Comparison Matrix (SP_031)
+**Date**: February 21, 2026
+**Status**: ✅ COMPLETE
+**Type**: UI Enhancement / New Feature
+**Duration**: 1 day
+**Priority**: MEDIUM
+**Dependencies**: SP_018 (Two-Stage Comparison), SP_019 (Vendor Comparison Component)
+
+**Objective**: Add per-cell validation badges to the comparison matrix so buyers can record that a data point was independently verified by the vendor (V), buyer (B), or an external expert (E).
+
+**Key Deliverables**:
+- ✅ `src/types/validation.types.ts` - CellValidation interface + localStorage utilities
+- ✅ `src/components/vendor-comparison/ValidationBadges.tsx` - SVG orbital ring with badge circles at 12/9/3 o'clock
+- ✅ `VerticalBarChart.tsx` updated - all icon states wrapped with ValidationBadges
+- ✅ `VendorComparisonNew.tsx` updated - validation toggles in cell detail modal, force re-render on change
+- ✅ Validation persisted per-cell in localStorage (`validation_{projectId}_{vendorId}_{criterionId}`)
+
+**Sprint Document**: [SP_031_Validation_Badges_Feature.md](./SPRINTS/SP_031_Validation_Badges_Feature.md)
+
+---
 
 #### Sprint 30: Template Preview Comparison View Simplification (SP_030)
 **Date**: January 17, 2026
